@@ -1,0 +1,60 @@
+import { describe, expect, it } from 'vitest'
+import { deleteCols, deleteRows, insertCols, insertRows, setCell } from './edit.js'
+import { getCell } from './model.js'
+import { parse } from './parse.js'
+import { rewriteFormula } from './refs.js'
+import { serialize } from './serialize.js'
+
+describe('rewriteFormula', () => {
+  const rw = (f: string, axis: 'row' | 'col', at: number, delta: number) =>
+    rewriteFormula(f, 'S', 'S', axis, at, delta)
+
+  it('shifts rows on insert', () => {
+    expect(rw('=A2+B2', 'row', 2, 1)).toBe('=A3+B3')
+    expect(rw('=A1+A5', 'row', 3, 1)).toBe('=A1+A6') // A1 above insert stays
+  })
+  it('shifts cols on insert', () => {
+    expect(rw('=B2*C2', 'col', 1, 1)).toBe('=C2*D2')
+  })
+  it('marks deleted refs as #REF!', () => {
+    expect(rw('=A2+A3', 'row', 3, -1)).toBe('=A2+#REF!')
+  })
+  it('preserves $ absolutes and other sheets', () => {
+    expect(rw('=$A$2', 'row', 2, 1)).toBe('=$A$3')
+    expect(rw('=Other!A2', 'row', 2, 1)).toBe('=Other!A2')
+  })
+  it('does not touch string literals or function names', () => {
+    expect(rw('=CONCAT("A2 is here", A2)', 'row', 2, 1)).toBe('=CONCAT("A2 is here", A3)')
+    expect(rw('=SUM(A2:A3)', 'row', 2, 1)).toBe('=SUM(A3:A4)')
+  })
+})
+
+describe('structural edits keep formulas correct', () => {
+  it('insertRows shifts a SUM range', () => {
+    const src = '| Item | N |\n|---|---|\n| a | 1 |\n| b | 2 |\n| T | =SUM(B2:B3) |\n'
+    const m = insertRows(parse(src), 0, 2, 1) // insert a row before row 2
+    const sheet = m.sheets[0]!
+    expect(getCell(sheet, 1, 5)).toBe('=SUM(B3:B4)') // total moved down and range shifted
+  })
+
+  it('deleteCols removes a column and shifts refs', () => {
+    const src = '| a | b | c |\n|---|---|---|\n| 1 | 2 | =A2+C2 |\n'
+    const m = deleteCols(parse(src), 0, 1, 1) // delete column B
+    const sheet = m.sheets[0]!
+    expect(sheet.width).toBe(2)
+    expect(getCell(sheet, 1, 2)).toBe('=A2+B2') // former C2 is now B2, refs shifted
+  })
+
+  it('setCell auto-expands and round-trips', () => {
+    const m = setCell(parse('| a |\n|---|\n| 1 |\n'), 0, 2, 3, 'hi')
+    expect(getCell(m.sheets[0]!, 2, 3)).toBe('hi')
+    expect(serialize(parse(serialize(m)))).toBe(serialize(m))
+  })
+
+  it('insertCols shifts style targets', () => {
+    const src = '| a | b |\n|---|---|\n| 1 | 2 |\n\n```defter-style\nB1:B2  bold\n```\n'
+    const m = insertCols(parse(src), 0, 0, 1) // insert a column at the front
+    const rule = m.sheets[0]!.styles[0]!
+    expect(rule.target).toMatchObject({ kind: 'range' })
+  })
+})

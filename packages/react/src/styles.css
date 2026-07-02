@@ -1,0 +1,212 @@
+/*
+ * Defter grid styles. Every visual value is a CSS custom property so a host can map its own
+ * design tokens onto the grid. `.defter` carries the defaults (light); `[data-defter-theme]`
+ * selectors override them. Fill/color tokens used in `defter-style` resolve to `--defter-token-*`.
+ */
+
+.defter {
+  /* Typography */
+  --defter-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --defter-font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --defter-font-size: 13px;
+  --defter-row-height: 26px;
+  --defter-col-width: 110px;
+  --defter-head-width: 44px;
+
+  /* Surfaces */
+  --defter-bg: #ffffff;
+  --defter-fg: #1a1a22;
+  --defter-muted-fg: #6b7280;
+  --defter-grid-line: #e6e7eb;
+  --defter-grid-line-strong: #d1d4db;
+
+  /* Headers (column letters / row numbers) */
+  --defter-header-bg: #f6f7f9;
+  --defter-header-fg: #57606a;
+  --defter-header-active-bg: #e8eaf0;
+  --defter-corner-bg: #eef0f3;
+
+  /* Selection */
+  --defter-accent: #2f6df6;
+  --defter-selection-bg: rgba(47, 109, 246, 0.10);
+  --defter-selection-border: #2f6df6;
+  --defter-focus-ring: #2f6df6;
+
+  /* Semantic fill tokens (referenced by defter-style `fill=`/`color=`) */
+  --defter-token-surface-1: #ffffff;
+  --defter-token-surface-2: #f3f4f6;
+  --defter-token-surface-3: #e5e7eb;
+  --defter-token-accent: #2f6df6;
+  --defter-token-accent-soft: #dbe7ff;
+  --defter-token-success: #1a7f47;
+  --defter-token-success-soft: #d7f0e0;
+  --defter-token-warning: #a8760a;
+  --defter-token-warning-soft: #fbedcf;
+  --defter-token-danger: #c02636;
+  --defter-token-danger-soft: #fadadd;
+  --defter-token-muted: #6b7280;
+
+  position: relative;
+  font-family: var(--defter-font);
+  font-size: var(--defter-font-size);
+  color: var(--defter-fg);
+  background: var(--defter-bg);
+  overflow: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+.defter[data-defter-theme="dark"] {
+  --defter-bg: #14161c;
+  --defter-fg: #e7e9ee;
+  --defter-muted-fg: #9aa1ad;
+  --defter-grid-line: #262a33;
+  --defter-grid-line-strong: #333844;
+  --defter-header-bg: #1b1e26;
+  --defter-header-fg: #9aa1ad;
+  --defter-header-active-bg: #262b36;
+  --defter-corner-bg: #20242d;
+  --defter-accent: #5b8bff;
+  --defter-selection-bg: rgba(91, 139, 255, 0.16);
+  --defter-selection-border: #5b8bff;
+  --defter-focus-ring: #5b8bff;
+  --defter-token-surface-1: #14161c;
+  --defter-token-surface-2: #1e222b;
+  --defter-token-surface-3: #2a2f3a;
+  --defter-token-accent: #5b8bff;
+  --defter-token-accent-soft: #23324f;
+  --defter-token-success: #4ac07f;
+  --defter-token-success-soft: #163a29;
+  --defter-token-warning: #d9a441;
+  --defter-token-warning-soft: #3d2f14;
+  --defter-token-danger: #f06a78;
+  --defter-token-danger-soft: #3d1a20;
+  --defter-token-muted: #9aa1ad;
+}
+
+.defter[data-defter-theme="paper"] {
+  --defter-font: "Iowan Old Style", Georgia, ui-serif, serif;
+  --defter-bg: #faf6ee;
+  --defter-fg: #3a3226;
+  --defter-muted-fg: #8a7d68;
+  --defter-grid-line: #e6dcc9;
+  --defter-grid-line-strong: #d8caae;
+  --defter-header-bg: #f1e9da;
+  --defter-header-fg: #7a6c54;
+  --defter-header-active-bg: #e9dec8;
+  --defter-corner-bg: #ece2ce;
+  --defter-accent: #b6552b;
+  --defter-selection-bg: rgba(182, 85, 43, 0.12);
+  --defter-selection-border: #b6552b;
+  --defter-focus-ring: #b6552b;
+  --defter-token-surface-1: #faf6ee;
+  --defter-token-surface-2: #f1e9da;
+  --defter-token-surface-3: #e7dcc6;
+  --defter-token-accent: #b6552b;
+  --defter-token-accent-soft: #f0dcc8;
+  --defter-token-success: #5a7d3c;
+  --defter-token-success-soft: #e2ead0;
+  --defter-token-warning: #b07d1e;
+  --defter-token-warning-soft: #f3e6c9;
+  --defter-token-danger: #b23a2e;
+  --defter-token-danger-soft: #f2d8d0;
+  --defter-token-muted: #8a7d68;
+}
+
+.defter__grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  width: max-content;
+}
+
+.defter__corner,
+.defter__colhead,
+.defter__rowhead {
+  position: sticky;
+  background: var(--defter-header-bg);
+  color: var(--defter-header-fg);
+  font-weight: 500;
+  text-align: center;
+  border-right: 1px solid var(--defter-grid-line-strong);
+  border-bottom: 1px solid var(--defter-grid-line-strong);
+  user-select: none;
+  z-index: 1;
+}
+.defter__corner {
+  left: 0;
+  top: 0;
+  z-index: 3;
+  background: var(--defter-corner-bg);
+  width: var(--defter-head-width);
+}
+.defter__colhead {
+  top: 0;
+  z-index: 2;
+  height: var(--defter-row-height);
+  min-width: var(--defter-col-width);
+}
+.defter__rowhead {
+  left: 0;
+  z-index: 2;
+  width: var(--defter-head-width);
+  min-width: var(--defter-head-width);
+}
+
+.defter__cell {
+  height: var(--defter-row-height);
+  padding: 0 6px;
+  border-right: 1px solid var(--defter-grid-line);
+  border-bottom: 1px solid var(--defter-grid-line);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--defter-bg);
+  vertical-align: middle;
+  max-width: 0;
+}
+.defter__cell--wrap {
+  white-space: normal;
+  word-break: break-word;
+}
+.defter__cell--number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.defter__cell--error {
+  color: var(--defter-token-danger);
+}
+.defter__cell--formula-src {
+  font-family: var(--defter-font-mono);
+  color: var(--defter-accent);
+}
+.defter__cell--selected {
+  box-shadow: inset 0 0 0 1px var(--defter-selection-border);
+}
+.defter__colhead--active,
+.defter__rowhead--active {
+  background: var(--defter-header-active-bg);
+  color: var(--defter-fg);
+}
+
+.defter__editor {
+  width: 100%;
+  height: 100%;
+  min-height: var(--defter-row-height);
+  border: none;
+  outline: 2px solid var(--defter-focus-ring);
+  outline-offset: -2px;
+  font: inherit;
+  color: var(--defter-fg);
+  background: var(--defter-bg);
+  padding: 0 5px;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.defter:focus {
+  outline: none;
+}
+.defter:focus-visible {
+  outline: 2px solid var(--defter-focus-ring);
+  outline-offset: -2px;
+}

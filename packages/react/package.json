@@ -1,0 +1,35 @@
+{
+  "name": "@defter/react",
+  "version": "0.0.1",
+  "description": "React renderer for Defter — a thin, themeable (CSS-variable) grid projection of the text model. Bring your own Y.Text for collaboration.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": ["dist", "src"],
+  "sideEffects": ["*.css"],
+  "scripts": {
+    "build": "tsc -b && node ./scripts/copy-css.mjs"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "dependencies": {
+    "@defter/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
