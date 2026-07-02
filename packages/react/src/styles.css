@@ -1,11 +1,11 @@
 /*
  * Defter grid styles. Every visual value is a CSS custom property so a host can map its own
- * design tokens onto the grid. `.defter` carries the defaults (light); `[data-defter-theme]`
- * selectors override them. Fill/color tokens used in `defter-style` resolve to `--defter-token-*`.
+ * design tokens onto the grid. `.defter-shell` carries the token defaults (light) so the formula
+ * bar, grid, and status bar all inherit them; `[data-defter-theme]` selectors override.
+ * Fill/color tokens used in `defter-style` resolve to `--defter-token-*`.
  */
 
-.defter {
-  /* Typography */
+.defter-shell {
   --defter-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --defter-font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
   --defter-font-size: 13px;
@@ -13,26 +13,24 @@
   --defter-col-width: 110px;
   --defter-head-width: 44px;
 
-  /* Surfaces */
   --defter-bg: #ffffff;
   --defter-fg: #1a1a22;
   --defter-muted-fg: #6b7280;
   --defter-grid-line: #e6e7eb;
   --defter-grid-line-strong: #d1d4db;
 
-  /* Headers (column letters / row numbers) */
   --defter-header-bg: #f6f7f9;
   --defter-header-fg: #57606a;
-  --defter-header-active-bg: #e8eaf0;
+  --defter-header-active-bg: #e3e9fb;
+  --defter-header-active-fg: #1c3e9e;
   --defter-corner-bg: #eef0f3;
+  --defter-bar-bg: #fbfbfc;
 
-  /* Selection */
   --defter-accent: #2f6df6;
   --defter-selection-bg: rgba(47, 109, 246, 0.10);
   --defter-selection-border: #2f6df6;
   --defter-focus-ring: #2f6df6;
 
-  /* Semantic fill tokens (referenced by defter-style `fill=`/`color=`) */
   --defter-token-surface-1: #ffffff;
   --defter-token-surface-2: #f3f4f6;
   --defter-token-surface-3: #e5e7eb;
@@ -46,16 +44,23 @@
   --defter-token-danger-soft: #fadadd;
   --defter-token-muted: #6b7280;
 
-  position: relative;
+  display: flex;
+  flex-direction: column;
   font-family: var(--defter-font);
   font-size: var(--defter-font-size);
   color: var(--defter-fg);
   background: var(--defter-bg);
-  overflow: auto;
+  border: 1px solid var(--defter-grid-line-strong);
+  border-radius: 8px;
+  overflow: hidden;
+  height: 100%;
   -webkit-font-smoothing: antialiased;
 }
 
-.defter[data-defter-theme="dark"] {
+.defter-shell[data-defter-theme="dark"],
+.defter[data-defter-theme="dark"],
+.defter__formulabar[data-defter-theme="dark"],
+.defter__statusbar[data-defter-theme="dark"] {
   --defter-bg: #14161c;
   --defter-fg: #e7e9ee;
   --defter-muted-fg: #9aa1ad;
@@ -63,8 +68,10 @@
   --defter-grid-line-strong: #333844;
   --defter-header-bg: #1b1e26;
   --defter-header-fg: #9aa1ad;
-  --defter-header-active-bg: #262b36;
+  --defter-header-active-bg: #23324f;
+  --defter-header-active-fg: #cdd8f5;
   --defter-corner-bg: #20242d;
+  --defter-bar-bg: #191c23;
   --defter-accent: #5b8bff;
   --defter-selection-bg: rgba(91, 139, 255, 0.16);
   --defter-selection-border: #5b8bff;
@@ -83,7 +90,10 @@
   --defter-token-muted: #9aa1ad;
 }
 
-.defter[data-defter-theme="paper"] {
+.defter-shell[data-defter-theme="paper"],
+.defter[data-defter-theme="paper"],
+.defter__formulabar[data-defter-theme="paper"],
+.defter__statusbar[data-defter-theme="paper"] {
   --defter-font: "Iowan Old Style", Georgia, ui-serif, serif;
   --defter-bg: #faf6ee;
   --defter-fg: #3a3226;
@@ -92,8 +102,10 @@
   --defter-grid-line-strong: #d8caae;
   --defter-header-bg: #f1e9da;
   --defter-header-fg: #7a6c54;
-  --defter-header-active-bg: #e9dec8;
+  --defter-header-active-bg: #ecd9c0;
+  --defter-header-active-fg: #7a3f1e;
   --defter-corner-bg: #ece2ce;
+  --defter-bar-bg: #f5efe3;
   --defter-accent: #b6552b;
   --defter-selection-bg: rgba(182, 85, 43, 0.12);
   --defter-selection-border: #b6552b;
@@ -110,6 +122,45 @@
   --defter-token-danger: #b23a2e;
   --defter-token-danger-soft: #f2d8d0;
   --defter-token-muted: #8a7d68;
+}
+
+/* Formula bar */
+.defter__formulabar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--defter-bar-bg);
+  border-bottom: 1px solid var(--defter-grid-line-strong);
+}
+.defter__cellref {
+  font-family: var(--defter-font-mono);
+  font-size: 12px;
+  color: var(--defter-muted-fg);
+  min-width: 42px;
+  padding: 0 6px;
+  border-right: 1px solid var(--defter-grid-line);
+}
+.defter__fx {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--defter-font-mono);
+  font-size: 12.5px;
+  color: var(--defter-fg);
+  padding: 3px 4px;
+}
+
+/* Grid scroll area */
+.defter {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  background: var(--defter-bg);
+}
+.defter:focus {
+  outline: none;
 }
 
 .defter__grid {
@@ -151,6 +202,11 @@
   width: var(--defter-head-width);
   min-width: var(--defter-head-width);
 }
+.defter__colhead--active,
+.defter__rowhead--active {
+  background: var(--defter-header-active-bg);
+  color: var(--defter-header-active-fg);
+}
 
 .defter__cell {
   height: var(--defter-row-height);
@@ -163,6 +219,7 @@
   background: var(--defter-bg);
   vertical-align: middle;
   max-width: 0;
+  cursor: cell;
 }
 .defter__cell--wrap {
   white-space: normal;
@@ -179,13 +236,21 @@
   font-family: var(--defter-font-mono);
   color: var(--defter-accent);
 }
-.defter__cell--selected {
-  box-shadow: inset 0 0 0 1px var(--defter-selection-border);
+.defter__cell--insel {
+  background: var(--defter-selection-bg);
 }
-.defter__colhead--active,
-.defter__rowhead--active {
-  background: var(--defter-header-active-bg);
-  color: var(--defter-fg);
+.defter__cell--focus {
+  box-shadow: inset 0 0 0 2px var(--defter-selection-border);
+}
+.defter__cell code {
+  font-family: var(--defter-font-mono);
+  font-size: 0.92em;
+  background: var(--defter-token-surface-2);
+  padding: 0 3px;
+  border-radius: 3px;
+}
+.defter__cell a {
+  color: var(--defter-accent);
 }
 
 .defter__editor {
@@ -203,10 +268,19 @@
   box-sizing: border-box;
 }
 
-.defter:focus {
-  outline: none;
+/* Status bar */
+.defter__statusbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  justify-content: flex-end;
+  padding: 3px 12px;
+  background: var(--defter-bar-bg);
+  border-top: 1px solid var(--defter-grid-line-strong);
+  font-size: 12px;
+  color: var(--defter-muted-fg);
+  font-variant-numeric: tabular-nums;
 }
-.defter:focus-visible {
-  outline: 2px solid var(--defter-focus-ring);
-  outline-offset: -2px;
+.defter__status-hint {
+  font-family: var(--defter-font-mono);
 }

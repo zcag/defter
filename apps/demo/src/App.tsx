@@ -99,6 +99,8 @@ export function App() {
                 engine={engine}
                 theme={theme}
                 showFormulas={showFormulas}
+                formulaBar
+                statusBar
               />
             </div>
           </div>

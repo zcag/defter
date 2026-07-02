@@ -269,11 +269,13 @@ body {
   tab-size: 2;
 }
 .gridwrap {
-  height: 440px;
-  overflow: hidden;
+  height: 480px;
+  padding: 10px;
+  background: var(--paper-2);
 }
-.gridwrap .defter {
+.gridwrap .defter-shell {
   height: 100%;
+  box-shadow: 0 6px 24px -12px rgba(20, 20, 50, 0.2);
 }
 
 .projection {

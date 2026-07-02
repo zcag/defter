@@ -1,0 +1,218 @@
+- generic [ref=f4e3]:
+  - navigation [ref=f4e4]:
+    - link "📒 defter" [ref=f4e5] [cursor=pointer]:
+      - /url: "#top"
+    - generic [ref=f4e6]:
+      - link "Playground" [ref=f4e7] [cursor=pointer]:
+        - /url: "#playground"
+      - link "Why" [ref=f4e8] [cursor=pointer]:
+        - /url: "#why"
+      - link "GitHub ↗" [ref=f4e9] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter
+  - banner [ref=f4e10]:
+    - generic [ref=f4e11]: text-canonical · collaborative · agent-friendly
+    - heading "The spreadsheet that's just text." [level=1] [ref=f4e12]:
+      - text: The spreadsheet that's
+      - emphasis [ref=f4e13]: just text.
+    - paragraph [ref=f4e14]:
+      - text: The plain-text markdown document
+      - strong [ref=f4e15]: is
+      - text: the source of truth. The grid is a live, editable projection of it — so version control, real-time collaboration, full-text search, and AI agents all operate on ordinary text instead of a hidden binary model.
+    - generic [ref=f4e16]:
+      - link "Try it live" [ref=f4e17] [cursor=pointer]:
+        - /url: "#playground"
+      - link "View source" [ref=f4e18] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter
+  - generic [ref=f4e19]:
+    - generic [ref=f4e20]:
+      - generic [ref=f4e21]:
+        - button "Invoice" [ref=f4e22] [cursor=pointer]
+        - button "Budget" [ref=f4e23] [cursor=pointer]
+        - button "Roadmap" [ref=f4e24] [cursor=pointer]
+      - generic [ref=f4e25]:
+        - generic [ref=f4e26]:
+          - generic [ref=f4e27]: Theme
+          - generic [ref=f4e28]:
+            - button "Light" [ref=f4e29] [cursor=pointer]
+            - button "Dark" [ref=f4e30] [cursor=pointer]
+            - button "Paper" [ref=f4e31] [cursor=pointer]
+        - button "ƒ formulas" [ref=f4e32] [cursor=pointer]
+        - generic [ref=f4e33]:
+          - generic [ref=f4e34]: Projection
+          - generic [ref=f4e35]:
+            - button "Off" [ref=f4e36] [cursor=pointer]
+            - button "Values" [ref=f4e37] [cursor=pointer]
+            - button "RAG" [ref=f4e38] [cursor=pointer]
+    - generic [ref=f4e39]:
+      - generic [ref=f4e40]:
+        - generic [ref=f4e41]: canonical text · the source of truth · edit me
+        - textbox [ref=f4e42]: "## Sheet: Invoice | Item | Qty | Unit | Total | | --- | ---: | ---: | ---: | | Design system audit | 12 | 140 | =B2*C2 | | Component build | 34 | 120 | =B3*C3 | | Motion & polish | 8 | 160 | =B4*C4 | | Subtotal | | | =SUM(D2:D4) | | Tax (20%) | | | =D5*0.2 | | **Total due** | | | =D5+D6 | ```defter-style A1:D1 bold fill=surface-3 align=center D2:D7 format=$#,##0.00 A5:A7 bold D5:D7 bold border=top A7:D7 fill=accent-soft ```"
+      - generic [ref=f4e43]:
+        - generic [ref=f4e44]: live grid · a projection · edit me too
+        - generic [ref=f4e46]:
+          - generic [ref=f4e47]:
+            - generic [ref=f4e48]: A2
+            - textbox "Enter a value or =formula" [ref=f4e49]: Design system audit
+          - table [ref=f4e51]:
+            - rowgroup [ref=f4e61]:
+              - row "A B C D E F G" [ref=f4e62]:
+                - columnheader [ref=f4e63]
+                - columnheader "A" [ref=f4e64]
+                - columnheader "B" [ref=f4e65]
+                - columnheader "C" [ref=f4e66]
+                - columnheader "D" [ref=f4e67]
+                - columnheader "E" [ref=f4e68]
+                - columnheader "F" [ref=f4e69]
+                - columnheader "G" [ref=f4e70]
+            - rowgroup [ref=f4e71]:
+              - row "1 Item Qty Unit Total" [ref=f4e72]:
+                - rowheader "1" [ref=f4e73]
+                - cell "Item" [ref=f4e74]
+                - cell "Qty" [ref=f4e75]
+                - cell "Unit" [ref=f4e76]
+                - cell "Total" [ref=f4e77]
+                - cell [ref=f4e78]
+                - cell [ref=f4e79]
+                - cell [ref=f4e80]
+              - row "2 Design system audit 12 140 $1,680.00" [ref=f4e81]:
+                - rowheader "2" [ref=f4e82]
+                - cell "Design system audit" [ref=f4e83]
+                - cell "12" [ref=f4e84]
+                - cell "140" [ref=f4e85]
+                - cell "$1,680.00" [ref=f4e86]
+                - cell [ref=f4e87]
+                - cell [ref=f4e88]
+                - cell [ref=f4e89]
+              - row "3 Component build 34 120 $4,080.00" [ref=f4e90]:
+                - rowheader "3" [ref=f4e91]
+                - cell "Component build" [ref=f4e92]
+                - cell "34" [ref=f4e93]
+                - cell "120" [ref=f4e94]
+                - cell "$4,080.00" [ref=f4e95]
+                - cell [ref=f4e96]
+                - cell [ref=f4e97]
+                - cell [ref=f4e98]
+              - row "4 Motion & polish 8 160 $1,280.00" [ref=f4e99]:
+                - rowheader "4" [ref=f4e100]
+                - cell "Motion & polish" [ref=f4e101]
+                - cell "8" [ref=f4e102]
+                - cell "160" [ref=f4e103]
+                - cell "$1,280.00" [ref=f4e104]
+                - cell [ref=f4e105]
+                - cell [ref=f4e106]
+                - cell [ref=f4e107]
+              - row "5 Subtotal $7,040.00" [ref=f4e108]:
+                - rowheader "5" [ref=f4e109]
+                - cell "Subtotal" [ref=f4e110]
+                - cell [ref=f4e111]
+                - cell [ref=f4e112]
+                - cell "$7,040.00" [ref=f4e113]
+                - cell [ref=f4e114]
+                - cell [ref=f4e115]
+                - cell [ref=f4e116]
+              - row "6 Tax (20%) $1,408.00" [ref=f4e117]:
+                - rowheader "6" [ref=f4e118]
+                - cell "Tax (20%)" [ref=f4e119]
+                - cell [ref=f4e120]
+                - cell [ref=f4e121]
+                - cell "$1,408.00" [ref=f4e122]
+                - cell [ref=f4e123]
+                - cell [ref=f4e124]
+                - cell [ref=f4e125]
+              - row "7 Total due $8,448.00" [ref=f4e126]:
+                - rowheader "7" [ref=f4e127]
+                - cell "Total due" [ref=f4e128]:
+                  - strong [ref=f4e129]: Total due
+                - cell [ref=f4e130]
+                - cell [ref=f4e131]
+                - cell "$8,448.00" [ref=f4e132]
+                - cell [ref=f4e133]
+                - cell [ref=f4e134]
+                - cell [ref=f4e135]
+              - row "8" [ref=f4e136]:
+                - columnheader "8" [ref=f4e137]
+                - cell [ref=f4e138]
+                - cell [ref=f4e139]
+                - cell [ref=f4e140]
+                - cell [ref=f4e141]
+                - cell [ref=f4e142]
+                - cell [ref=f4e143]
+                - cell [ref=f4e144]
+              - row "9" [ref=f4e145]:
+                - columnheader "9" [ref=f4e146]
+                - cell [ref=f4e147]
+                - cell [ref=f4e148]
+                - cell [ref=f4e149]
+                - cell [ref=f4e150]
+                - cell [ref=f4e151]
+                - cell [ref=f4e152]
+                - cell [ref=f4e153]
+              - row "10" [ref=f4e154]:
+                - columnheader "10" [ref=f4e155]
+                - cell [ref=f4e156]
+                - cell [ref=f4e157]
+                - cell [ref=f4e158]
+                - cell [ref=f4e159]
+                - cell [ref=f4e160]
+                - cell [ref=f4e161]
+                - cell [ref=f4e162]
+              - row "11" [ref=f4e163]:
+                - columnheader "11" [ref=f4e164]
+                - cell [ref=f4e165]
+                - cell [ref=f4e166]
+                - cell [ref=f4e167]
+                - cell [ref=f4e168]
+                - cell [ref=f4e169]
+                - cell [ref=f4e170]
+                - cell [ref=f4e171]
+              - row "12" [ref=f4e172]:
+                - columnheader "12" [ref=f4e173]
+                - cell [ref=f4e174]
+                - cell [ref=f4e175]
+                - cell [ref=f4e176]
+                - cell [ref=f4e177]
+                - cell [ref=f4e178]
+                - cell [ref=f4e179]
+                - cell [ref=f4e180]
+              - row "13" [ref=f4e181]:
+                - columnheader "13" [ref=f4e182]
+                - cell [ref=f4e183]
+                - cell [ref=f4e184]
+                - cell [ref=f4e185]
+                - cell [ref=f4e186]
+                - cell [ref=f4e187]
+                - cell [ref=f4e188]
+                - cell [ref=f4e189]
+          - generic [ref=f4e191]: A2
+  - generic [ref=f4e192]:
+    - heading "Five properties, one text file." [level=2] [ref=f4e193]
+    - generic [ref=f4e194]:
+      - generic [ref=f4e195]:
+        - generic [ref=f4e196]: 📝
+        - heading "Text is truth" [level=3] [ref=f4e197]
+        - paragraph [ref=f4e198]: A compact, one-row-one-line markdown table. No opaque blob — ever. It diffs, greps, and syncs like any text file.
+      - generic [ref=f4e199]:
+        - generic [ref=f4e200]: 👥
+        - heading "Collaboration for free" [level=3] [ref=f4e201]
+        - paragraph [ref=f4e202]: Bind the canonical text to a text CRDT (Yjs Y.Text). Bring your own provider; Defter never owns the socket.
+      - generic [ref=f4e203]:
+        - generic [ref=f4e204]: 🤖
+        - heading "Agents read & write it" [level=3] [ref=f4e205]
+        - paragraph [ref=f4e206]: An LLM authors a markdown table and edits via structured ops. The projection gives search and RAG clean, values-materialized text.
+      - generic [ref=f4e207]:
+        - generic [ref=f4e208]: 🎨
+        - heading "Rich, but still text" [level=3] [ref=f4e209]
+        - paragraph [ref=f4e210]: Fills, formats, merges, borders, alignment — a co-canonical style layer keyed by A1 range. Themed entirely through CSS variables.
+  - contentinfo [ref=f4e211]:
+    - generic [ref=f4e212]:
+      - strong [ref=f4e213]: Defter
+      - text: — Turkish for
+      - emphasis [ref=f4e214]: ledger / notebook
+      - text: . MIT licensed.
+    - generic [ref=f4e215]:
+      - link "GitHub" [ref=f4e216] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter
+      - link "Format spec" [ref=f4e217] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter/blob/master/docs/FORMAT.md
+      - link "Rationale" [ref=f4e218] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter/blob/master/docs/RATIONALE.md
