@@ -50,6 +50,13 @@ Two mitigations, both required:
    all clients heal to the same valid grid, and treats concurrent structural edits as best-effort
    rather than pretending they auto-merge. We do not oversell this.
 
+**Normalize before binding.** The canonical text must be run through `normalize()` (=
+`serialize(parse(text))`) *once* before it is bound to a `Y.Text`. Otherwise the first edit's
+serialize also applies one-time normalization (e.g. collapsing `---:` alignment padding), which
+makes that edit's splice non-minimal — and a non-minimal splice can overlap a concurrent edit and
+interleave into invalid text. Our convergence test proves the disjoint-cell merge holds *given*
+this pass; it's a real precondition, not a footnote.
+
 ## Search / RAG see labels and formulas, not computed values
 
 Formula cells store `=SUM(...)`, never the computed number. So a raw index sees formulas, not

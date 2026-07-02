@@ -1,7 +1,9 @@
-import { parse, projectProse, projectText } from '@defter/core'
+import { parse, projectProse, projectText, serialize } from '@defter/core'
 import { createEngine } from '@defter/formula'
 import { DefterGrid } from '@defter/react'
+import { useYText } from '@defter/yjs'
 import { useMemo, useState } from 'react'
+import * as Y from 'yjs'
 import { SAMPLES } from './samples.js'
 
 type Theme = 'light' | 'dark' | 'paper'
@@ -117,9 +119,82 @@ export function App() {
         )}
       </section>
 
+      <CollabDemo engine={engine} />
       <Features />
       <Footer />
     </div>
+  )
+}
+
+const COLLAB_SEED = `## Sheet: Sprint
+
+| Task | Owner | Points | Done |
+| --- | --- | ---: | :-: |
+| Parser | Ada | 5 | =IF(D2="y",C2,0) |
+| Engine | Lin | 8 | =IF(D3="y",C3,0) |
+| Grid UI | Sam | 5 | =IF(D4="y",C4,0) |
+| Shipped |  | =SUM(C2:C4) | =SUM(D2:D4) |
+`
+
+function useCollabPair(seed: string) {
+  return useMemo(() => {
+    // Normalize before binding to the CRDT so subsequent edits are minimal splices.
+    const canonical = serialize(parse(seed))
+    const docA = new Y.Doc()
+    const docB = new Y.Doc()
+    const ta = docA.getText('defter')
+    const tb = docB.getText('defter')
+    docA.transact(() => ta.insert(0, canonical))
+    Y.applyUpdate(docB, Y.encodeStateAsUpdate(docA))
+    docA.on('update', (u, origin) => {
+      if (origin !== 'remote') Y.applyUpdate(docB, u, 'remote')
+    })
+    docB.on('update', (u, origin) => {
+      if (origin !== 'remote') Y.applyUpdate(docA, u, 'remote')
+    })
+    return { ta, tb }
+  }, [seed])
+}
+
+function CollabDemo({ engine }: { engine: ReturnType<typeof createEngine> }) {
+  const { ta, tb } = useCollabPair(COLLAB_SEED)
+  const [textA, setA] = useYText(ta)
+  const [textB, setB] = useYText(tb)
+  const converged = textA === textB
+
+  return (
+    <section className="collab" id="collab">
+      <div className="collab__intro">
+        <h2 className="features__title">Collaboration, for free.</h2>
+        <p>
+          Two independent Yjs documents, synced only by exchanging CRDT updates — no shared memory.
+          Edit either grid; because a cell edit is a minimal text splice, edits to different cells
+          occupy disjoint character spans and merge cleanly. Defter ships <em>no</em> network
+          provider: you hand it a <code>Y.Text</code>, it binds the grid.
+        </p>
+        <div className={`collab__badge${converged ? ' collab__badge--ok' : ''}`}>
+          {converged ? '● both replicas converged' : '○ syncing…'}
+        </div>
+      </div>
+      <div className="collab__pair">
+        <div className="collab__peer">
+          <div className="collab__peerlabel">
+            <span className="dot dot--a" /> Replica A
+          </div>
+          <div className="gridwrap gridwrap--sm">
+            <DefterGrid text={textA} onChange={setA} engine={engine} theme="light" statusBar />
+          </div>
+        </div>
+        <div className="collab__peer">
+          <div className="collab__peerlabel">
+            <span className="dot dot--b" /> Replica B
+          </div>
+          <div className="gridwrap gridwrap--sm">
+            <DefterGrid text={textB} onChange={setB} engine={engine} theme="dark" statusBar />
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -131,6 +206,7 @@ function Nav() {
       </a>
       <div className="nav__links">
         <a href="#playground">Playground</a>
+        <a href="#collab">Collab</a>
         <a href="#why">Why</a>
         <a href="https://github.com/zcag/defter">GitHub ↗</a>
       </div>

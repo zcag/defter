@@ -6,7 +6,17 @@
 
 import { escapeCell } from './escape.js'
 import type { Model, Sheet } from './model.js'
+import { parse } from './parse.js'
 import { serializeStyleBlock } from './style.js'
+
+/**
+ * Normalize arbitrary Defter text to its canonical byte-stable form. **Do this once before binding
+ * text to a CRDT** — otherwise the first edit's serialize carries one-time normalization churn,
+ * making the splice non-minimal and able to overlap a concurrent edit.
+ */
+export function normalize(text: string): string {
+  return serialize(parse(text))
+}
 
 export function serialize(model: Model): string {
   const multi = model.sheets.length > 1

@@ -18,8 +18,11 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@types/react": "^19.0.8",
+    "react": "^19.0.0",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5",
-    "fast-check": "^3.23.2"
+    "fast-check": "^3.23.2",
+    "yjs": "^13.6.20"
   }
 }

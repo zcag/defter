@@ -1,0 +1,28 @@
+{
+  "name": "@defter/yjs",
+  "version": "0.0.1",
+  "description": "Bind a Defter grid to a Yjs Y.Text for collaboration. Inject the shared type; the transport, persistence, and awareness stay entirely the host's concern.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@defter/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "yjs": "^13"
+  }
+}
