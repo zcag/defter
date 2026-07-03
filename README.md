@@ -42,9 +42,27 @@ Read [`docs/FORMAT.md`](docs/FORMAT.md) for the normative format, and
 
 **For agents:** [`docs/AGENTS.md`](docs/AGENTS.md) is the complete contract for authoring and editing Defter sheets.
 
-## Status
+## What works
 
-Early and moving fast. See the [live demo](https://defter.cagdas.io) for what currently works.
+- **Text-canonical format** — compact one-row-one-line GFM tables (content) + a co-canonical
+  `defter-style` layer (fills, number formats, merges, borders, alignment, column widths,
+  conditional formatting, data-validation dropdowns, charts). Lenient parse, byte-stable
+  serialize, idempotent round-trip.
+- **Formula engine** ([`@defter/formula`](packages/formula)) — ~55 functions incl. `SUM`/`AVERAGE`,
+  `VLOOKUP`/`HLOOKUP`/`INDEX`/`MATCH`, `SUMIF`/`COUNTIF` (wildcards), `IF`/`IFS`/`SWITCH`, text and
+  date functions. Cross-sheet, cycle-safe, memoized. Compute-on-read — values are never stored.
+- **Premium editing** — range selection, formula bar, formatting toolbar, copy/paste (TSV),
+  undo/redo, fill down/right (relative-ref adjusting), column resize, insert/delete row/col (with
+  automatic reference rewriting), merges, freeze header/column, multi-sheet tabs, keyboard shortcuts.
+- **Scale** — opt-in row virtualization renders only the visible window.
+- **Collaboration** ([`@defter/yjs`](packages/yjs)) — bind a `Y.Text`; concurrent edits to different
+  cells auto-merge (tested for convergence). No bundled provider.
+- **Charts** (bar/line/area/pie, dependency-free SVG), **import/export** CSV + XLSX
+  ([`@defter/xlsx`](packages/xlsx)), **3 themes**, **ARIA grid**, **Storybook**, **CI**.
+- **Agent-ready** — the [authoring contract](docs/AGENTS.md) + a values-materialized projection for
+  search/RAG.
+
+Two adversarial review passes; 58 tests. See the [live demo](https://defter.cagdas.io).
 
 ## Develop
 

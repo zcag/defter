@@ -443,6 +443,34 @@ function Features() {
           </div>
         ))}
       </div>
+      <div className="caps">
+        {[
+          'formulas (~55 fns)',
+          'cross-sheet refs',
+          'VLOOKUP / INDEX-MATCH',
+          'conditional formatting',
+          'data validation',
+          'charts',
+          'merged cells',
+          'number formats',
+          'copy / paste',
+          'undo / redo',
+          'fill down / right',
+          'insert / delete row-col',
+          'column resize',
+          'freeze header / column',
+          'multi-sheet',
+          'CSV / XLSX import-export',
+          'row virtualization',
+          '3 themes',
+          'real-time collab',
+          'RAG projection',
+        ].map((c) => (
+          <span className="cap" key={c}>
+            {c}
+          </span>
+        ))}
+      </div>
     </section>
   )
 }
