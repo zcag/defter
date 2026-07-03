@@ -610,12 +610,14 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         className="defter"
         data-defter-theme={theme}
         tabIndex={0}
+        role="application"
+        aria-label={`Defter sheet: ${sheet.name}`}
         onKeyDown={onKeyDown}
         onCopy={onCopy}
         onPaste={onPaste}
         onContextMenu={onContextMenu}
       >
-        <table className="defter__grid">
+        <table className="defter__grid" role="grid" aria-readonly={!editable || undefined}>
           <colgroup>
             <col style={{ width: 'var(--defter-head-width)' }} />
             {Array.from({ length: totalCols }, (_, c) => (
@@ -629,6 +631,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                 <th
                   key={c}
                   data-col={c}
+                  role="columnheader"
+                  aria-colindex={c + 2}
                   className={`defter__colhead${c >= rect.minCol && c <= rect.maxCol ? ' defter__colhead--active' : ''}`}
                 >
                   {columnLabel(c)}
@@ -647,9 +651,10 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             {Array.from({ length: totalRows }, (_, ri) => {
               const row = ri + 1
               return (
-                <tr key={row}>
+                <tr key={row} role="row" aria-rowindex={row}>
                   <th
                     data-row={row}
+                    role="rowheader"
                     className={`defter__rowhead${row >= rect.minRow && row <= rect.maxRow ? ' defter__rowhead--active' : ''}${freezeHeader && row === 1 ? ' defter__rowhead--frozen' : ''}`}
                   >
                     {row}
@@ -846,6 +851,9 @@ function Cell(p: CellProps): React.JSX.Element {
       style={css}
       data-col={p.col}
       data-row={p.row}
+      role="gridcell"
+      aria-colindex={p.col + 2}
+      aria-selected={p.inSelection || p.focus || undefined}
       colSpan={p.colSpan}
       rowSpan={p.rowSpan}
       onMouseDown={(e) => p.onMouseDown(e.shiftKey)}
