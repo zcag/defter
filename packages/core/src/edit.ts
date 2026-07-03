@@ -99,6 +99,128 @@ export function fillRight(model: Model, sheetIndex: number, minCol: number, maxC
   return next
 }
 
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
+const MONTHS_ABBR = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+const DAYS_ABBR = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+
+/** Re-apply the original casing of `sample` (all-caps, Title, or lower) to a lowercase `word`. */
+function matchCase(word: string, sample: string): string {
+  if (sample === sample.toUpperCase() && sample !== sample.toLowerCase()) return word.toUpperCase()
+  if (sample[0] === sample[0]?.toUpperCase()) return word[0]!.toUpperCase() + word.slice(1)
+  return word
+}
+
+/** If every value is a name from `list` (case-insensitive), extend the sequence with wrap-around. */
+function nameSeries(vals: string[], list: string[], count: number): string[] | null {
+  const idx = vals.map((v) => list.indexOf(v.trim().toLowerCase()))
+  if (idx.some((i) => i < 0)) return null
+  const step = idx.length >= 2 ? idx[idx.length - 1]! - idx[idx.length - 2]! : 1
+  const s = step === 0 ? 1 : step
+  const out: string[] = []
+  let cur = idx[idx.length - 1]!
+  for (let i = 0; i < count; i++) {
+    cur = (((cur + s) % list.length) + list.length) % list.length
+    out.push(matchCase(list[cur]!, vals[vals.length - 1]!))
+  }
+  return out
+}
+
+/**
+ * Continue a series of source values for `count` more cells (a smart fill-handle drag):
+ * arithmetic number runs extrapolate, month/weekday names and `prefix<int>` text (e.g. "Item 3",
+ * "Q1") increment, and anything else tiles/repeats. `dCol`/`dRow` are the per-step direction so
+ * tiled formulas keep their relative references shifting correctly.
+ */
+function continueSeries(vals: string[], count: number, dCol: number, dRow: number): string[] {
+  const L = vals.length
+  // Formula pattern: tile the block, shifting refs by the offset from the original.
+  if (vals.some((v) => v.trim().startsWith('='))) {
+    const out: string[] = []
+    for (let i = 0; i < count; i++) {
+      const abs = L + i
+      const shift = abs - (abs % L)
+      out.push(fillOne(vals[abs % L]!, dCol * shift, dRow * shift))
+    }
+    return out
+  }
+  const nums = vals.map((v) => (v.trim() !== '' && /^-?\d*\.?\d+$/.test(v.trim()) ? Number(v.trim()) : NaN))
+  if (nums.every((n) => !Number.isNaN(n)) && L >= 2) {
+    const d = nums[1]! - nums[0]!
+    if (nums.every((n, i) => i === 0 || Math.abs(n - nums[i - 1]! - d) < 1e-9)) {
+      const out: string[] = []
+      let last = nums[L - 1]!
+      for (let i = 0; i < count; i++) {
+        last += d
+        out.push(String(Math.round(last * 1e9) / 1e9))
+      }
+      return out
+    }
+  }
+  for (const list of [MONTHS, MONTHS_ABBR, DAYS, DAYS_ABBR]) {
+    const s = nameSeries(vals, list, count)
+    if (s) return s
+  }
+  // Text with a trailing integer and a shared, non-empty prefix: increment the number.
+  // (A bare number with no prefix falls through to a copy — matching a plain drag of one number.)
+  const parts = vals.map((v) => /^(.*?)(-?\d+)$/.exec(v))
+  const prefix = parts[0]?.[1] ?? ''
+  if (parts.every((p) => p) && prefix !== '' && parts.every((p) => p![1] === prefix)) {
+    const seq = parts.map((p) => Number(p![2]))
+    let d = L >= 2 ? seq[L - 1]! - seq[L - 2]! : 1
+    if (!Number.isFinite(d) || d === 0) d = 1
+    const out: string[] = []
+    let last = seq[L - 1]!
+    for (let i = 0; i < count; i++) {
+      last += d
+      out.push(prefix + last)
+    }
+    return out
+  }
+  // Fallback: tile/repeat the source values.
+  return Array.from({ length: count }, (_, i) => vals[(L + i) % L]!)
+}
+
+/**
+ * Smart fill-handle drag: extend the selected block [minCol..maxCol]×[minRow..maxRow] to the drag
+ * target (further down if `targetRow > maxRow`, or further right if `targetCol > maxCol`),
+ * continuing whatever series each source line represents. Copies degrade gracefully to a repeat.
+ */
+export function fillSeries(
+  model: Model,
+  sheetIndex: number,
+  minCol: number,
+  minRow: number,
+  maxCol: number,
+  maxRow: number,
+  targetCol: number,
+  targetRow: number,
+): Model {
+  const next = cloneModel(model)
+  const sheet = next.sheets[sheetIndex]
+  if (!sheet) return next
+  if (targetRow > maxRow) {
+    grow(sheet, maxCol + 1, targetRow)
+    const count = targetRow - maxRow
+    for (let c = minCol; c <= maxCol; c++) {
+      const src: string[] = []
+      for (let r = minRow; r <= maxRow; r++) src.push(sheet.grid[r - 1]?.[c] ?? '')
+      const filled = continueSeries(src, count, 0, 1)
+      for (let i = 0; i < count; i++) sheet.grid[maxRow + i]![c] = filled[i]!
+    }
+  } else if (targetCol > maxCol) {
+    grow(sheet, targetCol + 1, maxRow)
+    const count = targetCol - maxCol
+    for (let r = minRow; r <= maxRow; r++) {
+      const src: string[] = []
+      for (let c = minCol; c <= maxCol; c++) src.push(sheet.grid[r - 1]?.[c] ?? '')
+      const filled = continueSeries(src, count, 1, 0)
+      for (let i = 0; i < count; i++) sheet.grid[r - 1]![maxCol + 1 + i] = filled[i]!
+    }
+  }
+  return next
+}
+
 /**
  * Sort data rows [fromRow, toRow] by a column. Whole rows move together, and each moved row's
  * formulas have their *relative* references offset by the row delta — so a per-row formula like

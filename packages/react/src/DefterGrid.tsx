@@ -3,14 +3,17 @@ import {
   type ComputedGrid,
   type FormulaEngine,
   type Locale,
+  type BorderKind,
   type Model,
   addSheet,
+  applyBorders,
   clearStylesIn,
   columnLabel,
   deleteCols,
   deleteRows,
   fillDown,
   fillRight,
+  fillSeries,
   formatColor,
   formatValue,
   getCell,
@@ -149,6 +152,75 @@ function Icon({ name }: { name: string }): React.JSX.Element {
         <svg {...c} strokeWidth={1.6}>
           <rect x="3" y="3" width="18" height="18" rx="1.5" />
           <path d="M3 12h18M12 3v18" opacity="0.55" />
+        </svg>
+      )
+    case 'border-all':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="1" />
+          <path d="M3 12h18M12 3v18" />
+        </svg>
+      )
+    case 'border-inner':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="1" opacity="0.3" />
+          <path d="M3 12h18M12 3v18" />
+        </svg>
+      )
+    case 'border-inner-h':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="1" opacity="0.3" />
+          <path d="M3 12h18" />
+        </svg>
+      )
+    case 'border-inner-v':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="1" opacity="0.3" />
+          <path d="M12 3v18" />
+        </svg>
+      )
+    case 'border-outer':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="1" />
+        </svg>
+      )
+    case 'border-left':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="1" opacity="0.3" />
+          <path d="M3 3v18" />
+        </svg>
+      )
+    case 'border-top':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="1" opacity="0.3" />
+          <path d="M3 3h18" />
+        </svg>
+      )
+    case 'border-right':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="1" opacity="0.3" />
+          <path d="M21 3v18" />
+        </svg>
+      )
+    case 'border-bottom':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="1" opacity="0.3" />
+          <path d="M3 21h18" />
+        </svg>
+      )
+    case 'border-clear':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="1" opacity="0.3" />
+          <path d="M8 8l8 8M16 8l-8 8" opacity="0.7" />
         </svg>
       )
     case 'wrap':
@@ -342,10 +414,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         fillDragging.current = false
         const t = fillTargetRef.current
         fillTargetRef.current = null
-        if (t && t.row > rect.maxRow) {
-          pushEdit(serialize(fillDown(model, si, rect.minCol, rect.maxCol, rect.minRow, t.row)))
-        } else if (t && t.col > rect.maxCol) {
-          pushEdit(serialize(fillRight(model, si, rect.minCol, t.col, rect.minRow, rect.maxRow)))
+        if (t && (t.row > rect.maxRow || t.col > rect.maxCol)) {
+          pushEdit(serialize(fillSeries(model, si, rect.minCol, rect.minRow, rect.maxCol, rect.maxRow, t.col, t.row)))
         }
       }
       dragging.current = false
@@ -426,6 +496,12 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const clearFormatting = useCallback(() => {
     pushEdit(serialize(clearStylesIn(model, si, rect.minCol, rect.minRow, rect.maxCol, rect.maxRow)))
   }, [model, pushEdit, si, rect])
+  const applyBorderKind = useCallback(
+    (kind: BorderKind) => {
+      pushEdit(serialize(applyBorders(model, si, rect, kind)))
+    },
+    [model, si, rect, pushEdit],
+  )
 
   const autoSum = useCallback(() => {
     const { col, row } = sel.focus
@@ -1008,14 +1084,14 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const activeAttrs = styles.attrs(sel.focus.col, sel.focus.row)
   const activeRaw = rawAt(sel.focus.col, sel.focus.row)
 
-  const [popover, setPopover] = useState<{ kind: 'fill' | 'text'; x: number; y: number } | null>(null)
+  const [popover, setPopover] = useState<{ kind: 'fill' | 'text' | 'border'; x: number; y: number } | null>(null)
   useEffect(() => {
     if (!popover) return
     const close = () => setPopover(null)
     window.addEventListener('click', close)
     return () => window.removeEventListener('click', close)
   }, [popover])
-  const openPopover = (kind: 'fill' | 'text', e: React.MouseEvent) => {
+  const openPopover = (kind: 'fill' | 'text' | 'border', e: React.MouseEvent) => {
     e.stopPropagation()
     if (popover?.kind === kind) return setPopover(null)
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
@@ -1169,7 +1245,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           </div>
           <span className="defter__tb-sep" />
 
-          <button className="defter__tb" title="Borders" onClick={() => applyStyle({ border: 'all' })}>
+          <button className="defter__tb" title="Borders" onClick={(e) => openPopover('border', e)}>
             <Icon name="borders" />
           </button>
           <button className={`defter__tb${activeAttrs.merge ? ' defter__tb--on' : ''}`} title="Merge cells" onClick={() => applyStyle({ merge: !activeAttrs.merge })}>
@@ -1344,13 +1420,38 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
 
       {popover && (
         <div
-          className="defter__popover"
+          className={`defter__popover${popover.kind === 'border' ? ' defter__popover--border' : ''}`}
           style={{ position: 'fixed', left: popover.x, top: popover.y }}
           data-defter-theme={theme}
           onClick={(e) => e.stopPropagation()}
         >
-          {popover.kind === 'text'
-            ? (['', 'accent', 'success', 'warning', 'danger', 'muted'] as const).map((t) => (
+          {popover.kind === 'border' ? (
+            ([
+              ['all', 'All borders'],
+              ['inner', 'Inner borders'],
+              ['inner-h', 'Inner horizontal'],
+              ['inner-v', 'Inner vertical'],
+              ['outer', 'Outer borders'],
+              ['left', 'Left border'],
+              ['top', 'Top border'],
+              ['right', 'Right border'],
+              ['bottom', 'Bottom border'],
+              ['clear', 'Clear borders'],
+            ] as const).map(([k, title]) => (
+              <button
+                key={k}
+                className="defter__pop-btn"
+                title={title}
+                onClick={() => {
+                  applyBorderKind(k)
+                  setPopover(null)
+                }}
+              >
+                <Icon name={`border-${k}`} />
+              </button>
+            ))
+          ) : popover.kind === 'text' ? (
+            (['', 'accent', 'success', 'warning', 'danger', 'muted'] as const).map((t) => (
                 <button
                   key={`fg${t}`}
                   className="defter__pop-swatch"
@@ -1362,7 +1463,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                   }}
                 />
               ))
-            : [
+          ) : (
+            [
                 <button
                   key="bgnone"
                   className="defter__pop-swatch defter__pop-swatch--none"
@@ -1384,7 +1486,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                     }}
                   />
                 )),
-              ]}
+              ]
+          )}
         </div>
       )}
 
