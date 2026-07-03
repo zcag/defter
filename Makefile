@@ -42,6 +42,9 @@ storybook: ## Run Storybook
 deploy: ## Build + deploy demo & Storybook to defter.cagdas.io
 	bash scripts/deploy.sh
 
+bench: build ## Run the performance harness (parse/serialize/edit/recompute across sizes)
+	node scripts/bench.mjs
+
 pack: build ## Pack every package to ./dist-tarballs/*.tgz (install elsewhere without npm)
 	@rm -rf $(PACK_DIR) && mkdir -p $(PACK_DIR)
 	@for d in packages/*/; do (cd "$$d" && pnpm pack --pack-destination "$(CURDIR)/$(PACK_DIR)"); done
