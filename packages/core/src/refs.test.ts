@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { deleteCols, deleteRows, fillDown, insertCols, insertRows, setCell, sortRows } from './edit.js'
+import { parseRange } from './coords.js'
+import { deleteCols, deleteRows, fillDown, insertCols, insertRows, setCell, setStyle, sortRows } from './edit.js'
 import { getCell } from './model.js'
 import { parse } from './parse.js'
 import { offsetReferences, rewriteFormula } from './refs.js'
@@ -78,6 +79,16 @@ describe('structural edits keep formulas correct', () => {
     const sheet = m.sheets[0]!
     expect(getCell(sheet, 1, 3)).toBe('=A3*A3')
     expect(getCell(sheet, 1, 4)).toBe('=A4*A4')
+  })
+
+  it('setStyle merges into a same-target rule instead of duplicating', () => {
+    let m = parse('| a | b |\n|---|---|\n| 1 | 2 |\n')
+    const target = { kind: 'range' as const, range: parseRange('B2') }
+    m = setStyle(m, 0, target, { format: '0%' })
+    m = setStyle(m, 0, target, { format: '0.0%', bold: true })
+    const rules = m.sheets[0]!.styles.filter((r) => r.target.kind === 'range')
+    expect(rules).toHaveLength(1)
+    expect(rules[0]!.attrs).toMatchObject({ format: '0.0%', bold: true })
   })
 
   it('sortRows reorders rows and keeps per-row formulas correct', () => {

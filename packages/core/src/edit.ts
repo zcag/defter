@@ -183,7 +183,25 @@ export function deleteSheet(model: Model, sheetIndex: number): Model {
   return next
 }
 
-/** Append a style rule (merged last-wins by the renderer) for a target. */
+function targetsEqual(a: StyleTarget, b: StyleTarget): boolean {
+  if (a.kind !== b.kind) return false
+  if (a.kind === 'range' && b.kind === 'range') {
+    return (
+      a.range.start.col === b.range.start.col &&
+      a.range.start.row === b.range.start.row &&
+      a.range.end.col === b.range.end.col &&
+      a.range.end.row === b.range.end.row
+    )
+  }
+  if (a.kind === 'cols' && b.kind === 'cols') return a.start === b.start && a.end === b.end
+  if (a.kind === 'rows' && b.kind === 'rows') return a.start === b.start && a.end === b.end
+  return false
+}
+
+/**
+ * Apply a style to a target. If a rule with the *same* target already exists, its attributes are
+ * merged in (keeping the text compact under repeated formatting) rather than appending a duplicate.
+ */
 export function setStyle(
   model: Model,
   sheetIndex: number,
@@ -193,7 +211,9 @@ export function setStyle(
   const next = cloneModel(model)
   const sheet = next.sheets[sheetIndex]
   if (!sheet) return next
-  sheet.styles.push({ target, attrs })
+  const existing = sheet.styles.find((r) => targetsEqual(r.target, target))
+  if (existing) Object.assign(existing.attrs, attrs)
+  else sheet.styles.push({ target, attrs })
   return next
 }
 
