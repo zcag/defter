@@ -180,6 +180,7 @@ export function App() {
                 statusBar
                 sheetTabs
                 freezeHeader
+                freezeCol
               />
             </div>
           </div>

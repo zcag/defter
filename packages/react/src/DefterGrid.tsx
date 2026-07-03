@@ -63,6 +63,8 @@ export interface DefterGridProps {
   toolbar?: boolean
   /** Keep the header row (A1 row 1) pinned while scrolling. */
   freezeHeader?: boolean
+  /** Keep the first column (A) pinned while scrolling horizontally. */
+  freezeCol?: boolean
   /** Render only the visible rows (windowing) for large sheets. Assumes a fixed row height. */
   virtualize?: boolean
   /** Fixed row height in px used by virtualization; must match `--defter-row-height` (default 26). */
@@ -99,6 +101,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     sheetTabs,
     toolbar = false,
     freezeHeader = false,
+    freezeCol = false,
     virtualize = false,
     rowHeight = 26,
     extraRows = 6,
@@ -714,6 +717,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                         focus={isFocus}
                         inSelection={inSel && !isFocus}
                         frozen={freezeHeader && row === 1}
+                        frozenCol={freezeCol && col === 0}
                         colSpan={span?.colspan}
                         rowSpan={span?.rowspan}
                         editing={editing?.col === col && editing?.row === row ? editing.value : null}
@@ -836,6 +840,7 @@ interface CellProps {
   focus: boolean
   inSelection: boolean
   frozen?: boolean
+  frozenCol?: boolean
   colSpan?: number
   rowSpan?: number
   editing: string | null
@@ -882,6 +887,7 @@ function Cell(p: CellProps): React.JSX.Element {
     p.inSelection ? 'defter__cell--insel' : '',
     p.focus ? 'defter__cell--focus' : '',
     p.frozen ? 'defter__cell--frozen' : '',
+    p.frozenCol ? 'defter__cell--frozen-col' : '',
   ]
     .filter(Boolean)
     .join(' ')
