@@ -59,6 +59,8 @@ export interface DefterGridProps {
   sheetTabs?: boolean
   /** Show the formatting toolbar (bold/align/fill/number-format) above the grid. */
   toolbar?: boolean
+  /** Keep the header row (A1 row 1) pinned while scrolling. */
+  freezeHeader?: boolean
   extraRows?: number
   extraCols?: number
   readOnly?: boolean
@@ -90,6 +92,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     statusBar = false,
     sheetTabs,
     toolbar = false,
+    freezeHeader = false,
     extraRows = 6,
 
     extraCols = 3,
@@ -647,7 +650,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                 <tr key={row}>
                   <th
                     data-row={row}
-                    className={`defter__rowhead${row >= rect.minRow && row <= rect.maxRow ? ' defter__rowhead--active' : ''}`}
+                    className={`defter__rowhead${row >= rect.minRow && row <= rect.maxRow ? ' defter__rowhead--active' : ''}${freezeHeader && row === 1 ? ' defter__rowhead--frozen' : ''}`}
                   >
                     {row}
                   </th>
@@ -670,6 +673,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                         colAlign={sheet.colAlign[col] ?? null}
                         focus={isFocus}
                         inSelection={inSel && !isFocus}
+                        frozen={freezeHeader && row === 1}
                         colSpan={span?.colspan}
                         rowSpan={span?.rowspan}
                         editing={editing?.col === col && editing?.row === row ? editing.value : null}
@@ -786,6 +790,7 @@ interface CellProps {
   colAlign: 'left' | 'center' | 'right' | null
   focus: boolean
   inSelection: boolean
+  frozen?: boolean
   colSpan?: number
   rowSpan?: number
   editing: string | null
@@ -827,6 +832,7 @@ function Cell(p: CellProps): React.JSX.Element {
     p.showFormulas && isFormula ? 'defter__cell--formula-src' : '',
     p.inSelection ? 'defter__cell--insel' : '',
     p.focus ? 'defter__cell--focus' : '',
+    p.frozen ? 'defter__cell--frozen' : '',
   ]
     .filter(Boolean)
     .join(' ')

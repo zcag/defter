@@ -179,6 +179,7 @@ export function App() {
                 formulaBar
                 statusBar
                 sheetTabs
+                freezeHeader
               />
             </div>
           </div>
