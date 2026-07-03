@@ -71,6 +71,8 @@ export interface DefterGridProps {
   virtualize?: boolean
   /** Fixed row height in px used by virtualization; must match `--defter-row-height` (default 26). */
   rowHeight?: number
+  /** Function names for formula autocomplete (e.g. `FUNCTION_NAMES` from `@defter/formula`). */
+  functions?: string[]
   extraRows?: number
   extraCols?: number
   readOnly?: boolean
@@ -125,6 +127,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     freezeCol = false,
     virtualize = false,
     rowHeight = 26,
+    functions,
     extraRows = 6,
 
     extraCols = 3,
@@ -785,6 +788,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             rowSpan={span?.rowspan}
             editing={editing?.col === col && editing?.row === row ? editing.value : null}
             inputRef={inputRef}
+            functions={functions}
             onMouseDown={(shift) => onCellMouseDown(col, row, shift)}
             onMouseEnter={() => onCellMouseEnter(col, row)}
             onBeginEdit={() => beginEdit(col, row)}
@@ -1195,12 +1199,125 @@ interface CellProps {
   rowSpan?: number
   editing: string | null
   inputRef: React.RefObject<HTMLInputElement | null>
+  functions?: string[]
   onMouseDown: (shift: boolean) => void
   onMouseEnter: () => void
   onBeginEdit: () => void
   onEditChange: (v: string) => void
   onCommit: (v: string, dir: 'down' | 'right') => void
   onCancel: () => void
+}
+
+function CellEditor(p: {
+  value: string
+  functions?: string[]
+  inputRef: React.RefObject<HTMLInputElement | null>
+  onChange: (v: string) => void
+  onCommit: (dir: 'down' | 'right') => void
+  onCancel: () => void
+}): React.JSX.Element {
+  const [caret, setCaret] = useState(p.value.length)
+  const [dismissed, setDismissed] = useState(false)
+  const [sugIdx, setSugIdx] = useState(0)
+
+  const suggestions = useMemo(() => {
+    if (!p.functions || dismissed || !p.value.startsWith('=')) return []
+    const m = /(?:^|[^A-Za-z0-9_])([A-Za-z]{1,})$/.exec(p.value.slice(0, caret))
+    if (!m) return []
+    const partial = m[1]!.toUpperCase()
+    return p.functions.filter((f) => f.startsWith(partial) && f !== partial).slice(0, 8)
+  }, [p.value, caret, p.functions, dismissed])
+
+  const accept = (name: string) => {
+    const before = p.value.slice(0, caret)
+    const after = p.value.slice(caret)
+    const m = /([A-Za-z]+)$/.exec(before)
+    const stem = m ? before.slice(0, before.length - m[1]!.length) : before
+    const pos = stem.length + name.length + 1
+    p.onChange(`${stem}${name}(${after}`)
+    setCaret(pos)
+    setSugIdx(0)
+    requestAnimationFrame(() => {
+      const el = p.inputRef.current
+      if (el) el.selectionStart = el.selectionEnd = pos
+    })
+  }
+
+  const active = suggestions.length ? sugIdx % suggestions.length : 0
+  return (
+    <>
+      <input
+        ref={p.inputRef}
+        className="defter__editor"
+        value={p.value}
+        autoFocus
+        onChange={(e) => {
+          p.onChange(e.target.value)
+          setCaret(e.target.selectionStart ?? e.target.value.length)
+          setDismissed(false)
+        }}
+        onKeyUp={(e) => setCaret((e.target as HTMLInputElement).selectionStart ?? 0)}
+        onClick={(e) => setCaret((e.target as HTMLInputElement).selectionStart ?? 0)}
+        onBlur={() => p.onCommit('down')}
+        onMouseDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (suggestions.length) {
+            if (e.key === 'ArrowDown') {
+              setSugIdx((i) => (i + 1) % suggestions.length)
+              e.preventDefault()
+              e.stopPropagation()
+              return
+            }
+            if (e.key === 'ArrowUp') {
+              setSugIdx((i) => (i - 1 + suggestions.length) % suggestions.length)
+              e.preventDefault()
+              e.stopPropagation()
+              return
+            }
+            if (e.key === 'Enter' || e.key === 'Tab') {
+              accept(suggestions[active]!)
+              e.preventDefault()
+              e.stopPropagation()
+              return
+            }
+            if (e.key === 'Escape') {
+              setDismissed(true)
+              e.preventDefault()
+              e.stopPropagation()
+              return
+            }
+          }
+          if (e.key === 'Enter') {
+            p.onCommit('down')
+            e.preventDefault()
+          } else if (e.key === 'Tab') {
+            p.onCommit('right')
+            e.preventDefault()
+          } else if (e.key === 'Escape') {
+            p.onCancel()
+            e.preventDefault()
+          }
+          e.stopPropagation()
+        }}
+      />
+      {suggestions.length > 0 && (
+        <ul className="defter__autocomplete">
+          {suggestions.map((f, i) => (
+            <li
+              key={f}
+              className={i === active ? 'defter__ac--on' : ''}
+              onMouseDown={(e) => {
+                e.preventDefault()
+                accept(f)
+              }}
+            >
+              {f}
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  )
 }
 
 function Cell(p: CellProps): React.JSX.Element {
@@ -1255,7 +1372,7 @@ function Cell(p: CellProps): React.JSX.Element {
 
   return (
     <td
-      className={`${cls}${validation ? ' defter__cell--select' : ''}`}
+      className={`${cls}${validation ? ' defter__cell--select' : ''}${p.editing !== null ? ' defter__cell--editing' : ''}`}
       style={css}
       data-col={p.col}
       data-row={p.row}
@@ -1289,26 +1406,13 @@ function Cell(p: CellProps): React.JSX.Element {
           ))}
         </select>
       ) : p.editing !== null ? (
-        <input
-          ref={p.inputRef}
-          className="defter__editor"
+        <CellEditor
           value={p.editing}
-          onChange={(e) => p.onEditChange(e.target.value)}
-          onBlur={() => p.onCommit(p.editing ?? '', 'down')}
-          onMouseDown={(e) => e.stopPropagation()}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              p.onCommit(p.editing ?? '', 'down')
-              e.preventDefault()
-            } else if (e.key === 'Tab') {
-              p.onCommit(p.editing ?? '', 'right')
-              e.preventDefault()
-            } else if (e.key === 'Escape') {
-              p.onCancel()
-              e.preventDefault()
-            }
-            e.stopPropagation()
-          }}
+          functions={p.functions}
+          inputRef={p.inputRef}
+          onChange={p.onEditChange}
+          onCommit={(dir) => p.onCommit(p.editing ?? '', dir)}
+          onCancel={p.onCancel}
         />
       ) : (
         <>

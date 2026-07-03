@@ -7,7 +7,7 @@ import {
   resolveChartData,
   serialize,
 } from '@defter/core'
-import { createEngine } from '@defter/formula'
+import { FUNCTION_NAMES, createEngine } from '@defter/formula'
 import { DefterChart, DefterGrid } from '@defter/react'
 import { useYText } from '@defter/yjs'
 import ironcalcWasmUrl from '@ironcalc/wasm/wasm_bg.wasm?url'
@@ -209,6 +209,7 @@ export function App() {
                 sheetTabs
                 freezeHeader
                 freezeCol
+                functions={FUNCTION_NAMES}
               />
             </div>
           </div>
