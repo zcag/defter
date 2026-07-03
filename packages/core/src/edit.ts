@@ -5,7 +5,14 @@
  * here so formulas and style targets stay correct.
  */
 
-import { type Model, type Sheet, type StyleAttrs, type StyleTarget, cloneModel } from './model.js'
+import {
+  type Model,
+  type Sheet,
+  type StyleAttrs,
+  type StyleTarget,
+  cloneModel,
+  emptySheet,
+} from './model.js'
 import { shiftReferencesInModel } from './refs.js'
 
 function grow(sheet: Sheet, minWidth: number, minRows: number): void {
@@ -59,6 +66,45 @@ export function insertCols(model: Model, sheetIndex: number, at: number, count =
   sheet.colAlign.splice(index, 0, ...Array(count).fill(null))
   sheet.width += count
   shiftReferencesInModel(next, sheet.name, 'col', at, count)
+  return next
+}
+
+/** Append a new empty sheet with a unique name. Returns the new model (heading forced on serialize). */
+export function addSheet(model: Model, name?: string): Model {
+  const next = cloneModel(model)
+  const used = new Set(next.sheets.map((s) => s.name.toLowerCase()))
+  let finalName = name?.trim() || ''
+  if (!finalName || used.has(finalName.toLowerCase())) {
+    let n = next.sheets.length + 1
+    finalName = `Sheet${n}`
+    while (used.has(finalName.toLowerCase())) finalName = `Sheet${++n}`
+  }
+  const sheet = emptySheet(finalName, true)
+  sheet.grid = [['', '', '']]
+  sheet.width = 3
+  sheet.colAlign = [null, null, null]
+  next.sheets.push(sheet)
+  return next
+}
+
+/** Rename a sheet. No-op if the name collides with another sheet. */
+export function renameSheet(model: Model, sheetIndex: number, name: string): Model {
+  const next = cloneModel(model)
+  const sheet = next.sheets[sheetIndex]
+  const trimmed = name.trim()
+  if (!sheet || !trimmed) return next
+  if (next.sheets.some((s, i) => i !== sheetIndex && s.name.toLowerCase() === trimmed.toLowerCase()))
+    return next
+  sheet.name = trimmed
+  sheet.headed = true
+  return next
+}
+
+/** Delete a sheet. No-op if it's the only sheet. */
+export function deleteSheet(model: Model, sheetIndex: number): Model {
+  const next = cloneModel(model)
+  if (next.sheets.length <= 1) return next
+  next.sheets.splice(sheetIndex, 1)
   return next
 }
 

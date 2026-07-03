@@ -57,8 +57,38 @@ E2:E5  bold
 \`\`\`
 `
 
+const multi = `## Sheet: Sales
+
+| Month | Units | Price | Revenue |
+| --- | ---: | ---: | ---: |
+| Jan | 120 | 29 | =B2*C2 |
+| Feb | 145 | 29 | =B3*C3 |
+| Mar | 190 | 32 | =B4*C4 |
+
+\`\`\`defter-style
+A1:D1  bold fill=surface-3
+D2:D4  format=$#,##0
+\`\`\`
+
+## Sheet: Summary
+
+| Metric | Value |
+| --- | ---: |
+| Total units | =SUM(Sales!B2:B4) |
+| Total revenue | =SUM(Sales!D2:D4) |
+| Avg price | =Summary!B3/Summary!B2 |
+| Best month | =Sales!A4 |
+
+\`\`\`defter-style
+A1:B1  bold fill=accent-soft
+B2  format=#,##0
+B3:B4  format=$#,##0.00
+\`\`\`
+`
+
 export const SAMPLES: Sample[] = [
   { id: 'invoice', label: 'Invoice', text: invoice },
   { id: 'budget', label: 'Budget', text: budget },
   { id: 'planner', label: 'Roadmap', text: planner },
+  { id: 'multi', label: 'Multi-sheet', text: multi },
 ]

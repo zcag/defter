@@ -4,6 +4,7 @@ import {
   type FormulaEngine,
   type Locale,
   type Model,
+  addSheet,
   columnLabel,
   deleteCols,
   deleteRows,
@@ -14,6 +15,7 @@ import {
   isError,
   parse,
   parseLiteral,
+  renameSheet,
   resolveStyles,
   serialize,
   setCell,
@@ -48,6 +50,8 @@ export interface DefterGridProps {
   formulaBar?: boolean
   /** Show the selection status bar (sum/avg/count) below the grid. */
   statusBar?: boolean
+  /** Show sheet tabs. Defaults to on when the document has more than one sheet. */
+  sheetTabs?: boolean
   extraRows?: number
   extraCols?: number
   readOnly?: boolean
@@ -77,14 +81,18 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     showFormulas = false,
     formulaBar = false,
     statusBar = false,
+    sheetTabs,
     extraRows = 6,
+
     extraCols = 3,
     readOnly = false,
   } = props
 
   const model = useMemo<Model>(() => parse(text), [text])
   const computed = useMemo<ComputedGrid | null>(() => (engine ? engine.compute(model) : null), [engine, model])
-  const sheet = model.sheets[sheetIndex] ?? model.sheets[0]!
+  const [activeSheet, setActiveSheet] = useState(sheetIndex)
+  const si = model.sheets[activeSheet] ? activeSheet : 0
+  const sheet = model.sheets[si]!
   const styles = useMemo(() => resolveStyles(sheet), [sheet])
 
   const totalRows = sheet.grid.length + extraRows
@@ -107,6 +115,33 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     (c: number) => localW[c] ?? styles.attrs(c, 1).width ?? DEFAULT_COL_W,
     [localW, styles],
   )
+
+  // History: all mutations route through pushEdit so undo/redo works. (Local edits only; a
+  // collab host that also wants remote-aware undo would layer Yjs's UndoManager on top.)
+  const undoStack = useRef<string[]>([])
+  const redoStack = useRef<string[]>([])
+  const pushEdit = useCallback(
+    (next: string) => {
+      if (!onChange || next === text) return
+      undoStack.current.push(text)
+      if (undoStack.current.length > 300) undoStack.current.shift()
+      redoStack.current = []
+      onChange(next)
+    },
+    [text, onChange],
+  )
+  const undo = useCallback(() => {
+    if (!onChange || undoStack.current.length === 0) return
+    const prev = undoStack.current.pop()!
+    redoStack.current.push(text)
+    onChange(prev)
+  }, [text, onChange])
+  const redo = useCallback(() => {
+    if (!onChange || redoStack.current.length === 0) return
+    const nxt = redoStack.current.pop()!
+    undoStack.current.push(text)
+    onChange(nxt)
+  }, [text, onChange])
 
   const rect: Rect = useMemo(() => {
     const { anchor, focus } = sel
@@ -143,7 +178,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       if (!r) return
       const w = Math.max(48, Math.round(r.startW + (e.clientX - r.startX)))
       resizeRef.current = null
-      if (onChange) onChange(serialize(setColumnWidth(model, sheetIndex, r.col, w)))
+      pushEdit(serialize(setColumnWidth(model, si, r.col, w)))
       setLocalW((prev) => {
         const n = { ...prev }
         delete n[r.col]
@@ -156,7 +191,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       window.removeEventListener('mousemove', move)
       window.removeEventListener('mouseup', up)
     }
-  }, [model, onChange, sheetIndex])
+  }, [model, pushEdit, si])
 
   useEffect(() => {
     if (!menu) return
@@ -171,10 +206,10 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
 
   const applyModel = useCallback(
     (m: Model) => {
-      if (onChange) onChange(serialize(m))
+      pushEdit(serialize(m))
       setMenu(null)
     },
-    [onChange],
+    [pushEdit],
   )
 
   const rawAt = useCallback((col: number, row: number) => getCell(sheet, col, row), [sheet])
@@ -190,22 +225,22 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
 
   const commit = useCallback(
     (col: number, row: number, value: string, move?: Pos) => {
-      if (onChange) onChange(serialize(setCell(model, sheetIndex, col, row, value)))
+      pushEdit(serialize(setCell(model, si, col, row, value)))
       setEditing(null)
       if (move) setSel({ anchor: move, focus: move })
       rootRef.current?.focus()
     },
-    [model, onChange, sheetIndex],
+    [model, pushEdit, si],
   )
 
   const commitMany = useCallback(
     (writes: { col: number; row: number; value: string }[]) => {
-      if (!onChange || writes.length === 0) return
+      if (writes.length === 0) return
       let m = model
-      for (const w of writes) m = setCell(m, sheetIndex, w.col, w.row, w.value)
-      onChange(serialize(m))
+      for (const w of writes) m = setCell(m, si, w.col, w.row, w.value)
+      pushEdit(serialize(m))
     },
-    [model, onChange, sheetIndex],
+    [model, pushEdit, si],
   )
 
   const beginEdit = useCallback(
@@ -232,6 +267,17 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
       if (editing) return
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+        if (e.shiftKey) redo()
+        else undo()
+        e.preventDefault()
+        return
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) {
+        redo()
+        e.preventDefault()
+        return
+      }
       const { col, row } = sel.focus
       const shift = e.shiftKey
       switch (e.key) {
@@ -279,7 +325,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           }
       }
     },
-    [editing, sel.focus, moveFocus, rect, rawAt, commitMany, editable, beginEdit],
+    [editing, sel.focus, moveFocus, rect, rawAt, commitMany, editable, beginEdit, undo, redo],
   )
 
   const onCopy = useCallback(
@@ -510,23 +556,23 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
 
       {menu && (
         <div className="defter__menu" style={{ left: menu.x, top: menu.y }} data-defter-theme={theme}>
-          <button onClick={() => applyModel(insertRows(model, sheetIndex, Math.max(2, rect.minRow), 1))}>
+          <button onClick={() => applyModel(insertRows(model, si, Math.max(2, rect.minRow), 1))}>
             Insert row above
           </button>
-          <button onClick={() => applyModel(insertRows(model, sheetIndex, rect.maxRow + 1, 1))}>
+          <button onClick={() => applyModel(insertRows(model, si, rect.maxRow + 1, 1))}>
             Insert row below
           </button>
-          <button onClick={() => applyModel(deleteRows(model, sheetIndex, rect.minRow, rect.maxRow - rect.minRow + 1))}>
+          <button onClick={() => applyModel(deleteRows(model, si, rect.minRow, rect.maxRow - rect.minRow + 1))}>
             Delete {rect.maxRow > rect.minRow ? `rows ${rect.minRow}–${rect.maxRow}` : `row ${rect.minRow}`}
           </button>
           <div className="defter__menu-sep" />
-          <button onClick={() => applyModel(insertCols(model, sheetIndex, rect.minCol, 1))}>
+          <button onClick={() => applyModel(insertCols(model, si, rect.minCol, 1))}>
             Insert column left
           </button>
-          <button onClick={() => applyModel(insertCols(model, sheetIndex, rect.maxCol + 1, 1))}>
+          <button onClick={() => applyModel(insertCols(model, si, rect.maxCol + 1, 1))}>
             Insert column right
           </button>
-          <button onClick={() => applyModel(deleteCols(model, sheetIndex, rect.minCol, rect.maxCol - rect.minCol + 1))}>
+          <button onClick={() => applyModel(deleteCols(model, si, rect.minCol, rect.maxCol - rect.minCol + 1))}>
             Delete {rect.maxCol > rect.minCol ? `columns ${columnLabel(rect.minCol)}–${columnLabel(rect.maxCol)}` : `column ${columnLabel(rect.minCol)}`}
           </button>
           <div className="defter__menu-sep" />
@@ -551,6 +597,38 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
               {columnLabel(sel.focus.col)}
               {sel.focus.row}
             </span>
+          )}
+        </div>
+      )}
+
+      {(sheetTabs ?? model.sheets.length > 1) && (
+        <div className="defter__tabs" data-defter-theme={theme}>
+          {model.sheets.map((s, i) => (
+            <button
+              key={`${s.name}-${i}`}
+              className={`defter__tab${i === si ? ' defter__tab--on' : ''}`}
+              onClick={() => setActiveSheet(i)}
+              onDoubleClick={() => {
+                if (!editable) return
+                const name = window.prompt('Rename sheet', s.name)
+                if (name) pushEdit(serialize(renameSheet(model, i, name)))
+              }}
+            >
+              {s.name}
+            </button>
+          ))}
+          {editable && (
+            <button
+              className="defter__tab-add"
+              title="Add sheet"
+              onClick={() => {
+                const len = model.sheets.length
+                pushEdit(serialize(addSheet(model)))
+                setActiveSheet(len)
+              }}
+            >
+              +
+            </button>
           )}
         </div>
       )}

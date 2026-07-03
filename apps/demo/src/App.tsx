@@ -103,6 +103,7 @@ export function App() {
                 showFormulas={showFormulas}
                 formulaBar
                 statusBar
+                sheetTabs
               />
             </div>
           </div>

@@ -334,3 +334,48 @@
 .defter__status-hint {
   font-family: var(--defter-font-mono);
 }
+
+/* Sheet tabs */
+.defter__tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 4px 6px;
+  background: var(--defter-bar-bg);
+  border-top: 1px solid var(--defter-grid-line-strong);
+  overflow-x: auto;
+}
+.defter__tab {
+  border: none;
+  background: transparent;
+  color: var(--defter-muted-fg);
+  padding: 5px 14px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.defter__tab:hover {
+  background: var(--defter-selection-bg);
+}
+.defter__tab--on {
+  background: var(--defter-bg);
+  color: var(--defter-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.defter__tab-add {
+  border: none;
+  background: transparent;
+  color: var(--defter-muted-fg);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 10px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.defter__tab-add:hover {
+  background: var(--defter-selection-bg);
+  color: var(--defter-fg);
+}
