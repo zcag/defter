@@ -1,6 +1,6 @@
 {
   "name": "@defterjs/xlsx",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "XLSX import/export for Defter, via exceljs. Maps cells, formulas, merges, and basic styling to and from the Defter model. Optional \u2014 not part of core.",
   "license": "MIT",
   "type": "module",

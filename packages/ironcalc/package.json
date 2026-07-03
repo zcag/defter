@@ -1,6 +1,6 @@
 {
   "name": "@defterjs/ironcalc",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "IronCalc-wasm formula engine adapter for Defter \u2014 proves the pluggable-engine seam with a mature Rust/Wasm engine (300+ functions). Optional; the default is @defterjs/formula.",
   "license": "MIT",
   "type": "module",

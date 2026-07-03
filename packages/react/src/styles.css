@@ -30,6 +30,7 @@
   --defter-selection-bg: rgba(47, 109, 246, 0.18);
   --defter-selection-border: #2f6df6;
   --defter-focus-ring: #2f6df6;
+  --defter-collab-flag-fg: #ffffff;
 
   --defter-token-surface-1: #ffffff;
   --defter-token-surface-2: #f3f4f6;
@@ -418,6 +419,36 @@
     animation: none;
   }
 }
+/* Remote presence (collaborators): a coloured outline + soft fill over a peer's selection, with a
+ * name flag on the top-left. Positioned in JS from the corner cells (like the marquee). The peer's
+ * `color` is the only non-token colour — passed in via --defter-collab-color. */
+.defter__collab {
+  position: absolute;
+  pointer-events: none;
+  box-sizing: border-box;
+  z-index: 4;
+  border: 2px solid var(--defter-collab-color, var(--defter-selection-border));
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--defter-collab-color, var(--defter-selection-border)) 12%, transparent);
+}
+.defter__collab-flag {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  transform: translateY(-100%);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 5px;
+  font-size: 10.5px;
+  line-height: 1.35;
+  font-weight: 600;
+  border-radius: 3px 3px 3px 0;
+  color: var(--defter-collab-flag-fg);
+  background: var(--defter-collab-color, var(--defter-selection-border));
+}
+
 /* Themed tooltip (replaces native title= chrome); centered under the hovered element. */
 .defter__tooltip {
   position: absolute;

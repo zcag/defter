@@ -23,6 +23,7 @@ import {
   offsetReferences,
   parse,
   parseLiteral,
+  parseRef,
   renameSheet,
   resolveConditionalAttrs,
   resolveStyles,
@@ -47,6 +48,31 @@ import {
 } from 'react'
 import { renderInline } from './inline.js'
 import { resolveColor, styleToCss } from './styleToCss.js'
+
+/**
+ * A remote peer's live presence, fed from the host's awareness channel. Render it Google-Sheets
+ * style: a coloured outline + name flag on the peer's selection, but only while they're on the
+ * currently-viewed sheet.
+ */
+export interface Collaborator {
+  /** Stable per-peer id (used as the React key). */
+  id: string
+  /** Display name shown on the flag over the peer's active cell. */
+  name: string
+  /** The peer's presence colour (any CSS colour). The only colour not driven by `--defter-*` tokens. */
+  color: string
+  /** Which sheet the peer is on; their cursor renders only when it matches the viewed sheet. */
+  sheetIndex: number
+  /** The peer's selection as A1 (`B3`) or an A1 range (`A1:B4`). */
+  selection: string
+}
+
+/** The local selection, as handed to `onSelectionChange` for the host to broadcast over awareness. */
+export interface SelectionState {
+  sheetIndex: number
+  /** A1 for a single cell (`B3`), or an A1 range (`A1:B4`) for a multi-cell selection. */
+  selection: string
+}
 
 export interface DefterGridProps {
   /** Canonical Defter text. The grid is a projection of it. */
@@ -84,12 +110,60 @@ export interface DefterGridProps {
   extraRows?: number
   extraCols?: number
   readOnly?: boolean
+  /**
+   * Remote peers to render as live cursors/selections (from the host's awareness channel). Each
+   * peer shows a coloured outline + name flag over `selection`, but only while `sheetIndex` matches
+   * the viewed sheet. Purely presentational — never touches the local selection, edit, or clipboard.
+   */
+  collaborators?: Collaborator[]
+  /**
+   * Fired (throttled) with the local selection whenever it changes, so the host can broadcast it
+   * over awareness. `selection` is A1 (`B3`) or an A1 range (`A1:B4`).
+   */
+  onSelectionChange?: (sel: SelectionState) => void
+  /**
+   * Collaborative undo override. Pass a `Y.UndoManager`-backed handler (see `useYUndo` in
+   * `@defterjs/yjs`) and the grid drives it for Ctrl/Cmd+Z and the toolbar undo button instead of
+   * its built-in text history — so undo reverts only the local user's edits under a shared `Y.Text`.
+   * Omit both `undo`/`redo` to keep the built-in local text-history undo.
+   */
+  undo?: () => void
+  /** Collaborative redo override; see {@link DefterGridProps.undo}. */
+  redo?: () => void
+  /** When an `undo` override is supplied, disables the toolbar undo button while nothing can be undone. */
+  canUndo?: boolean
+  /** When a `redo` override is supplied, disables the toolbar redo button while nothing can be redone. */
+  canRedo?: boolean
   className?: string
   style?: CSSProperties
 }
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/** A selection rect → A1: a single cell (`B3`) or a range (`A1:B4`). Rows are 1-based A1 numbers. */
+function rectToA1(r: { minCol: number; maxCol: number; minRow: number; maxRow: number }): string {
+  const tl = `${columnLabel(r.minCol)}${r.minRow}`
+  if (r.minCol === r.maxCol && r.minRow === r.maxRow) return tl
+  return `${tl}:${columnLabel(r.maxCol)}${r.maxRow}`
+}
+
+/** Parse an A1 cell or range (`B3` / `A1:B4`) into a normalized selection rect; null if malformed. */
+function a1ToRect(a1: string): { minCol: number; maxCol: number; minRow: number; maxRow: number } | null {
+  try {
+    const [start, end] = a1.split(':')
+    const s = parseRef(start!.trim())
+    const e = end ? parseRef(end.trim()) : s
+    return {
+      minCol: Math.min(s.col, e.col),
+      maxCol: Math.max(s.col, e.col),
+      minRow: Math.min(s.row, e.row),
+      maxRow: Math.max(s.row, e.row),
+    }
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -375,32 +449,43 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     [localW, styles],
   )
 
-  // History: all mutations route through pushEdit so undo/redo works. (Local edits only; a
-  // collab host that also wants remote-aware undo would layer Yjs's UndoManager on top.)
+  // History: all mutations route through pushEdit so undo/redo works. This is the built-in *local
+  // text* history; a collaborative host passes `undo`/`redo` overrides (a Yjs UndoManager via
+  // `@defterjs/yjs`'s `useYUndo`) so undo reverts only the local user's edits under a shared
+  // `Y.Text`. When an override is present the built-in stack is bypassed entirely.
   const undoStack = useRef<string[]>([])
   const redoStack = useRef<string[]>([])
+  const collabUndo = props.undo
+  const collabRedo = props.redo
   const pushEdit = useCallback(
     (next: string) => {
       if (!onChange || next === text) return
-      undoStack.current.push(text)
-      if (undoStack.current.length > 300) undoStack.current.shift()
-      redoStack.current = []
+      if (!collabUndo) {
+        undoStack.current.push(text)
+        if (undoStack.current.length > 300) undoStack.current.shift()
+        redoStack.current = []
+      }
       onChange(next)
     },
-    [text, onChange],
+    [text, onChange, collabUndo],
   )
-  const undo = useCallback(() => {
+  const internalUndo = useCallback(() => {
     if (!onChange || undoStack.current.length === 0) return
     const prev = undoStack.current.pop()!
     redoStack.current.push(text)
     onChange(prev)
   }, [text, onChange])
-  const redo = useCallback(() => {
+  const internalRedo = useCallback(() => {
     if (!onChange || redoStack.current.length === 0) return
     const nxt = redoStack.current.pop()!
     undoStack.current.push(text)
     onChange(nxt)
   }, [text, onChange])
+  // Collaborative override (Yjs UndoManager) wins when supplied; else the built-in text history.
+  const undo = collabUndo ?? internalUndo
+  const redo = collabRedo ?? internalRedo
+  const undoDisabled = collabUndo ? props.canUndo === false : false
+  const redoDisabled = collabRedo ? props.canRedo === false : false
 
   const [vp, setVp] = useState({ top: 0, height: 0 })
   useEffect(() => {
@@ -430,6 +515,31 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     }
   }, [sel])
 
+  // Broadcast the local selection to the host (for its awareness channel), throttled. `si` is
+  // folded in so a sheet switch re-broadcasts. The A1 string is a single cell or a range.
+  const onSelectionChange = props.onSelectionChange
+  const selChangeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => {
+    if (!onSelectionChange) return
+    if (selChangeTimer.current) clearTimeout(selChangeTimer.current)
+    selChangeTimer.current = setTimeout(() => {
+      onSelectionChange({ sheetIndex: si, selection: rectToA1(rect) })
+    }, 60)
+    return () => {
+      if (selChangeTimer.current) clearTimeout(selChangeTimer.current)
+    }
+  }, [rect, si, onSelectionChange])
+
+  // Remote peers on the currently-viewed sheet, resolved to grid rects for the overlay layer.
+  const collabRects = useMemo(() => {
+    const list = props.collaborators
+    if (!list?.length) return []
+    return list
+      .filter((c) => c.sheetIndex === si && c.selection)
+      .map((c) => ({ collab: c, r: a1ToRect(c.selection) }))
+      .filter((x): x is { collab: Collaborator; r: Rect } => x.r !== null)
+  }, [props.collaborators, si])
+
   // Position an overlay box (selection marquee, copy marching-ants) over a cell range from the corner
   // cells' geometry — so merges/freeze/widths all work and it scrolls locked to the content.
   useLayoutEffect(() => {
@@ -455,6 +565,21 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     const single = rect.minCol === rect.maxCol && rect.minRow === rect.maxRow
     place(marqueeRef.current, rect, !single && editing === null)
     place(copyMarqueeRef.current, copyRect, copyRect !== null)
+    // Remote presence: each peer's overlay carries its rect in data-* attrs (set at render). Position
+    // them off the same corner-cell geometry; a peer whose cells aren't rendered (virtualized out)
+    // simply hides. Purely presentational — never touches the local selection.
+    root.querySelectorAll<HTMLDivElement>('.defter__collab').forEach((el) => {
+      place(
+        el,
+        {
+          minCol: Number(el.dataset.minCol),
+          maxCol: Number(el.dataset.maxCol),
+          minRow: Number(el.dataset.minRow),
+          maxRow: Number(el.dataset.maxRow),
+        },
+        true,
+      )
+    })
   })
 
   // Themed tooltips: drive off existing `title` attributes via delegation — suppress the native
@@ -1302,10 +1427,10 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             if ((e.target as HTMLElement).closest('button')) e.preventDefault()
           }}
         >
-          <button className="defter__tb" title="Undo (Ctrl+Z)" onClick={undo}>
+          <button className="defter__tb" title="Undo (Ctrl+Z)" onClick={undo} disabled={undoDisabled}>
             <Icon name="undo" />
           </button>
-          <button className="defter__tb" title="Redo (Ctrl+Y)" onClick={redo}>
+          <button className="defter__tb" title="Redo (Ctrl+Y)" onClick={redo} disabled={redoDisabled}>
             <Icon name="redo" />
           </button>
           <button
@@ -1526,6 +1651,20 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         </table>
         <div ref={marqueeRef} className="defter__marquee" aria-hidden="true" style={{ display: 'none' }} />
         <div ref={copyMarqueeRef} className="defter__copy-marquee" aria-hidden="true" style={{ display: 'none' }} />
+        {collabRects.map(({ collab, r }) => (
+          <div
+            key={collab.id}
+            className="defter__collab"
+            aria-hidden="true"
+            data-min-col={r.minCol}
+            data-max-col={r.maxCol}
+            data-min-row={r.minRow}
+            data-max-row={r.maxRow}
+            style={{ display: 'none', '--defter-collab-color': collab.color } as CSSProperties}
+          >
+            <span className="defter__collab-flag">{collab.name}</span>
+          </div>
+        ))}
       </div>
 
       {menu && (

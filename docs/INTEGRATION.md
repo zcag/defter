@@ -81,6 +81,75 @@ export function CollabSheet({ ytext, engine }: { ytext: Y.Text; engine: FormulaE
 That is the whole contract. In tela: wire `TelaProvider`'s `Y.Doc` → a `Y.Text` field → `useYText` →
 `<DefterGrid>`, and collaboration, snapshots, and awareness come from tela's existing stack.
 
+### Live presence — remote cursors + selections
+
+The grid renders remote peers Google-Sheets style (a coloured outline + name flag over each peer's
+cells) from a `collaborators` prop, and reports the local selection through `onSelectionChange` so
+you can broadcast it. Both are pure UI — Defter never touches your transport. Map your **awareness**
+channel to the prop, and feed `onSelectionChange` back into awareness:
+
+```tsx
+import type { Collaborator, SelectionState } from '@defterjs/react'
+
+// Derive `collaborators` from your awareness states (one entry per remote peer).
+const collaborators: Collaborator[] = [...awareness.getStates()]
+  .filter(([clientId]) => clientId !== awareness.clientID)     // drop self
+  .map(([, s]) => s.presence)                                  // { id, name, color, sheetIndex, selection }
+  .filter(Boolean)
+
+<DefterGrid
+  text={text}
+  onChange={setText}
+  engine={engine}
+  collaborators={collaborators}
+  onSelectionChange={(sel: SelectionState) =>                  // { sheetIndex, selection: "A1" | "A1:B4" }
+    awareness.setLocalStateField('presence', { id: me.id, name: me.name, color: me.color, ...sel })
+  }
+/>
+```
+
+- **`collaborators: Collaborator[]`** — `{ id, name, color, sheetIndex, selection }`. `selection` is
+  A1 (`B3`) or an A1 range (`A1:B4`); `color` is the peer's presence colour (the *only* colour not
+  driven by a `--defter-*` token). A peer's cursor shows only while `sheetIndex` matches the viewed
+  sheet. Malformed/off-screen selections just don't render.
+- **`onSelectionChange: (sel: SelectionState) => void`** — fired (throttled ~60 ms) with
+  `{ sheetIndex, selection }` whenever the local selection changes.
+
+The flag's text colour is themeable via `--defter-collab-flag-fg` (see [THEMING.md](./THEMING.md)).
+
+### CRDT-aware undo/redo
+
+Under a shared `Y.Text`, plain text-history undo would stomp a remote peer's concurrent edit. Use
+`useYUndo` from `@defterjs/yjs` — it wraps a `Y.UndoManager` scoped to the **local** origin (the
+`'local'` origin `useYText` writes with) so undo reverts only *your* edits — and hand its four
+fields to the grid. The grid then drives them for Ctrl/Cmd+Z, Shift+Z, and the toolbar buttons:
+
+```tsx
+import { useYText, useYUndo } from '@defterjs/yjs'
+import { DefterGrid } from '@defterjs/react'
+
+export function CollabSheet({ ytext, engine }: { ytext: Y.Text; engine: FormulaEngine }) {
+  const [text, setText] = useYText(ytext)
+  const { undo, redo, canUndo, canRedo } = useYUndo(ytext)   // scoped to the local origin
+  return (
+    <DefterGrid
+      text={text}
+      onChange={setText}
+      engine={engine}
+      undo={undo}
+      redo={redo}
+      canUndo={canUndo}
+      canRedo={canRedo}
+      toolbar
+    />
+  )
+}
+```
+
+Omit the `undo`/`redo` props (non-collaborative embed) and the grid keeps its built-in local
+text-history undo — no behaviour change. `useYUndo(ytext, { captureTimeout, trackedOrigins })` tunes
+edit grouping and which origins count as "local".
+
 ## Theming
 
 Map your design tokens onto Defter's `--defter-*` variables, or drive them live via the `style`

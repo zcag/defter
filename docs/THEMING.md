@@ -72,7 +72,7 @@ them by any of the three methods above. A host that maps its own tokens onto Def
 **all** of these; diff your mapping against this list (or the machine-readable block at the end of
 this file) to catch any it's missing.
 
-> **Contract stability.** These 33 variables are a stable public interface. **Adding, renaming, or
+> **Contract stability.** These 34 variables are a stable public interface. **Adding, renaming, or
 > removing a `--defter-*` variable is a contract change** — it must be reflected here (table + the
 > JSON block below) in the same change, so hosts can diff and update their mappings. Treat the JSON
 > block as the source of truth to diff against.
@@ -107,6 +107,11 @@ this file) to catch any it's missing.
 | `--defter-selection-border` | selection outline / active-cell ring | `#2f6df6` |
 | `--defter-focus-ring` | cell-editor focus ring | `#2f6df6` |
 | `--defter-selection-bg` | selection fill tint (use an `rgba` with alpha) | `rgba(47,109,246,0.18)` |
+| `--defter-collab-flag-fg` | text colour on a remote collaborator's name flag | `#ffffff` |
+
+A remote collaborator's outline/fill/flag are painted in that peer's own `color` (passed via the
+`collaborators` prop, not a token — see [INTEGRATION.md](./INTEGRATION.md)); the flag's *text* colour
+is the one themeable part, `--defter-collab-flag-fg`.
 
 ### Palette tokens (used by `defter-style` fills & text colours)
 Cell fills and font colours in the `defter-style` block reference these by short name (`accent`,
@@ -154,7 +159,8 @@ The same 33 variables as data, for a host to diff programmatically. Grouped as i
     "--defter-accent": { "purpose": "accent (active toolbar buttons, links)", "light": "#2f6df6", "dark": "#5b8bff" },
     "--defter-selection-border": { "purpose": "selection outline / active-cell ring", "light": "#2f6df6", "dark": "#5b8bff" },
     "--defter-focus-ring": { "purpose": "cell-editor focus ring", "light": "#2f6df6", "dark": "#5b8bff" },
-    "--defter-selection-bg": { "purpose": "selection fill tint (rgba with alpha)", "light": "rgba(47, 109, 246, 0.18)", "dark": "rgba(91, 139, 255, 0.26)" }
+    "--defter-selection-bg": { "purpose": "selection fill tint (rgba with alpha)", "light": "rgba(47, 109, 246, 0.18)", "dark": "rgba(91, 139, 255, 0.26)" },
+    "--defter-collab-flag-fg": { "purpose": "text colour on a remote collaborator's name flag", "light": "#ffffff", "dark": "#ffffff" }
   },
   "palette": {
     "--defter-token-surface-1": { "purpose": "defter-style fill: surface-1", "light": "#ffffff", "dark": "#14161c" },
