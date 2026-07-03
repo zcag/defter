@@ -319,6 +319,42 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     [totalCols, totalRows],
   )
 
+  // Ctrl+Arrow: jump to the edge of the current data block (Sheets behaviour).
+  const jump = useCallback(
+    (dc: number, dr: number, extend: boolean) => {
+      const dataRows = sheet.grid.length
+      const dataCols = sheet.width
+      const isEmpty = (c: number, r: number) => getCell(sheet, c, r).trim() === ''
+      const inB = (c: number, r: number) => c >= 0 && c < dataCols && r >= 1 && r <= dataRows
+      let { col: c, row: r } = sel.focus
+      if (inB(c, r)) {
+        if (!isEmpty(c, r) && inB(c + dc, r + dr) && !isEmpty(c + dc, r + dr)) {
+          while (inB(c + dc, r + dr) && !isEmpty(c + dc, r + dr)) {
+            c += dc
+            r += dr
+          }
+        } else {
+          c += dc
+          r += dr
+          while (inB(c, r) && isEmpty(c, r)) {
+            c += dc
+            r += dr
+          }
+          if (!inB(c, r)) {
+            c -= dc
+            r -= dr
+          }
+        }
+      } else {
+        c += dc
+        r += dr
+      }
+      const p = { col: clampCol(c), row: clampRow(r) }
+      setSel((s) => ({ anchor: extend ? s.anchor : p, focus: p }))
+    },
+    [sheet, sel.focus, totalCols, totalRows],
+  )
+
   const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
       if (editing) return
@@ -363,13 +399,16 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       }
       const { col, row } = sel.focus
       const shift = e.shiftKey
+      const mod = e.ctrlKey || e.metaKey
+      const lastCol = Math.max(0, sheet.width - 1)
+      const lastRow = Math.max(1, sheet.grid.length)
       switch (e.key) {
         case 'ArrowUp':
-          moveFocus(0, -1, shift)
+          mod ? jump(0, -1, shift) : moveFocus(0, -1, shift)
           e.preventDefault()
           break
         case 'ArrowDown':
-          moveFocus(0, 1, shift)
+          mod ? jump(0, 1, shift) : moveFocus(0, 1, shift)
           e.preventDefault()
           break
         case 'Enter':
@@ -377,14 +416,41 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           e.preventDefault()
           break
         case 'ArrowLeft':
-          moveFocus(-1, 0, shift)
+          mod ? jump(-1, 0, shift) : moveFocus(-1, 0, shift)
           e.preventDefault()
           break
         case 'ArrowRight':
+          mod ? jump(1, 0, shift) : moveFocus(1, 0, shift)
+          e.preventDefault()
+          break
         case 'Tab':
           moveFocus(1, 0, false)
           e.preventDefault()
           break
+        case 'Home': {
+          const p = mod ? { col: 0, row: 1 } : { col: 0, row }
+          setSel((s) => ({ anchor: shift ? s.anchor : p, focus: p }))
+          e.preventDefault()
+          break
+        }
+        case 'End': {
+          const p = mod ? { col: lastCol, row: lastRow } : { col: lastCol, row }
+          setSel((s) => ({ anchor: shift ? s.anchor : p, focus: p }))
+          e.preventDefault()
+          break
+        }
+        case 'PageDown': {
+          const p = { col, row: clampRow(row + 20) }
+          setSel((s) => ({ anchor: shift ? s.anchor : p, focus: p }))
+          e.preventDefault()
+          break
+        }
+        case 'PageUp': {
+          const p = { col, row: clampRow(row - 20) }
+          setSel((s) => ({ anchor: shift ? s.anchor : p, focus: p }))
+          e.preventDefault()
+          break
+        }
         case 'Backspace':
         case 'Delete': {
           if (editable) {
@@ -426,6 +492,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       si,
       totalCols,
       totalRows,
+      jump,
+      sheet,
     ],
   )
 
