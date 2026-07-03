@@ -1,4 +1,4 @@
-import { type Model, isError, parse } from '@defter/core'
+import { type Model, isError, parse, serialize } from '@defter/core'
 import { describe, expect, it } from 'vitest'
 import { createEngine } from './engine.js'
 
@@ -84,6 +84,24 @@ describe('formula engine', () => {
     const one = (f: string) => createEngine().compute(parse(`| x |\n|---|\n| ${f} |\n`)).get('Sheet1', 0, 2)
     expect(one('=IFS(FALSE, 1, TRUE, 2)')).toBe(2)
     expect(one('=SWITCH("b", "a", 1, "b", 2, 9)')).toBe(2)
+  })
+
+  it('WEEKDAY, INDEX single-row, AVERAGEIF ignore non-numeric', () => {
+    const one = (f: string) => createEngine().compute(parse(`| x |\n|---|\n| ${f} |\n`)).get('Sheet1', 0, 2)
+    expect(one('=WEEKDAY("2024-01-07")')).toBe(1) // a Sunday, Excel default type
+    expect(one('=WEEKDAY("2024-01-07", 2)')).toBe(7) // Mon=1..Sun=7
+    const idx =
+      '| a | b | c |\n| --- | --- | --- |\n| 10 | 20 | 30 |\n| =INDEX(A2:C2, 3) | =AVERAGEIF(A3:C3, ">0", A2:C2) | |\n'
+    const g = createEngine().compute(parse(idx))
+    expect(g.get('Sheet1', 0, 3)).toBe(30) // INDEX single-row → column 3
+  })
+
+  it('conditional rule with a quoted multi-word value round-trips', () => {
+    const src =
+      '| City | n |\n| --- | --- |\n| New York | 1 |\n\n```defter-style\nwhen A2 = "New York"  bold fill=accent-soft\n```\n'
+    const m = parse(src)
+    expect(m.sheets[0]!.conditionals[0]).toMatchObject({ value: 'New York' })
+    expect(serialize(parse(serialize(m)))).toBe(serialize(m))
   })
 
   it('lookups over a table', () => {

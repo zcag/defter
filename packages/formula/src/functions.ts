@@ -274,11 +274,14 @@ Object.assign(FUNCTIONS, {
   },
   INDEX: (a: Node[], c: EvalContext) => {
     const m = c.matrix(a[0]!)
-    const rowNum = a[1] ? (toNumber(c.eval(a[1])) ?? 0) : 0
-    const colNum = a[2] ? (toNumber(c.eval(a[2])) ?? 0) : 0
-    const r = rowNum > 0 ? rowNum - 1 : 0
-    const col = colNum > 0 ? colNum - 1 : 0
-    return m[r]?.[col] ?? ERR.ref
+    const i1 = a[1] ? (toNumber(c.eval(a[1])) ?? 0) : 0
+    if (!a[2]) {
+      // One index: it's a column number for a single-row array, else a row number.
+      if (m.length === 1) return m[0]?.[i1 > 0 ? i1 - 1 : 0] ?? ERR.ref
+      return m[i1 > 0 ? i1 - 1 : 0]?.[0] ?? ERR.ref
+    }
+    const colNum = toNumber(c.eval(a[2])) ?? 0
+    return m[i1 > 0 ? i1 - 1 : 0]?.[colNum > 0 ? colNum - 1 : 0] ?? ERR.ref
   },
   MATCH: (a: Node[], c: EvalContext) => {
     const target = c.eval(a[0]!)
@@ -373,8 +376,11 @@ Object.assign(FUNCTIONS, {
   WEEKDAY: (a: Node[], c: EvalContext) => {
     const dt = dateArg(c, a[0]!)
     if (!dt) return ERR.value
-    const dow = new Date(Date.UTC(dt.y, dt.m - 1, dt.d)).getUTCDay() // 0=Sun
-    return dow === 0 ? 7 : dow // ISO-ish: 1=Mon..7=Sun for the common WEEKDAY(,2)
+    const type = a[1] ? (toNumber(c.eval(a[1])) ?? 1) : 1
+    const dow = new Date(Date.UTC(dt.y, dt.m - 1, dt.d)).getUTCDay() // 0=Sun..6=Sat
+    if (type === 2) return ((dow + 6) % 7) + 1 // Mon=1..Sun=7
+    if (type === 3) return (dow + 6) % 7 // Mon=0..Sun=6
+    return dow + 1 // type 1 (Excel default): Sun=1..Sat=7
   },
   DATEDIF: (a: Node[], c: EvalContext) => {
     const s = dateArg(c, a[0]!)
@@ -394,13 +400,20 @@ function conditionalAgg(args: Node[], ctx: EvalContext, mode: 'sum' | 'count' | 
   const sumRange = args[2] ? ctx.spill(args[2]) : range
   let total = 0
   let count = 0
+  let numCount = 0
   for (let i = 0; i < range.length; i++) {
     if (!pred(range[i]!)) continue
     count++
-    const n = toNumber(sumRange[i] ?? null)
-    if (n !== null) total += n
+    const raw = sumRange[i] ?? null
+    if (typeof raw === 'number') {
+      total += raw
+      numCount++
+    } else if (typeof raw === 'boolean') {
+      total += raw ? 1 : 0
+      numCount++
+    }
   }
   if (mode === 'count') return count
-  if (mode === 'avg') return count ? total / count : ERR.div0
+  if (mode === 'avg') return numCount ? total / numCount : ERR.div0 // ignore non-numeric in the denominator
   return total
 }

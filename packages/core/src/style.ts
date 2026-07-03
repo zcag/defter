@@ -122,18 +122,30 @@ function parseCondLine(line: string): CondRule | null {
   if (!opMatch) return null
   const targetText = rest.slice(0, opMatch.index).trim()
   const afterOp = rest.slice(opMatch.index + opMatch[0].length).trim()
-  const parts = afterOp.split(/\s+/)
-  const valueTok = parts[0] ?? ''
-  const value = valueTok.startsWith('"') ? valueTok.replace(/^"|"$/g, '') : Number(valueTok)
+  // Value may be a quoted (possibly multi-word) string or a bare token; the rest is attributes.
+  let value: number | string
+  let attrsStr: string
+  if (afterOp.startsWith('"')) {
+    const end = afterOp.indexOf('"', 1)
+    if (end < 0) return null
+    value = afterOp.slice(1, end)
+    attrsStr = afterOp.slice(end + 1).trim()
+  } else {
+    const sp = afterOp.search(/\s/)
+    const valueTok = sp < 0 ? afterOp : afterOp.slice(0, sp)
+    attrsStr = sp < 0 ? '' : afterOp.slice(sp).trim()
+    const num = Number(valueTok)
+    value = valueTok !== '' && !Number.isNaN(num) ? num : valueTok
+  }
   let target: StyleTarget
   try {
     target = parseStyleTarget(targetText)
   } catch {
     return null
   }
-  const attrs = parseAttrs(parts.slice(1))
+  const attrs = parseAttrs(attrsStr.split(/\s+/).filter(Boolean))
   if (Object.keys(attrs).length === 0) return null
-  return { target, op: opMatch[0] as CondOp, value: Number.isNaN(value as number) ? valueTok : value, attrs }
+  return { target, op: opMatch[0] as CondOp, value, attrs }
 }
 
 /** Parse a whole `defter-style` block body (without the fences). Lenient. */
