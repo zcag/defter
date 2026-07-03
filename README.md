@@ -8,6 +8,8 @@ The plain-text markdown document *is* the source of truth. The grid is a live, e
 projection of it — so collaboration, versioning, full-text search, and AI agents all
 operate on ordinary text instead of a hidden binary/JSON model.
 
+[![CI](https://github.com/zcag/defter/actions/workflows/ci.yml/badge.svg)](https://github.com/zcag/defter/actions/workflows/ci.yml)
+
 [Live demo → defter.cagdas.io](https://defter.cagdas.io) · [Storybook](https://defter.cagdas.io/storybook/) · [Format spec](docs/FORMAT.md)
 
 </div>
