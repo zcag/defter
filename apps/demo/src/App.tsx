@@ -208,7 +208,6 @@ export function App() {
                 statusBar
                 sheetTabs
                 freezeHeader
-                freezeCol
                 functions={FUNCTION_NAMES}
               />
             </div>

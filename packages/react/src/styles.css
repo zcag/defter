@@ -428,6 +428,7 @@
 }
 .defter__cell--focus {
   position: relative;
+  box-shadow: inset 0 0 0 2px var(--defter-selection-border);
 }
 .defter__fill-handle {
   position: absolute;
@@ -630,6 +631,18 @@
   background: var(--defter-bg);
   color: var(--defter-accent);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.defter__tab-rename {
+  border: 1px solid var(--defter-accent);
+  border-radius: 6px;
+  background: var(--defter-bg);
+  color: var(--defter-fg);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 4px 10px;
+  width: 100px;
+  outline: none;
 }
 .defter__tab-add {
   border: none;

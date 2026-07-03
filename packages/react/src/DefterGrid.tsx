@@ -242,6 +242,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const model = useMemo<Model>(() => parse(text), [text])
   const computed = useMemo<ComputedGrid | null>(() => (engine ? engine.compute(model) : null), [engine, model])
   const [activeSheet, setActiveSheet] = useState(sheetIndex)
+  const [renaming, setRenaming] = useState<{ index: number; value: string } | null>(null)
   const si = model.sheets[activeSheet] ? activeSheet : 0
   const sheet = model.sheets[si]!
   const styles = useMemo(() => resolveStyles(sheet), [sheet])
@@ -858,13 +859,24 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const activeAttrs = styles.attrs(sel.focus.col, sel.focus.row)
   const activeRaw = rawAt(sel.focus.col, sel.focus.row)
 
-  const [popover, setPopover] = useState<'fill' | 'text' | null>(null)
+  const [popover, setPopover] = useState<{ kind: 'fill' | 'text'; x: number; y: number } | null>(null)
   useEffect(() => {
     if (!popover) return
     const close = () => setPopover(null)
     window.addEventListener('click', close)
     return () => window.removeEventListener('click', close)
   }, [popover])
+  const openPopover = (kind: 'fill' | 'text', e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (popover?.kind === kind) return setPopover(null)
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setPopover({ kind, x: r.left, y: r.bottom + 4 })
+  }
+
+  // Formula bar has its own edit buffer, decoupled from the in-cell editor (so typing there
+  // doesn't yank focus into the cell). Resets when the active cell changes.
+  const [barValue, setBarValue] = useState<string | null>(null)
+  useEffect(() => setBarValue(null), [sel.focus.col, sel.focus.row])
 
   const renderRow = (row: number) => (
     <tr key={row} role="row" aria-rowindex={row}>
@@ -872,6 +884,14 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         data-row={row}
         role="rowheader"
         className={`defter__rowhead${row >= rect.minRow && row <= rect.maxRow ? ' defter__rowhead--active' : ''}${freezeHeader && row === 1 ? ' defter__rowhead--frozen' : ''}`}
+        onMouseDown={(e) => {
+          rootRef.current?.focus()
+          setSel((s) =>
+            e.shiftKey
+              ? { anchor: s.anchor, focus: { col: totalCols - 1, row } }
+              : { anchor: { col: 0, row }, focus: { col: totalCols - 1, row } },
+          )
+        }}
       >
         {row}
       </th>
@@ -880,22 +900,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         const span = styles.mergeAnchor(col, row)
         const isFocus = sel.focus.col === col && sel.focus.row === row
         const inSel = col >= rect.minCol && col <= rect.maxCol && row >= rect.minRow && row <= rect.maxRow
-        const selBorder = inSel
-          ? [
-              row === rect.minRow && 'inset 0 2px 0 0 var(--defter-selection-border)',
-              row === rect.maxRow && 'inset 0 -2px 0 0 var(--defter-selection-border)',
-              col === rect.minCol && 'inset 2px 0 0 0 var(--defter-selection-border)',
-              col === rect.maxCol && 'inset -2px 0 0 0 var(--defter-selection-border)',
-            ]
-              .filter(Boolean)
-              .join(', ')
-          : ''
         return (
           <Cell
             key={col}
             col={col}
             row={row}
-            selBorder={selBorder}
             sheet={sheet}
             styles={styles}
             computed={computed}
@@ -929,9 +938,21 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   )
 
   return (
-    <div className={`defter-shell${props.className ? ` ${props.className}` : ''}`} style={props.style}>
+    <div
+      className={`defter-shell${props.className ? ` ${props.className}` : ''}`}
+      data-defter-theme={theme}
+      style={props.style}
+    >
       {toolbar && editable && (
-        <div className="defter__toolbar" data-defter-theme={theme}>
+        <div
+          className="defter__toolbar"
+          data-defter-theme={theme}
+          onMouseDown={(e) => {
+            // Keep focus in the cell editor / formula bar when clicking a toolbar button, so the
+            // style applies to the active cell instead of committing + moving the selection down.
+            if ((e.target as HTMLElement).closest('button')) e.preventDefault()
+          }}
+        >
           <button className="defter__tb" title="Undo (Ctrl+Z)" onClick={undo}>
             <Icon name="undo" />
           </button>
@@ -983,31 +1004,16 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           </button>
 
           <div className="defter__tb-pop">
-            <button className="defter__tb defter__tb--color" title="Text color" onClick={(e) => { e.stopPropagation(); setPopover(popover === 'text' ? null : 'text') }}>
+            <button className="defter__tb defter__tb--color" title="Text color" onClick={(e) => openPopover('text', e)}>
               <Icon name="text-color" />
               <span className="defter__tb-bar" style={{ background: activeAttrs.color ? `var(--defter-token-${activeAttrs.color})` : 'var(--defter-fg)' }} />
             </button>
-            {popover === 'text' && (
-              <div className="defter__popover" onClick={(e) => e.stopPropagation()}>
-                {(['', 'accent', 'success', 'warning', 'danger', 'muted'] as const).map((t) => (
-                  <button key={`fg${t}`} className="defter__pop-swatch" title={t || 'default'} style={{ background: t ? `var(--defter-token-${t})` : 'var(--defter-fg)' }} onClick={() => { applyStyle({ color: t || undefined }); setPopover(null) }} />
-                ))}
-              </div>
-            )}
           </div>
           <div className="defter__tb-pop">
-            <button className="defter__tb defter__tb--color" title="Fill color" onClick={(e) => { e.stopPropagation(); setPopover(popover === 'fill' ? null : 'fill') }}>
+            <button className="defter__tb defter__tb--color" title="Fill color" onClick={(e) => openPopover('fill', e)}>
               <Icon name="fill" />
               <span className="defter__tb-bar" style={{ background: activeAttrs.fill ? `var(--defter-token-${activeAttrs.fill})` : 'transparent', outline: activeAttrs.fill ? 'none' : '1px solid var(--defter-grid-line-strong)' }} />
             </button>
-            {popover === 'fill' && (
-              <div className="defter__popover" onClick={(e) => e.stopPropagation()}>
-                <button className="defter__pop-swatch defter__pop-swatch--none" title="none" onClick={() => { applyStyle({ fill: undefined }); setPopover(null) }} />
-                {(['surface-2', 'surface-3', 'accent-soft', 'success-soft', 'warning-soft', 'danger-soft'] as const).map((t) => (
-                  <button key={`bg${t}`} className="defter__pop-swatch" title={t} style={{ background: `var(--defter-token-${t})` }} onClick={() => { applyStyle({ fill: t }); setPopover(null) }} />
-                ))}
-              </div>
-            )}
           </div>
           <span className="defter__tb-sep" />
 
@@ -1046,19 +1052,27 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           <span className="defter__fx-label">fx</span>
           <input
             className="defter__fx"
-            value={editing ? editing.value : activeRaw}
+            value={barValue ?? activeRaw}
             readOnly={!editable}
             placeholder={editable ? 'Enter a value or =formula' : ''}
-            onChange={(e) => setEditing({ col: sel.focus.col, row: sel.focus.row, value: e.target.value })}
+            onChange={(e) => setBarValue(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                commit(sel.focus.col, sel.focus.row, editing?.value ?? activeRaw, {
+                commit(sel.focus.col, sel.focus.row, barValue ?? activeRaw, {
                   col: sel.focus.col,
                   row: sel.focus.row + 1,
                 })
+                setBarValue(null)
                 e.preventDefault()
               } else if (e.key === 'Escape') {
-                setEditing(null)
+                setBarValue(null)
+                ;(e.target as HTMLInputElement).blur()
+              }
+            }}
+            onBlur={() => {
+              if (barValue !== null) {
+                commit(sel.focus.col, sel.focus.row, barValue)
+                setBarValue(null)
               }
             }}
           />
@@ -1099,6 +1113,14 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                   role="columnheader"
                   aria-colindex={c + 2}
                   className={`defter__colhead${c >= rect.minCol && c <= rect.maxCol ? ' defter__colhead--active' : ''}`}
+                  onMouseDown={(e) => {
+                    rootRef.current?.focus()
+                    setSel((s) =>
+                      e.shiftKey
+                        ? { anchor: s.anchor, focus: { col: c, row: totalRows } }
+                        : { anchor: { col: c, row: 1 }, focus: { col: c, row: totalRows } },
+                    )
+                  }}
                 >
                   {columnLabel(c)}
                   {editable && (
@@ -1159,6 +1181,52 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           </button>
           <div className="defter__menu-sep" />
           <button onClick={clearSelection}>Clear contents</button>
+        </div>
+      )}
+
+      {popover && (
+        <div
+          className="defter__popover"
+          style={{ position: 'fixed', left: popover.x, top: popover.y }}
+          data-defter-theme={theme}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {popover.kind === 'text'
+            ? (['', 'accent', 'success', 'warning', 'danger', 'muted'] as const).map((t) => (
+                <button
+                  key={`fg${t}`}
+                  className="defter__pop-swatch"
+                  title={t || 'default'}
+                  style={{ background: t ? `var(--defter-token-${t})` : 'var(--defter-fg)' }}
+                  onClick={() => {
+                    applyStyle({ color: t || undefined })
+                    setPopover(null)
+                  }}
+                />
+              ))
+            : [
+                <button
+                  key="bgnone"
+                  className="defter__pop-swatch defter__pop-swatch--none"
+                  title="none"
+                  onClick={() => {
+                    applyStyle({ fill: undefined })
+                    setPopover(null)
+                  }}
+                />,
+                ...(['surface-2', 'surface-3', 'accent-soft', 'success-soft', 'warning-soft', 'danger-soft'] as const).map((t) => (
+                  <button
+                    key={`bg${t}`}
+                    className="defter__pop-swatch"
+                    title={t}
+                    style={{ background: `var(--defter-token-${t})` }}
+                    onClick={() => {
+                      applyStyle({ fill: t })
+                      setPopover(null)
+                    }}
+                  />
+                )),
+              ]}
         </div>
       )}
 
@@ -1244,20 +1312,38 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
 
       {(sheetTabs ?? model.sheets.length > 1) && (
         <div className="defter__tabs" data-defter-theme={theme}>
-          {model.sheets.map((s, i) => (
-            <button
-              key={`${s.name}-${i}`}
-              className={`defter__tab${i === si ? ' defter__tab--on' : ''}`}
-              onClick={() => setActiveSheet(i)}
-              onDoubleClick={() => {
-                if (!editable) return
-                const name = window.prompt('Rename sheet', s.name)
-                if (name) pushEdit(serialize(renameSheet(model, i, name)))
-              }}
-            >
-              {s.name}
-            </button>
-          ))}
+          {model.sheets.map((s, i) =>
+            renaming?.index === i ? (
+              <input
+                key={`rename-${i}`}
+                className="defter__tab-rename"
+                autoFocus
+                value={renaming.value}
+                onChange={(e) => setRenaming({ index: i, value: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (renaming.value.trim()) pushEdit(serialize(renameSheet(model, i, renaming.value.trim())))
+                    setRenaming(null)
+                  } else if (e.key === 'Escape') {
+                    setRenaming(null)
+                  }
+                }}
+                onBlur={() => {
+                  if (renaming.value.trim()) pushEdit(serialize(renameSheet(model, i, renaming.value.trim())))
+                  setRenaming(null)
+                }}
+              />
+            ) : (
+              <button
+                key={`${s.name}-${i}`}
+                className={`defter__tab${i === si ? ' defter__tab--on' : ''}`}
+                onClick={() => setActiveSheet(i)}
+                onDoubleClick={() => editable && setRenaming({ index: i, value: s.name })}
+              >
+                {s.name}
+              </button>
+            ),
+          )}
           {editable && (
             <button
               className="defter__tab-add"
@@ -1289,7 +1375,6 @@ interface CellProps {
   colAlign: 'left' | 'center' | 'right' | null
   focus: boolean
   inSelection: boolean
-  selBorder?: string
   frozen?: boolean
   frozenCol?: boolean
   fillHandle?: boolean
@@ -1463,7 +1548,6 @@ function Cell(p: CellProps): React.JSX.Element {
 
   const css = styleToCss(attrs)
   if (!attrs.align && p.colAlign) css.textAlign = p.colAlign
-  if (p.selBorder) css.boxShadow = p.selBorder
   if (numVal !== null && attrs.format && !attrs.color) {
     const fc = formatColor(numVal, attrs.format)
     if (fc) css.color = resolveColor(fc)
