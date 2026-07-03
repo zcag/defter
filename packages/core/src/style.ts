@@ -4,7 +4,15 @@
  */
 
 import { columnIndex, columnLabel, formatRange, parseRange } from './coords.js'
-import type { ChartSpec, CondOp, CondRule, StyleAttrs, StyleRule, StyleTarget } from './model.js'
+import type {
+  ChartSpec,
+  CondOp,
+  CondRule,
+  StyleAttrs,
+  StyleRule,
+  StyleTarget,
+  ValidationRule,
+} from './model.js'
 
 const FLAGS = ['bold', 'italic', 'underline', 'strike', 'wrap', 'merge'] as const
 const KEYS = [
@@ -86,6 +94,25 @@ export interface ParsedStyleBlock {
   rules: StyleRule[]
   charts: ChartSpec[]
   conditionals: CondRule[]
+  validations: ValidationRule[]
+}
+
+function parseValidateLine(line: string): ValidationRule | null {
+  // validate <target> list=A,B,C
+  const rest = line.slice(9).trim() // drop "validate "
+  const m = /^(\S+)\s+list=(.+)$/.exec(rest)
+  if (!m) return null
+  let target: StyleTarget
+  try {
+    target = parseStyleTarget(m[1]!)
+  } catch {
+    return null
+  }
+  const list = m[2]!
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  return list.length ? { target, list } : null
 }
 
 function parseCondLine(line: string): CondRule | null {
@@ -114,12 +141,18 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
   const rules: StyleRule[] = []
   const charts: ChartSpec[] = []
   const conditionals: CondRule[] = []
+  const validations: ValidationRule[] = []
   for (const raw of body.split('\n')) {
     const line = raw.trim()
     if (!line || line.startsWith('#')) continue
     if (line.toLowerCase().startsWith('when ')) {
       const cond = parseCondLine(line)
       if (cond) conditionals.push(cond)
+      continue
+    }
+    if (line.toLowerCase().startsWith('validate ')) {
+      const val = parseValidateLine(line)
+      if (val) validations.push(val)
       continue
     }
     if (line.toLowerCase().startsWith('chart ') || line.toLowerCase() === 'chart') {
@@ -138,7 +171,7 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
     const attrs = parseAttrs(parts.slice(1))
     if (Object.keys(attrs).length > 0) rules.push({ target, attrs })
   }
-  return { rules, charts, conditionals }
+  return { rules, charts, conditionals, validations }
 }
 
 const CHART_ATTR = /(\w+)=(?:"([^"]*)"|(\S+))/g
@@ -167,11 +200,15 @@ export function serializeStyleBlock(
   rules: StyleRule[],
   charts: ChartSpec[] = [],
   conditionals: CondRule[] = [],
+  validations: ValidationRule[] = [],
 ): string {
   const lines = rules.map((r) => `${formatStyleTarget(r.target)}  ${formatAttrs(r.attrs)}`)
   for (const cond of conditionals) {
     const v = typeof cond.value === 'number' ? cond.value : `"${cond.value}"`
     lines.push(`when ${formatStyleTarget(cond.target)} ${cond.op} ${v}  ${formatAttrs(cond.attrs)}`)
+  }
+  for (const val of validations) {
+    lines.push(`validate ${formatStyleTarget(val.target)} list=${val.list.join(',')}`)
   }
   for (const ch of charts) lines.push(serializeChart(ch))
   return lines.join('\n')

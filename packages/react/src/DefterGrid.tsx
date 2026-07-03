@@ -21,6 +21,7 @@ import {
   renameSheet,
   resolveConditionalAttrs,
   resolveStyles,
+  resolveValidation,
   serialize,
   setCell,
   setColumnWidth,
@@ -887,10 +888,11 @@ function Cell(p: CellProps): React.JSX.Element {
 
   const css = styleToCss(attrs)
   if (!attrs.align && p.colAlign) css.textAlign = p.colAlign
+  const validation = resolveValidation(p.sheet, p.col, p.row)
 
   return (
     <td
-      className={cls}
+      className={`${cls}${validation ? ' defter__cell--select' : ''}`}
       style={css}
       data-col={p.col}
       data-row={p.row}
@@ -903,7 +905,27 @@ function Cell(p: CellProps): React.JSX.Element {
       onMouseEnter={p.onMouseEnter}
       onDoubleClick={p.onBeginEdit}
     >
-      {p.editing !== null ? (
+      {p.editing !== null && validation ? (
+        <select
+          className="defter__editor defter__select-editor"
+          value={validation.includes(p.editing) ? p.editing : ''}
+          autoFocus
+          onChange={(e) => p.onCommit(e.target.value, 'down')}
+          onBlur={() => p.onCancel()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') p.onCancel()
+            e.stopPropagation()
+          }}
+        >
+          <option value="" />
+          {validation.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      ) : p.editing !== null ? (
         <input
           ref={p.inputRef}
           className="defter__editor"
@@ -926,7 +948,10 @@ function Cell(p: CellProps): React.JSX.Element {
           }}
         />
       ) : (
-        display
+        <>
+          {display}
+          {validation && <span className="defter__caret" aria-hidden="true">▾</span>}
+        </>
       )}
     </td>
   )

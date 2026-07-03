@@ -40,8 +40,13 @@ function serializeSheet(sheet: Sheet, forceHeading: boolean): string {
   for (let r = 1; r < sheet.grid.length; r++) lines.push(row(sheet.grid[r]!))
   parts.push(lines.join('\n'))
 
-  if (sheet.styles.length > 0 || sheet.charts.length > 0 || sheet.conditionals.length > 0) {
-    const block = serializeStyleBlock(sheet.styles, sheet.charts, sheet.conditionals)
+  if (
+    sheet.styles.length > 0 ||
+    sheet.charts.length > 0 ||
+    sheet.conditionals.length > 0 ||
+    sheet.validations.length > 0
+  ) {
+    const block = serializeStyleBlock(sheet.styles, sheet.charts, sheet.conditionals, sheet.validations)
     parts.push(`\n\`\`\`defter-style\n${block}\n\`\`\``)
   }
   return parts.join('\n')

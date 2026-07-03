@@ -47,17 +47,19 @@ chart type=pie title="Budget share" x=A2:A5 y=B2:B5
 
 const planner = `## Sheet: Roadmap
 
-| Feature | Effort | Impact | Score | Priority |
-| --- | ---: | ---: | ---: | :-: |
-| Minimal-splice CRDT | 8 | 10 | =C2/B2 | =IF(D2>=1,"P0","P1") |
-| Charts in style layer | 5 | 7 | =C3/B3 | =IF(D3>=1,"P0","P1") |
-| xlsx import | 3 | 6 | =C4/B4 | =IF(D4>=1,"P0","P1") |
-| Multi-cursor awareness | 6 | 5 | =C5/B5 | =IF(D5>=1,"P0","P1") |
+| Feature | Effort | Impact | Score | Priority | Status |
+| --- | ---: | ---: | ---: | :-: | :-: |
+| Minimal-splice CRDT | 8 | 10 | =C2/B2 | =IF(D2>=1,"P0","P1") | Done |
+| Charts in style layer | 5 | 7 | =C3/B3 | =IF(D3>=1,"P0","P1") | Done |
+| xlsx import | 3 | 6 | =C4/B4 | =IF(D4>=1,"P0","P1") | Doing |
+| Multi-cursor awareness | 6 | 5 | =C5/B5 | =IF(D5>=1,"P0","P1") | Todo |
 
 \`\`\`defter-style
-A1:E1  bold fill=accent-soft align=center
+A1:F1  bold fill=accent-soft align=center
 D2:D5  format=0.00
 E2:E5  bold
+validate F2:F5 list=Todo,Doing,Done
+when D2:D5 >= 1  fill=success-soft
 \`\`\`
 `
 

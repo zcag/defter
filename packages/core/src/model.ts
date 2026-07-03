@@ -25,8 +25,15 @@ export interface Sheet {
   charts: ChartSpec[]
   /** Conditional formatting rules (`when <range> <op> <value>  <attrs>`). */
   conditionals: CondRule[]
+  /** Data-validation dropdowns (`validate <range> list=A,B,C`). */
+  validations: ValidationRule[]
   /** Whether the sheet was introduced by an explicit `## Sheet:` heading. */
   headed: boolean
+}
+
+export interface ValidationRule {
+  target: StyleTarget
+  list: string[]
 }
 
 export type CondOp = '>' | '<' | '>=' | '<=' | '=' | '<>'
@@ -81,7 +88,17 @@ export function emptyModel(): Model {
 }
 
 export function emptySheet(name: string, headed = true): Sheet {
-  return { name, grid: [[]], width: 0, colAlign: [], styles: [], charts: [], conditionals: [], headed }
+  return {
+    name,
+    grid: [[]],
+    width: 0,
+    colAlign: [],
+    styles: [],
+    charts: [],
+    conditionals: [],
+    validations: [],
+    headed,
+  }
 }
 
 /** Read a cell's logical text by A1 (col 0-based, row 1-based). Empty string if out of range. */

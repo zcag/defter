@@ -112,6 +112,8 @@ The block also carries two data-driven constructs, keyed by A1 range like everyt
   or `"text"`). Example: `when D2:D9 < 0  color=danger bold`.
 - **Charts** — `chart type=bar|line|area|pie title="…" x=<labels-range> y=<values-range>`. One per
   line. The chart follows the data referenced by its ranges.
+- **Data validation** — `validate <range> list=A,B,C` makes those cells dropdowns restricted to
+  the listed options.
 
 Because all of these are keyed by A1, they are subject to the same reference rewriting as formulas
 (insert/delete a row or column and their targets shift; a fully-deleted range drops the rule).

@@ -62,6 +62,10 @@ export function shiftReferencesInModel(
         const t = shiftStyleTarget(cond.target, axis, at, delta)
         return t ? [{ ...cond, target: t }] : []
       })
+      sheet.validations = sheet.validations.flatMap((val) => {
+        const t = shiftStyleTarget(val.target, axis, at, delta)
+        return t ? [{ ...val, target: t }] : []
+      })
     }
   }
 }

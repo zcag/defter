@@ -80,6 +80,15 @@ export function resolveConditionalAttrs(
   return out
 }
 
+/** The dropdown option list for a cell, if a `validate` rule covers it; otherwise null. */
+export function resolveValidation(sheet: Sheet, col: number, row: number): string[] | null {
+  for (let i = sheet.validations.length - 1; i >= 0; i--) {
+    const v = sheet.validations[i]!
+    if (targetCovers(v.target, col, row)) return v.list
+  }
+  return null
+}
+
 export function resolveStyles(sheet: Sheet): ResolvedStyles {
   const anchors = new Map<string, MergeSpan>()
   const covered = new Set<string>()

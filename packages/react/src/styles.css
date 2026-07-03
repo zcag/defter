@@ -374,6 +374,22 @@
   color: var(--defter-accent);
 }
 
+.defter__cell--select {
+  position: relative;
+}
+.defter__caret {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  color: var(--defter-muted-fg);
+  pointer-events: none;
+}
+.defter__select-editor {
+  padding: 0 2px;
+  cursor: pointer;
+}
 .defter__editor {
   width: 100%;
   height: 100%;
