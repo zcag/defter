@@ -23,8 +23,19 @@ export interface Sheet {
   styles: StyleRule[]
   /** Charts declared in the `defter-style` block, referencing ranges in this sheet. */
   charts: ChartSpec[]
+  /** Conditional formatting rules (`when <range> <op> <value>  <attrs>`). */
+  conditionals: CondRule[]
   /** Whether the sheet was introduced by an explicit `## Sheet:` heading. */
   headed: boolean
+}
+
+export type CondOp = '>' | '<' | '>=' | '<=' | '=' | '<>'
+
+export interface CondRule {
+  target: StyleTarget
+  op: CondOp
+  value: number | string
+  attrs: StyleAttrs
 }
 
 export interface ChartSpec {
@@ -70,7 +81,7 @@ export function emptyModel(): Model {
 }
 
 export function emptySheet(name: string, headed = true): Sheet {
-  return { name, grid: [[]], width: 0, colAlign: [], styles: [], charts: [], headed }
+  return { name, grid: [[]], width: 0, colAlign: [], styles: [], charts: [], conditionals: [], headed }
 }
 
 /** Read a cell's logical text by A1 (col 0-based, row 1-based). Empty string if out of range. */

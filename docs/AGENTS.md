@@ -84,6 +84,10 @@ B2:B9   align=right
   danger danger-soft muted`. A raw `#hex` also works but won't follow the theme.
 - **Merged cells:** `merge` on a range keeps the range rectangular in the text (covered cells stay
   empty) and displays merged: `A1:D1 merge bold align=center`.
+- **Conditional formatting:** `when <range> <op> <value>  <attrs>` applies the attributes to
+  each cell in the range whose computed value satisfies the condition — e.g.
+  `when D2:D9 < 0  color=danger bold` or `when B2:B9 >= 100  fill=success-soft`
+  (ops: `> < >= <= = <>`; value is a number or `"text"`). They follow the data.
 - **Charts** are declared in the same block, one per line, referencing ranges:
   `chart type=bar title="Revenue" x=A2:A4 y=D2:D4` (types: `bar`, `line`, `area`, `pie`; `x` is
   the label range, `y` the values). They follow the data — insert/delete a row and the chart's

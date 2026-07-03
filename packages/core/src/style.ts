@@ -4,7 +4,7 @@
  */
 
 import { columnIndex, columnLabel, formatRange, parseRange } from './coords.js'
-import type { ChartSpec, StyleAttrs, StyleRule, StyleTarget } from './model.js'
+import type { ChartSpec, CondOp, CondRule, StyleAttrs, StyleRule, StyleTarget } from './model.js'
 
 const FLAGS = ['bold', 'italic', 'underline', 'strike', 'wrap', 'merge'] as const
 const KEYS = [
@@ -85,15 +85,43 @@ export function formatAttrs(attrs: StyleAttrs): string {
 export interface ParsedStyleBlock {
   rules: StyleRule[]
   charts: ChartSpec[]
+  conditionals: CondRule[]
 }
 
-/** Parse a whole `defter-style` block body (without the fences) into rules and charts. Lenient. */
+function parseCondLine(line: string): CondRule | null {
+  // when <target> <op> <value>  <attr> <attr> ...
+  const rest = line.slice(5).trim() // drop "when "
+  const opMatch = /(>=|<=|<>|>|<|=)/.exec(rest)
+  if (!opMatch) return null
+  const targetText = rest.slice(0, opMatch.index).trim()
+  const afterOp = rest.slice(opMatch.index + opMatch[0].length).trim()
+  const parts = afterOp.split(/\s+/)
+  const valueTok = parts[0] ?? ''
+  const value = valueTok.startsWith('"') ? valueTok.replace(/^"|"$/g, '') : Number(valueTok)
+  let target: StyleTarget
+  try {
+    target = parseStyleTarget(targetText)
+  } catch {
+    return null
+  }
+  const attrs = parseAttrs(parts.slice(1))
+  if (Object.keys(attrs).length === 0) return null
+  return { target, op: opMatch[0] as CondOp, value: Number.isNaN(value as number) ? valueTok : value, attrs }
+}
+
+/** Parse a whole `defter-style` block body (without the fences). Lenient. */
 export function parseStyleBlock(body: string): ParsedStyleBlock {
   const rules: StyleRule[] = []
   const charts: ChartSpec[] = []
+  const conditionals: CondRule[] = []
   for (const raw of body.split('\n')) {
     const line = raw.trim()
     if (!line || line.startsWith('#')) continue
+    if (line.toLowerCase().startsWith('when ')) {
+      const cond = parseCondLine(line)
+      if (cond) conditionals.push(cond)
+      continue
+    }
     if (line.toLowerCase().startsWith('chart ') || line.toLowerCase() === 'chart') {
       const chart = parseChartLine(line)
       if (chart) charts.push(chart)
@@ -110,7 +138,7 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
     const attrs = parseAttrs(parts.slice(1))
     if (Object.keys(attrs).length > 0) rules.push({ target, attrs })
   }
-  return { rules, charts }
+  return { rules, charts, conditionals }
 }
 
 const CHART_ATTR = /(\w+)=(?:"([^"]*)"|(\S+))/g
@@ -134,9 +162,17 @@ function parseChartLine(line: string): ChartSpec | null {
   }
 }
 
-/** Serialize rules and charts to a block body (without fences). Empty string if both are empty. */
-export function serializeStyleBlock(rules: StyleRule[], charts: ChartSpec[] = []): string {
+/** Serialize rules, conditionals, and charts to a block body (without fences). */
+export function serializeStyleBlock(
+  rules: StyleRule[],
+  charts: ChartSpec[] = [],
+  conditionals: CondRule[] = [],
+): string {
   const lines = rules.map((r) => `${formatStyleTarget(r.target)}  ${formatAttrs(r.attrs)}`)
+  for (const cond of conditionals) {
+    const v = typeof cond.value === 'number' ? cond.value : `"${cond.value}"`
+    lines.push(`when ${formatStyleTarget(cond.target)} ${cond.op} ${v}  ${formatAttrs(cond.attrs)}`)
+  }
   for (const ch of charts) lines.push(serializeChart(ch))
   return lines.join('\n')
 }

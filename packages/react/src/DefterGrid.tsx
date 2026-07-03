@@ -19,6 +19,7 @@ import {
   parse,
   parseLiteral,
   renameSheet,
+  resolveConditionalAttrs,
   resolveStyles,
   serialize,
   setCell,
@@ -809,7 +810,11 @@ interface CellProps {
 }
 
 function Cell(p: CellProps): React.JSX.Element {
-  const attrs = p.styles.attrs(p.col, p.row)
+  const staticAttrs = p.styles.attrs(p.col, p.row)
+  const attrs =
+    p.computed && p.sheet.conditionals.length > 0
+      ? { ...staticAttrs, ...resolveConditionalAttrs(p.sheet, p.computed, p.col, p.row) }
+      : staticAttrs
   const raw = getCell(p.sheet, p.col, p.row)
   const isFormula = raw.trim().startsWith('=')
 

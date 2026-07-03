@@ -58,6 +58,10 @@ export function shiftReferencesInModel(
       sheet.charts = sheet.charts
         .map((ch) => shiftChart(ch, editedSheet, axis, at, delta))
         .filter((ch): ch is ChartSpec => ch !== null)
+      sheet.conditionals = sheet.conditionals.flatMap((cond) => {
+        const t = shiftStyleTarget(cond.target, axis, at, delta)
+        return t ? [{ ...cond, target: t }] : []
+      })
     }
   }
 }

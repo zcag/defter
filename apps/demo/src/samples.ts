@@ -38,6 +38,8 @@ const budget = `## Sheet: Q3 Budget
 A1:E1  bold fill=surface-3
 B2:D6  format=#,##0
 A6:E6  bold border=top
+when D2:D6 >= 0  color=success
+when D2:D6 < 0  color=danger bold
 chart type=bar title="Actual spend by team" x=A2:A5 y=C2:C5
 chart type=pie title="Budget share" x=A2:A5 y=B2:B5
 \`\`\`

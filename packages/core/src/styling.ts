@@ -4,7 +4,9 @@
  * top-left is the anchor; the other covered cells are hidden by the renderer.
  */
 
-import type { Sheet, StyleAttrs, StyleTarget } from './model.js'
+import type { ComputedGrid } from './compute.js'
+import type { CondOp, Sheet, StyleAttrs, StyleTarget } from './model.js'
+import { type CellValue, isError, toNumber } from './values.js'
 
 export interface MergeSpan {
   colspan: number
@@ -31,6 +33,51 @@ function targetCovers(target: StyleTarget, col: number, row: number): boolean {
     case 'rows':
       return row >= target.start && row <= target.end
   }
+}
+
+function condMatches(v: CellValue, op: CondOp, value: number | string): boolean {
+  if (isError(v)) return false
+  const vn = toNumber(v)
+  if (typeof value === 'number' && vn !== null && typeof v !== 'string') {
+    switch (op) {
+      case '>':
+        return vn > value
+      case '<':
+        return vn < value
+      case '>=':
+        return vn >= value
+      case '<=':
+        return vn <= value
+      case '=':
+        return vn === value
+      case '<>':
+        return vn !== value
+    }
+  }
+  const s = v === null ? '' : String(v)
+  const t = String(value)
+  return op === '<>' ? s !== t : op === '=' ? s === t : false
+}
+
+/**
+ * Conditional-formatting attributes for a cell, evaluated against the computed value. Merged on
+ * top of the static styles by the renderer (conditionals win).
+ */
+export function resolveConditionalAttrs(
+  sheet: Sheet,
+  computed: ComputedGrid,
+  col: number,
+  row: number,
+): StyleAttrs {
+  const out: StyleAttrs = {}
+  if (sheet.conditionals.length === 0) return out
+  let value: CellValue | undefined
+  for (const cond of sheet.conditionals) {
+    if (!targetCovers(cond.target, col, row)) continue
+    if (value === undefined) value = computed.get(sheet.name, col, row)
+    if (condMatches(value, cond.op, cond.value)) Object.assign(out, cond.attrs)
+  }
+  return out
 }
 
 export function resolveStyles(sheet: Sheet): ResolvedStyles {
