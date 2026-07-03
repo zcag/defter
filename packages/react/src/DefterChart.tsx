@@ -7,6 +7,8 @@ export interface DefterChartProps {
   labels: string[]
   /** One array of numbers per series. */
   series: number[][]
+  /** Optional series names for the legend. */
+  seriesNames?: string[]
   width?: number
   height?: number
   theme?: string
@@ -90,10 +92,10 @@ export function DefterChart(props: DefterChartProps): React.JSX.Element {
         {multi && type !== 'pie' && (
           <g>
             {series.map((_, si) => (
-              <g key={si} transform={`translate(${pad.left + si * 70}, ${height - 10})`}>
+              <g key={si} transform={`translate(${pad.left + si * 90}, ${height - 10})`}>
                 <rect width={10} height={10} y={-9} rx={2} fill={PALETTE[si % PALETTE.length]} />
                 <text x={14} className="defter-chart__label">
-                  Series {si + 1}
+                  {props.seriesNames?.[si] || `Series ${si + 1}`}
                 </text>
               </g>
             ))}

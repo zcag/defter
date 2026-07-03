@@ -10,6 +10,8 @@ export interface ChartData {
   labels: string[]
   /** One array of numbers per series. */
   series: number[][]
+  /** Series names, inferred from the header cell above each range. */
+  seriesNames: string[]
 }
 
 export function resolveChartData(
@@ -33,5 +35,10 @@ export function resolveChartData(
     }
   }
   while (labels.length < maxLen) labels.push(String(labels.length + 1))
-  return { labels, series }
+  const seriesNames = chart.values.map((range) => {
+    const s = range.sheet ?? sheetName
+    const headerRow = range.start.row - 1
+    return headerRow >= 1 ? formatValue(computed.get(s, range.start.col, headerRow), { locale }) : ''
+  })
+  return { labels, series, seriesNames }
 }

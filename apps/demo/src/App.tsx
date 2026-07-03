@@ -71,7 +71,7 @@ export function App() {
   const charts = useMemo(() => {
     const m = parse(text)
     const computed = engine.compute(m)
-    const out: { key: string; type: any; title?: string; labels: string[]; series: number[][] }[] = []
+    const out: { key: string; type: any; title?: string; labels: string[]; series: number[][]; seriesNames: string[] }[] = []
     m.sheets.forEach((s, si) =>
       s.charts.forEach((ch, ci) => {
         const data = resolveChartData(s.name, ch, computed)
@@ -227,6 +227,7 @@ export function App() {
                   title={c.title}
                   labels={c.labels}
                   series={c.series}
+                  seriesNames={c.seriesNames}
                   theme={theme}
                 />
               ))}
