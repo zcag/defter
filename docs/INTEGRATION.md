@@ -8,23 +8,23 @@ React 19 + Vite host (like tela) follows.
 
 | Package | Role | Needs |
 |---|---|---|
-| `@defter/core` | headless parse/serialize/edit, framework-agnostic | — |
-| `@defter/react` | the grid renderer | `react`/`react-dom` (peer, ≥18) |
-| `@defter/formula` | default formula engine (dependency-free) | — |
-| `@defter/yjs` | bind the canonical text to a `Y.Text` (no provider) | `yjs` (peer) |
-| `@defter/xlsx` | XLSX import/export | `exceljs` |
-| `@defter/ironcalc` | optional IronCalc/Wasm engine (300+ fns) | — |
+| `@defterjs/core` | headless parse/serialize/edit, framework-agnostic | — |
+| `@defterjs/react` | the grid renderer | `react`/`react-dom` (peer, ≥18) |
+| `@defterjs/formula` | default formula engine (dependency-free) | — |
+| `@defterjs/yjs` | bind the canonical text to a `Y.Text` (no provider) | `yjs` (peer) |
+| `@defterjs/xlsx` | XLSX import/export | `exceljs` |
+| `@defterjs/ironcalc` | optional IronCalc/Wasm engine (300+ fns) | — |
 
 ```bash
-pnpm add @defter/react @defter/core @defter/formula   # core embed
-pnpm add @defter/yjs yjs                               # + collaboration
-pnpm add @defter/xlsx                                  # + xlsx io
+pnpm add @defterjs/react @defterjs/core @defterjs/formula   # core embed
+pnpm add @defterjs/yjs yjs                               # + collaboration
+pnpm add @defterjs/xlsx                                  # + xlsx io
 ```
 
 Import the stylesheet once (it is all CSS variables — see [THEMING.md](./THEMING.md)):
 
 ```ts
-import '@defter/react/styles.css'
+import '@defterjs/react/styles.css'
 ```
 
 ## Minimal read/write grid
@@ -34,9 +34,9 @@ on every edit. Omit `onChange` (or pass `readOnly`) for a read-only grid.
 
 ```tsx
 import { useState, useMemo } from 'react'
-import { DefterGrid } from '@defter/react'
-import { createEngine, FUNCTION_NAMES } from '@defter/formula'
-import '@defter/react/styles.css'
+import { DefterGrid } from '@defterjs/react'
+import { createEngine, FUNCTION_NAMES } from '@defterjs/formula'
+import '@defterjs/react/styles.css'
 
 const engine = createEngine()
 
@@ -68,8 +68,8 @@ minimal-splice edits (concurrent edits to different cells are disjoint character
 auto-merges). Persistence, transport, and awareness stay entirely yours.
 
 ```tsx
-import { useYText } from '@defter/yjs'
-import { DefterGrid } from '@defter/react'
+import { useYText } from '@defterjs/yjs'
+import { DefterGrid } from '@defterjs/react'
 
 // `ytext` comes from your own Y.Doc, synced by your own provider (e.g. tela's TelaProvider).
 export function CollabSheet({ ytext, engine }: { ytext: Y.Text; engine: FormulaEngine }) {
@@ -110,9 +110,9 @@ contract to your agent/slash-menu manifest. Nothing else changes: the body never
 ## Import/export
 
 ```ts
-import { modelToCsv, modelToCsvSheets, csvToModel, parse, serialize } from '@defter/core'
+import { modelToCsv, modelToCsvSheets, csvToModel, parse, serialize } from '@defterjs/core'
 const csv = modelToCsv(parse(text), { computed: engine.compute(parse(text)) }) // active sheet
 const perSheet = modelToCsvSheets(parse(text))                                 // [{ name, csv }] — one per sheet
 // XLSX (whole workbook, lazy-loaded):
-const { exportXlsx, importXlsx } = await import('@defter/xlsx')
+const { exportXlsx, importXlsx } = await import('@defterjs/xlsx')
 ```

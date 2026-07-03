@@ -1,6 +1,6 @@
 /** Built-in worksheet functions. Each takes raw arg nodes + context so it controls evaluation. */
 
-import { type CellValue, ERR, formatValue, isError, toNumber } from '@defter/core'
+import { type CellValue, ERR, formatValue, isError, toNumber } from '@defterjs/core'
 import { type EvalContext, stringify } from './evaluator.js'
 import type { Node } from './parser.js'
 

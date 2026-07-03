@@ -1,6 +1,6 @@
 /** Pratt parser: tokens → AST. Handles refs, ranges, sheet-qualified refs, calls, operators. */
 
-import { type Range, type Ref, parseRef } from '@defter/core'
+import { type Range, type Ref, parseRef } from '@defterjs/core'
 import { type Token, lex } from './lexer.js'
 
 export type Node =

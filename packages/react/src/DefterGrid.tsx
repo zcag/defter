@@ -33,8 +33,8 @@ import {
   setStyle,
   sortRows,
   toNumber,
-} from '@defter/core'
-import type { StyleAttrs } from '@defter/core'
+} from '@defterjs/core'
+import type { StyleAttrs } from '@defterjs/core'
 import {
   type CSSProperties,
   type KeyboardEvent,
@@ -78,7 +78,7 @@ export interface DefterGridProps {
   virtualize?: boolean
   /** Fixed row height in px used by virtualization; must match `--defter-row-height` (default 26). */
   rowHeight?: number
-  /** Function names for formula autocomplete (e.g. `FUNCTION_NAMES` from `@defter/formula`). */
+  /** Function names for formula autocomplete (e.g. `FUNCTION_NAMES` from `@defterjs/formula`). */
   functions?: string[]
   extraRows?: number
   extraCols?: number

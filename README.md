@@ -38,11 +38,11 @@ live at runtime) in [`docs/THEMING.md`](docs/THEMING.md).
 
 | Package | What it is |
 |---|---|
-| [`@defter/core`](packages/core) | Headless, framework-agnostic TypeScript. Parse/serialize, A1 coordinates, values/formatting, structured edits, reference rewriting, minimal-splice diff, projection, lint. No React, no DOM. |
-| [`@defter/formula`](packages/formula) | The default formula engine — a compact, dependency-free Excel-style evaluator (~75 functions, cross-sheet, cycle-safe). Implements core's pluggable `FormulaEngine`. |
-| [`@defter/ironcalc`](packages/ironcalc) | Alternative engine adapter over [IronCalc](https://ironcalc.com) (Rust/Wasm, 300+ functions). Same `FormulaEngine` interface — proves the seam. Swap it in live in the demo. |
-| [`@defter/react`](packages/react) | The grid renderer — a thin, themeable (CSS-variable) projection of the text. Selection, formula bar, copy/paste, merges, sheet tabs, undo/redo, 3 themes. |
-| [`@defter/yjs`](packages/yjs) | Collaboration binding: hand it a `Y.Text` and it keeps the canonical text in sync via minimal splices. Ships no network provider — inject the shared type. |
+| [`@defterjs/core`](packages/core) | Headless, framework-agnostic TypeScript. Parse/serialize, A1 coordinates, values/formatting, structured edits, reference rewriting, minimal-splice diff, projection, lint. No React, no DOM. |
+| [`@defterjs/formula`](packages/formula) | The default formula engine — a compact, dependency-free Excel-style evaluator (~75 functions, cross-sheet, cycle-safe). Implements core's pluggable `FormulaEngine`. |
+| [`@defterjs/ironcalc`](packages/ironcalc) | Alternative engine adapter over [IronCalc](https://ironcalc.com) (Rust/Wasm, 300+ functions). Same `FormulaEngine` interface — proves the seam. Swap it in live in the demo. |
+| [`@defterjs/react`](packages/react) | The grid renderer — a thin, themeable (CSS-variable) projection of the text. Selection, formula bar, copy/paste, merges, sheet tabs, undo/redo, 3 themes. |
+| [`@defterjs/yjs`](packages/yjs) | Collaboration binding: hand it a `Y.Text` and it keeps the canonical text in sync via minimal splices. Ships no network provider — inject the shared type. |
 
 **For agents:** [`docs/AGENTS.md`](docs/AGENTS.md) is the complete contract for authoring and editing Defter sheets.
 
@@ -52,17 +52,17 @@ live at runtime) in [`docs/THEMING.md`](docs/THEMING.md).
   `defter-style` layer (fills, number formats, merges, borders, alignment, column widths,
   conditional formatting, data-validation dropdowns, charts). Lenient parse, byte-stable
   serialize, idempotent round-trip.
-- **Formula engine** ([`@defter/formula`](packages/formula)) — ~55 functions incl. `SUM`/`AVERAGE`,
+- **Formula engine** ([`@defterjs/formula`](packages/formula)) — ~55 functions incl. `SUM`/`AVERAGE`,
   `VLOOKUP`/`HLOOKUP`/`INDEX`/`MATCH`, `SUMIF`/`COUNTIF` (wildcards), `IF`/`IFS`/`SWITCH`, text and
   date functions. Cross-sheet, cycle-safe, memoized. Compute-on-read — values are never stored.
 - **Premium editing** — range selection, formula bar, formatting toolbar, copy/paste (TSV),
   undo/redo, fill down/right (relative-ref adjusting), column resize, insert/delete row/col (with
   automatic reference rewriting), merges, freeze header/column, multi-sheet tabs, keyboard shortcuts.
 - **Scale** — opt-in row virtualization renders only the visible window.
-- **Collaboration** ([`@defter/yjs`](packages/yjs)) — bind a `Y.Text`; concurrent edits to different
+- **Collaboration** ([`@defterjs/yjs`](packages/yjs)) — bind a `Y.Text`; concurrent edits to different
   cells auto-merge (tested for convergence). No bundled provider.
 - **Charts** (bar/line/area/pie, dependency-free SVG), **import/export** CSV + XLSX
-  ([`@defter/xlsx`](packages/xlsx)), **3 themes**, **ARIA grid**, **Storybook**, **CI**.
+  ([`@defterjs/xlsx`](packages/xlsx)), **3 themes**, **ARIA grid**, **Storybook**, **CI**.
 - **Agent-ready** — the [authoring contract](docs/AGENTS.md) + a values-materialized projection for
   search/RAG.
 

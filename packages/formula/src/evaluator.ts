@@ -8,7 +8,7 @@ import {
   cellsInRange,
   isError,
   toNumber,
-} from '@defter/core'
+} from '@defterjs/core'
 import { FUNCTIONS } from './functions.js'
 import type { Node } from './parser.js'
 

@@ -7,10 +7,10 @@ import {
   projectText,
   resolveChartData,
   serialize,
-} from '@defter/core'
-import { FUNCTION_NAMES, createEngine } from '@defter/formula'
-import { DefterChart, DefterGrid } from '@defter/react'
-import { useYText } from '@defter/yjs'
+} from '@defterjs/core'
+import { FUNCTION_NAMES, createEngine } from '@defterjs/formula'
+import { DefterChart, DefterGrid } from '@defterjs/react'
+import { useYText } from '@defterjs/yjs'
 import ironcalcWasmUrl from '@ironcalc/wasm/wasm_bg.wasm?url'
 import { type CSSProperties, useMemo, useRef, useState } from 'react'
 import * as Y from 'yjs'
@@ -40,7 +40,7 @@ export function App() {
     if (icEngineRef.current) return setEngine(icEngineRef.current)
     setIcLoading(true)
     try {
-      const { initIronCalc, createIronCalcEngine } = await import('@defter/ironcalc')
+      const { initIronCalc, createIronCalcEngine } = await import('@defterjs/ironcalc')
       await initIronCalc(ironcalcWasmUrl)
       icEngineRef.current = createIronCalcEngine()
       setEngine(icEngineRef.current)
@@ -121,7 +121,7 @@ export function App() {
   }
   const exportXlsx = async () => {
     const m = parse(text)
-    const { exportXlsx } = await import('@defter/xlsx')
+    const { exportXlsx } = await import('@defterjs/xlsx')
     const buf = await exportXlsx(m, { computed: engine.compute(m) })
     download('defter.xlsx', buf, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
   }
@@ -130,7 +130,7 @@ export function App() {
     if (name.endsWith('.csv')) {
       setText(serialize(csvToModel(await file.text(), file.name.replace(/\.csv$/i, '') || 'Sheet1')))
     } else if (name.endsWith('.xlsx')) {
-      const { importXlsx } = await import('@defter/xlsx')
+      const { importXlsx } = await import('@defterjs/xlsx')
       setText(serialize(await importXlsx(await file.arrayBuffer())))
     }
   }

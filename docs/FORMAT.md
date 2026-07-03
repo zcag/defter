@@ -2,7 +2,7 @@
 
 Defter's source of truth is **plain UTF-8 text**, line-oriented, designed so ordinary
 text machinery — git, a text CRDT (Yjs `Y.Text`), file-sync, full-text search — operates
-on it directly. This document is the normative spec. Everything else in `@defter/core`
+on it directly. This document is the normative spec. Everything else in `@defterjs/core`
 implements it.
 
 ## Design invariants (why the format looks the way it does)

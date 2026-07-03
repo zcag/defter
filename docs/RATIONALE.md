@@ -34,7 +34,7 @@ neighbouring rows.
 
 ## Collaboration: inject the shared type, don't own the socket
 
-`@defter/react` accepts a `Y.Text` (content) and a `Y.Map` (style layer) from the host and binds
+`@defterjs/react` accepts a `Y.Text` (content) and a `Y.Map` (style layer) from the host and binds
 to them. It ships **no** network/persistence/awareness provider. The transport is entirely the
 host's concern — which is what lets a host (e.g. tela) reuse its existing Yjs collab wholesale.
 

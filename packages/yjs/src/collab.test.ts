@@ -1,4 +1,4 @@
-import { getCell, parse, serialize, setCell } from '@defter/core'
+import { getCell, parse, serialize, setCell } from '@defterjs/core'
 import { describe, expect, it } from 'vitest'
 import * as Y from 'yjs'
 import { applyTextToYText } from './index.js'

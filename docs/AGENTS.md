@@ -124,7 +124,7 @@ A6:D6   bold border=top fill=accent-soft
 ## 6. Editing an existing sheet (do NOT rewrite the whole body)
 
 When a sheet is live and collaborative, replacing the entire document clobbers concurrent edits.
-Use the **structured operations** the host exposes (these map to `@defter/core`):
+Use the **structured operations** the host exposes (these map to `@defterjs/core`):
 
 - `setCell(sheet, col, row, text)` — set one cell (text or `=formula`).
 - `insertRows / deleteRows / insertCols / deleteCols` — structural edits; Defter rewrites all

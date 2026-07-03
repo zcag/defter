@@ -1,4 +1,4 @@
-import { type Model, isError, parse, serialize } from '@defter/core'
+import { type Model, isError, parse, serialize } from '@defterjs/core'
 import { describe, expect, it } from 'vitest'
 import { createEngine } from './engine.js'
 

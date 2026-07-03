@@ -1,4 +1,4 @@
-import { insertRows, parse, serialize } from '@defter/core'
+import { insertRows, parse, serialize } from '@defterjs/core'
 import { describe, expect, it } from 'vitest'
 import { createEngine } from './engine.js'
 

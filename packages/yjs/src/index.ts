@@ -7,7 +7,7 @@
  * concurrent edits to different cells occupy disjoint character spans and the CRDT auto-merges.
  */
 
-import { diffSplice } from '@defter/core'
+import { diffSplice } from '@defterjs/core'
 import { useCallback, useEffect, useState } from 'react'
 import type * as Y from 'yjs'
 

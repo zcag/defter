@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
-import { isError, parse } from '@defter/core'
+import { isError, parse } from '@defterjs/core'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { createIronCalcEngine, initIronCalcSync } from './index.js'
 

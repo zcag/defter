@@ -14,7 +14,7 @@ There are three ways to theme, from least to most dynamic. They compose.
 ```
 
 Each preset is just a block of `--defter-*` values under a `[data-defter-theme="…"]` selector in
-`@defter/react`'s stylesheet. `theme` also accepts any custom string — pair it with your own CSS:
+`@defterjs/react`'s stylesheet. `theme` also accepts any custom string — pair it with your own CSS:
 
 ```css
 [data-defter-theme="brand"] { --defter-accent: #e0115f; --defter-bg: #0b0b10; /* … */ }

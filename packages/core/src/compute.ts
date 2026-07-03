@@ -1,6 +1,6 @@
 /**
- * The formula-engine seam. `@defter/core` defines the interface; a concrete engine (the default
- * `@defter/formula`, or an IronCalc-wasm adapter) is injected. Values are computed on read and
+ * The formula-engine seam. `@defterjs/core` defines the interface; a concrete engine (the default
+ * `@defterjs/formula`, or an IronCalc-wasm adapter) is injected. Values are computed on read and
  * never stored back into the model.
  */
 

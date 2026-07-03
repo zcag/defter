@@ -50,22 +50,22 @@ importers:
 
   apps/demo:
     dependencies:
-      '@defter/core':
+      '@defterjs/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@defter/formula':
+      '@defterjs/formula':
         specifier: workspace:*
         version: link:../../packages/formula
-      '@defter/ironcalc':
+      '@defterjs/ironcalc':
         specifier: workspace:*
         version: link:../../packages/ironcalc
-      '@defter/react':
+      '@defterjs/react':
         specifier: workspace:*
         version: link:../../packages/react
-      '@defter/xlsx':
+      '@defterjs/xlsx':
         specifier: workspace:*
         version: link:../../packages/xlsx
-      '@defter/yjs':
+      '@defterjs/yjs':
         specifier: workspace:*
         version: link:../../packages/yjs
       '@ironcalc/wasm':
@@ -101,13 +101,13 @@ importers:
 
   packages/formula:
     dependencies:
-      '@defter/core':
+      '@defterjs/core':
         specifier: workspace:*
         version: link:../core
 
   packages/ironcalc:
     dependencies:
-      '@defter/core':
+      '@defterjs/core':
         specifier: workspace:*
         version: link:../core
       '@ironcalc/wasm':
@@ -116,11 +116,11 @@ importers:
 
   packages/react:
     dependencies:
-      '@defter/core':
+      '@defterjs/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@defter/formula':
+      '@defterjs/formula':
         specifier: workspace:*
         version: link:../formula
       '@storybook/react':
@@ -141,7 +141,7 @@ importers:
 
   packages/xlsx:
     dependencies:
-      '@defter/core':
+      '@defterjs/core':
         specifier: workspace:*
         version: link:../core
       exceljs:
@@ -150,7 +150,7 @@ importers:
 
   packages/yjs:
     dependencies:
-      '@defter/core':
+      '@defterjs/core':
         specifier: workspace:*
         version: link:../core
       react:

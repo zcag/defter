@@ -1,5 +1,5 @@
 {
-  "name": "@defter/demo",
+  "name": "@defterjs/demo",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -9,12 +9,12 @@
     "preview": "vite preview --host"
   },
   "dependencies": {
-    "@defter/core": "workspace:*",
-    "@defter/formula": "workspace:*",
-    "@defter/ironcalc": "workspace:*",
-    "@defter/react": "workspace:*",
-    "@defter/xlsx": "workspace:*",
-    "@defter/yjs": "workspace:*",
+    "@defterjs/core": "workspace:*",
+    "@defterjs/formula": "workspace:*",
+    "@defterjs/ironcalc": "workspace:*",
+    "@defterjs/react": "workspace:*",
+    "@defterjs/xlsx": "workspace:*",
+    "@defterjs/yjs": "workspace:*",
     "@ironcalc/wasm": "^0.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

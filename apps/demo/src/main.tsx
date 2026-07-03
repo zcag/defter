@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import '@defter/react/styles.css'
+import '@defterjs/react/styles.css'
 import './app.css'
 import { App } from './App.js'
 

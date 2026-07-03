@@ -1,7 +1,7 @@
 /**
  * IronCalc-wasm adapter — an alternative `FormulaEngine` backed by the mature IronCalc Rust engine
  * (300+ functions, real dependency graph). This exists to prove Defter's pluggable-engine seam: the
- * default `@defter/formula` and this share one interface. The wasm module must be initialized once
+ * default `@defterjs/formula` and this share one interface. The wasm module must be initialized once
  * before use — call `initIronCalc(source)` (browser: a wasm URL; Node: pass bytes to `initSync`).
  */
 
@@ -13,7 +13,7 @@ import {
   type Model as DefterModel,
   formatRange,
   parseLiteral,
-} from '@defter/core'
+} from '@defterjs/core'
 import initWasm, { Model, initSync } from '@ironcalc/wasm'
 
 const ERROR_STRINGS = new Set([

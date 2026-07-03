@@ -1,4 +1,4 @@
-import { createEngine } from '@defter/formula'
+import { createEngine } from '@defterjs/formula'
 import type { Meta, StoryObj } from '@storybook/react'
 import { useState } from 'react'
 import { DefterGrid } from './DefterGrid.js'

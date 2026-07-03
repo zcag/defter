@@ -16,7 +16,7 @@ import {
   getCell,
   parseLiteral,
   resolveStyles,
-} from '@defter/core'
+} from '@defterjs/core'
 
 const TOKEN_HEX: Record<string, string> = {
   'surface-1': 'FFFFFFFF',

@@ -1,4 +1,4 @@
-import type { StyleAttrs } from '@defter/core'
+import type { StyleAttrs } from '@defterjs/core'
 import type { CSSProperties } from 'react'
 
 /** Resolve a fill/color token to a CSS color: hex/rgb/hsl literal, else a `--defter-token-*` var. */

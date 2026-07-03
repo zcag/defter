@@ -1,4 +1,4 @@
-import { getCell, parse, resolveStyles } from '@defter/core'
+import { getCell, parse, resolveStyles } from '@defterjs/core'
 import { describe, expect, it } from 'vitest'
 import { exportXlsx, importXlsx } from './index.js'
 

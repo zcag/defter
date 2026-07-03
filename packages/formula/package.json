@@ -1,7 +1,7 @@
 {
-  "name": "@defter/formula",
+  "name": "@defterjs/formula",
   "version": "0.1.0",
-  "description": "Default formula engine for Defter \u2014 a compact, dependency-free Excel-style evaluator implementing the @defter/core FormulaEngine interface.",
+  "description": "Default formula engine for Defter \u2014 a compact, dependency-free Excel-style evaluator implementing the @defterjs/core FormulaEngine interface.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -22,7 +22,7 @@
     "prepublishOnly": "tsc -b"
   },
   "dependencies": {
-    "@defter/core": "workspace:*"
+    "@defterjs/core": "workspace:*"
   },
   "author": "Cagdas Salur",
   "repository": {

@@ -1,4 +1,4 @@
-import type { ChartSpec } from '@defter/core'
+import type { ChartSpec } from '@defterjs/core'
 import type { CSSProperties } from 'react'
 
 export interface DefterChartProps {

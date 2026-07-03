@@ -1,5 +1,5 @@
 {
-  "name": "@defter/react",
+  "name": "@defterjs/react",
   "version": "0.1.0",
   "description": "React renderer for Defter \u2014 a thin, themeable (CSS-variable) grid projection of the text model. Bring your own Y.Text for collaboration.",
   "license": "MIT",
@@ -29,10 +29,10 @@
     "react-dom": ">=18"
   },
   "dependencies": {
-    "@defter/core": "workspace:*"
+    "@defterjs/core": "workspace:*"
   },
   "devDependencies": {
-    "@defter/formula": "workspace:*",
+    "@defterjs/formula": "workspace:*",
     "@storybook/react": "^8.5.3",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
