@@ -826,6 +826,31 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     [sheet, sel.focus, totalCols, totalRows],
   )
 
+  // Build the selection's tab-separated text, stash the raw cells for an in-app paste, and light the
+  // marching-ants marquee. Returns the TSV so both the clipboard event and the keydown fallback share it.
+  const buildClipboard = useCallback(
+    (cut: boolean): string => {
+      const raws: string[][] = []
+      const valLines: string[] = []
+      for (let r = rect.minRow; r <= rect.maxRow; r++) {
+        const rawRow: string[] = []
+        const valRow: string[] = []
+        for (let c = rect.minCol; c <= rect.maxCol; c++) {
+          const raw = rawAt(c, r)
+          rawRow.push(raw)
+          valRow.push(raw.trim().startsWith('=') ? formatValue(valueAt(c, r), { locale }) : raw)
+        }
+        raws.push(rawRow)
+        valLines.push(valRow.join('\t'))
+      }
+      const tsv = valLines.join('\n')
+      clip.current = { cells: raws, tsv, origin: { col: rect.minCol, row: rect.minRow }, cut }
+      setCopyRect({ ...rect })
+      return tsv
+    },
+    [rect, rawAt, valueAt, locale],
+  )
+
   const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLElement>) => {
       if (editing) return
@@ -833,6 +858,19 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         setCopyRect(null)
         e.preventDefault()
         return
+      }
+      // Copy/cut: also mirror the selection into the (selected) keycatcher so the OS's *native* copy
+      // grabs it even on browsers that won't fire the copy event on a hidden field (iOS Safari).
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && /^[cxCX]$/.test(e.key)) {
+        const cut = e.key === 'x' || e.key === 'X'
+        if (cut && !editable) return
+        const tsv = buildClipboard(cut)
+        const ta = keyCatcherRef.current
+        if (ta) {
+          ta.value = tsv
+          ta.select()
+        }
+        return // do NOT preventDefault — let the native copy/cut of the selected text proceed
       }
       if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
         if (e.shiftKey) redo()
@@ -988,33 +1026,16 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       jump,
       sheet,
       copyRect,
+      buildClipboard,
     ],
   )
 
-  // Write the selection to both the OS clipboard (values, tab-separated, for other apps) and our
-  // internal clipboard (raw cells, so an in-app paste keeps formulas). `cut` marks the source to clear.
   const writeClipboard = useCallback(
     (e: React.ClipboardEvent, cut: boolean) => {
-      const raws: string[][] = []
-      const valLines: string[] = []
-      for (let r = rect.minRow; r <= rect.maxRow; r++) {
-        const rawRow: string[] = []
-        const valRow: string[] = []
-        for (let c = rect.minCol; c <= rect.maxCol; c++) {
-          const raw = rawAt(c, r)
-          rawRow.push(raw)
-          valRow.push(raw.trim().startsWith('=') ? formatValue(valueAt(c, r), { locale }) : raw)
-        }
-        raws.push(rawRow)
-        valLines.push(valRow.join('\t'))
-      }
-      const tsv = valLines.join('\n')
-      clip.current = { cells: raws, tsv, origin: { col: rect.minCol, row: rect.minRow }, cut }
-      setCopyRect({ ...rect }) // marching-ants marquee over the copied range
-      e.clipboardData.setData('text/plain', tsv)
+      e.clipboardData.setData('text/plain', buildClipboard(cut))
       e.preventDefault()
     },
-    [rect, rawAt, valueAt, locale],
+    [buildClipboard],
   )
   const onCopy = useCallback(
     (e: React.ClipboardEvent) => {
@@ -1563,6 +1584,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         className="defter__keycatcher"
         aria-label={`Defter sheet: ${sheet.name}`}
         tabIndex={-1}
+        inputMode="none"
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="off"
