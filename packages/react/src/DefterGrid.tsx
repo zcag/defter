@@ -77,6 +77,10 @@ export interface DefterGridProps {
   style?: CSSProperties
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 interface Pos {
   col: number
   row: number
@@ -369,6 +373,18 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         e.preventDefault()
         return
       }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+        setFinder({ query: '', replace: '', replaceMode: false })
+        setMatchIdx(0)
+        e.preventDefault()
+        return
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'h' || e.key === 'H') && editable) {
+        setFinder({ query: '', replace: '', replaceMode: true })
+        setMatchIdx(0)
+        e.preventDefault()
+        return
+      }
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && editable) {
         const k = e.key.toLowerCase()
         if (k === 'b') {
@@ -601,6 +617,41 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     commitMany(writes)
     setMenu(null)
   }, [rect, rawAt, commitMany])
+
+  // Find & replace (Ctrl+F / Ctrl+H).
+  const [finder, setFinder] = useState<{ query: string; replace: string; replaceMode: boolean } | null>(null)
+  const [matchIdx, setMatchIdx] = useState(0)
+  const matches = useMemo<Pos[]>(() => {
+    if (!finder?.query) return []
+    const q = finder.query.toLowerCase()
+    const out: Pos[] = []
+    for (let r = 0; r < sheet.grid.length; r++) {
+      for (let c = 0; c < sheet.width; c++) {
+        if ((sheet.grid[r]![c] ?? '').toLowerCase().includes(q)) out.push({ col: c, row: r + 1 })
+      }
+    }
+    return out
+  }, [finder?.query, sheet])
+  const curMatch = matches.length ? ((matchIdx % matches.length) + matches.length) % matches.length : 0
+  useEffect(() => {
+    if (finder && matches.length) {
+      const m = matches[curMatch]!
+      setSel({ anchor: m, focus: m })
+    }
+  }, [curMatch, matches, finder])
+
+  const doReplace = useCallback(() => {
+    if (!finder || !editable || !matches.length) return
+    const m = matches[curMatch]!
+    const raw = getCell(sheet, m.col, m.row)
+    const next = raw.replace(new RegExp(escapeRegExp(finder.query), 'i'), finder.replace)
+    pushEdit(serialize(setCell(model, si, m.col, m.row, next)))
+  }, [finder, editable, matches, curMatch, sheet, model, si, pushEdit])
+  const doReplaceAll = useCallback(() => {
+    if (!finder || !editable) return
+    const re = new RegExp(escapeRegExp(finder.query), 'gi')
+    commitMany(matches.map((m) => ({ col: m.col, row: m.row, value: getCell(sheet, m.col, m.row).replace(re, finder.replace) })))
+  }, [finder, editable, matches, sheet, commitMany])
 
   const activeAttrs = styles.attrs(sel.focus.col, sel.focus.row)
   const activeRaw = rawAt(sel.focus.col, sel.focus.row)
@@ -837,6 +888,65 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           </button>
           <div className="defter__menu-sep" />
           <button onClick={clearSelection}>Clear contents</button>
+        </div>
+      )}
+
+      {finder && (
+        <div className="defter__finder" data-defter-theme={theme}>
+          <input
+            className="defter__finder-input"
+            autoFocus
+            placeholder="Find"
+            value={finder.query}
+            onChange={(e) => {
+              setFinder((f) => (f ? { ...f, query: e.target.value } : f))
+              setMatchIdx(0)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') setMatchIdx((i) => i + (e.shiftKey ? -1 : 1))
+              else if (e.key === 'Escape') {
+                setFinder(null)
+                rootRef.current?.focus()
+              }
+              e.stopPropagation()
+            }}
+          />
+          <span className="defter__finder-count">
+            {matches.length ? `${curMatch + 1} / ${matches.length}` : '0'}
+          </span>
+          <button className="defter__finder-btn" title="Previous" onClick={() => setMatchIdx((i) => i - 1)}>
+            ↑
+          </button>
+          <button className="defter__finder-btn" title="Next" onClick={() => setMatchIdx((i) => i + 1)}>
+            ↓
+          </button>
+          {finder.replaceMode && editable && (
+            <>
+              <input
+                className="defter__finder-input"
+                placeholder="Replace"
+                value={finder.replace}
+                onChange={(e) => setFinder((f) => (f ? { ...f, replace: e.target.value } : f))}
+                onKeyDown={(e) => e.stopPropagation()}
+              />
+              <button className="defter__finder-btn" onClick={doReplace}>
+                Replace
+              </button>
+              <button className="defter__finder-btn" onClick={doReplaceAll}>
+                All
+              </button>
+            </>
+          )}
+          <button
+            className="defter__finder-btn"
+            title="Close"
+            onClick={() => {
+              setFinder(null)
+              rootRef.current?.focus()
+            }}
+          >
+            ✕
+          </button>
         </div>
       )}
 
