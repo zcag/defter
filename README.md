@@ -36,7 +36,8 @@ Read [`docs/FORMAT.md`](docs/FORMAT.md) for the normative format, and
 | Package | What it is |
 |---|---|
 | [`@defter/core`](packages/core) | Headless, framework-agnostic TypeScript. Parse/serialize, A1 coordinates, values/formatting, structured edits, reference rewriting, minimal-splice diff, projection, lint. No React, no DOM. |
-| [`@defter/formula`](packages/formula) | The default formula engine — a compact, dependency-free Excel-style evaluator (~30 functions, cross-sheet, cycle-safe). Implements core's pluggable `FormulaEngine`. |
+| [`@defter/formula`](packages/formula) | The default formula engine — a compact, dependency-free Excel-style evaluator (~75 functions, cross-sheet, cycle-safe). Implements core's pluggable `FormulaEngine`. |
+| [`@defter/ironcalc`](packages/ironcalc) | Alternative engine adapter over [IronCalc](https://ironcalc.com) (Rust/Wasm, 300+ functions). Same `FormulaEngine` interface — proves the seam. Swap it in live in the demo. |
 | [`@defter/react`](packages/react) | The grid renderer — a thin, themeable (CSS-variable) projection of the text. Selection, formula bar, copy/paste, merges, sheet tabs, undo/redo, 3 themes. |
 | [`@defter/yjs`](packages/yjs) | Collaboration binding: hand it a `Y.Text` and it keeps the canonical text in sync via minimal splices. Ships no network provider — inject the shared type. |
 

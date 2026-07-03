@@ -7,7 +7,7 @@ exec > >(tee /tmp/defter-deploy.log) 2>&1
 cd "$(dirname "$0")/.."
 
 echo "== building packages =="
-node_modules/.bin/tsc -b packages/core packages/formula packages/react packages/yjs packages/xlsx
+node_modules/.bin/tsc -b packages/core packages/formula packages/react packages/yjs packages/xlsx packages/ironcalc
 node packages/react/scripts/copy-css.mjs
 
 echo "== building demo =="

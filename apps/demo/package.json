@@ -11,9 +11,11 @@
   "dependencies": {
     "@defter/core": "workspace:*",
     "@defter/formula": "workspace:*",
+    "@defter/ironcalc": "workspace:*",
     "@defter/react": "workspace:*",
     "@defter/xlsx": "workspace:*",
     "@defter/yjs": "workspace:*",
+    "@ironcalc/wasm": "^0.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "yjs": "^13.6.20"

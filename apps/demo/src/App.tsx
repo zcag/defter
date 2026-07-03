@@ -10,6 +10,7 @@ import {
 import { createEngine } from '@defter/formula'
 import { DefterChart, DefterGrid } from '@defter/react'
 import { useYText } from '@defter/yjs'
+import ironcalcWasmUrl from '@ironcalc/wasm/wasm_bg.wasm?url'
 import { useMemo, useRef, useState } from 'react'
 import * as Y from 'yjs'
 import { SAMPLES } from './samples.js'
@@ -27,7 +28,25 @@ type Theme = 'light' | 'dark' | 'paper'
 type ProjView = 'off' | 'table' | 'prose'
 
 export function App() {
-  const engine = useMemo(() => createEngine(), [])
+  const jsEngine = useMemo(() => createEngine(), [])
+  const [engine, setEngine] = useState(jsEngine)
+  const [engineKind, setEngineKind] = useState('js')
+  const [icLoading, setIcLoading] = useState(false)
+  const icEngineRef = useRef<typeof jsEngine | null>(null)
+  const selectEngine = async (kind: string) => {
+    setEngineKind(kind)
+    if (kind === 'js') return setEngine(jsEngine)
+    if (icEngineRef.current) return setEngine(icEngineRef.current)
+    setIcLoading(true)
+    try {
+      const { initIronCalc, createIronCalcEngine } = await import('@defter/ironcalc')
+      await initIronCalc(ironcalcWasmUrl)
+      icEngineRef.current = createIronCalcEngine()
+      setEngine(icEngineRef.current)
+    } finally {
+      setIcLoading(false)
+    }
+  }
   const [sampleId, setSampleId] = useState(SAMPLES[0]!.id)
   const [text, setText] = useState(SAMPLES[0]!.text)
   const [theme, setTheme] = useState<Theme>('light')
@@ -117,6 +136,15 @@ export function App() {
             >
               ƒ formulas
             </button>
+            <ToggleGroup
+              label="Engine"
+              value={engineKind}
+              options={[
+                ['js', 'JS'],
+                ['ironcalc', icLoading ? 'IronCalc…' : 'IronCalc'],
+              ]}
+              onChange={selectEngine}
+            />
             <ToggleGroup
               label="Projection"
               value={proj}
