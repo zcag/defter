@@ -62,6 +62,10 @@ export interface DefterGridProps {
   toolbar?: boolean
   /** Keep the header row (A1 row 1) pinned while scrolling. */
   freezeHeader?: boolean
+  /** Render only the visible rows (windowing) for large sheets. Assumes a fixed row height. */
+  virtualize?: boolean
+  /** Fixed row height in px used by virtualization; must match `--defter-row-height` (default 26). */
+  rowHeight?: number
   extraRows?: number
   extraCols?: number
   readOnly?: boolean
@@ -94,6 +98,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     sheetTabs,
     toolbar = false,
     freezeHeader = false,
+    virtualize = false,
+    rowHeight = 26,
     extraRows = 6,
 
     extraCols = 3,
@@ -110,6 +116,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const totalRows = sheet.grid.length + extraRows
   const totalCols = sheet.width + extraCols
   const editable = Boolean(onChange) && !readOnly
+  const OVERSCAN = 8
 
   const [sel, setSel] = useState<{ anchor: Pos; focus: Pos }>({
     anchor: { col: 0, row: 2 },
@@ -154,6 +161,22 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     undoStack.current.push(text)
     onChange(nxt)
   }, [text, onChange])
+
+  const [vp, setVp] = useState({ top: 0, height: 0 })
+  useEffect(() => {
+    if (virtualize && rootRef.current) setVp((v) => ({ ...v, height: rootRef.current!.clientHeight }))
+  }, [virtualize])
+
+  // Visible row window (1-based, inclusive). Without virtualize this is the full range → no spacers.
+  let winStart = 1
+  let winEnd = totalRows
+  if (virtualize && vp.height > 0) {
+    const visible = Math.ceil(vp.height / rowHeight)
+    winStart = Math.max(1, Math.floor(vp.top / rowHeight) + 1 - OVERSCAN)
+    winEnd = Math.min(totalRows, winStart + visible + OVERSCAN * 2)
+  }
+  const padTop = (winStart - 1) * rowHeight
+  const padBottom = (totalRows - winEnd) * rowHeight
 
   const rect: Rect = useMemo(() => {
     const { anchor, focus } = sel
@@ -617,6 +640,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         onCopy={onCopy}
         onPaste={onPaste}
         onContextMenu={onContextMenu}
+        onScroll={
+          virtualize
+            ? (e) => setVp({ top: e.currentTarget.scrollTop, height: e.currentTarget.clientHeight })
+            : undefined
+        }
       >
         <table className="defter__grid" role="grid" aria-readonly={!editable || undefined}>
           <colgroup>
@@ -649,8 +677,13 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {Array.from({ length: totalRows }, (_, ri) => {
-              const row = ri + 1
+            {padTop > 0 && (
+              <tr aria-hidden="true">
+                <td colSpan={totalCols + 1} style={{ height: padTop, padding: 0, border: 0 }} />
+              </tr>
+            )}
+            {Array.from({ length: winEnd - winStart + 1 }, (_, k) => {
+              const row = winStart + k
               return (
                 <tr key={row} role="row" aria-rowindex={row}>
                   <th
@@ -698,6 +731,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                 </tr>
               )
             })}
+            {padBottom > 0 && (
+              <tr aria-hidden="true">
+                <td colSpan={totalCols + 1} style={{ height: padBottom, padding: 0, border: 0 }} />
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

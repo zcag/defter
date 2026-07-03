@@ -313,6 +313,17 @@ const STATES: [string, string, string][] = [
     'a non-editable projection',
     '| Metric | Q1 | Q2 |\n| --- | ---: | ---: |\n| Revenue | 42 | 58 |\n| Growth | =B2 | =C2-B2 |\n\n```defter-style\nA1:C1  bold fill=accent-soft\n```\n',
   ],
+  [
+    'Large (virtualized)',
+    '1,000 rows, only the visible window in the DOM',
+    (() => {
+      const rows = Array.from(
+        { length: 1000 },
+        (_, r) => `| Item ${r + 1} | ${((r * 37) % 500) + 1} | ${(r % 12) + 1} | =B${r + 2}*C${r + 2} |`,
+      )
+      return `| Item | Qty | Price | Total |\n| --- | ---: | ---: | ---: |\n${rows.join('\n')}\n\n\`\`\`defter-style\nA1:D1  bold fill=surface-3\nD2:D1001  format=$#,##0\n\`\`\`\n`
+    })(),
+  ],
 ]
 
 function StatesGallery({ engine }: { engine: ReturnType<typeof createEngine> }) {
@@ -331,7 +342,12 @@ function StatesGallery({ engine }: { engine: ReturnType<typeof createEngine> }) 
               <span>{sub}</span>
             </div>
             <div className="state-card__grid">
-              <StateGrid text={text} engine={engine} readOnly={title === 'Read-only'} />
+              <StateGrid
+                text={text}
+                engine={engine}
+                readOnly={title === 'Read-only'}
+                virtualize={title.startsWith('Large')}
+              />
             </div>
           </div>
         ))}
@@ -344,10 +360,12 @@ function StateGrid({
   text,
   engine,
   readOnly,
+  virtualize,
 }: {
   text: string
   engine: ReturnType<typeof createEngine>
   readOnly?: boolean
+  virtualize?: boolean
 }) {
   const [t, setT] = useState(text)
   return (
@@ -357,7 +375,9 @@ function StateGrid({
       engine={engine}
       theme="light"
       readOnly={readOnly}
-      extraRows={2}
+      virtualize={virtualize}
+      freezeHeader={virtualize}
+      extraRows={virtualize ? 0 : 2}
       extraCols={1}
     />
   )
