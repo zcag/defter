@@ -40,6 +40,7 @@ import {
   type KeyboardEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -351,6 +352,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
   const autoScrollRaf = useRef(0)
+  const marqueeRef = useRef<HTMLDivElement>(null)
   // Internal clipboard: preserves raw cells (incl. formulas) so an in-app paste keeps formulas and
   // shifts their relative refs by the paste offset. `tsv` fingerprints our own copy so we can tell
   // an internal paste from one pasted in from another app (which only gives us plain text).
@@ -418,6 +420,29 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       maxRow: Math.max(anchor.row, focus.row),
     }
   }, [sel])
+
+  // Draw a single crisp border around the whole multi-cell selection (a single cell keeps its own
+  // ring). An overlay positioned from the corner cells' geometry, so merges/freeze/widths all work.
+  useLayoutEffect(() => {
+    const root = rootRef.current
+    const mq = marqueeRef.current
+    if (!root || !mq) return
+    const single = rect.minCol === rect.maxCol && rect.minRow === rect.maxRow
+    const a = root.querySelector(`td[data-col="${rect.minCol}"][data-row="${rect.minRow}"]`)
+    const b = root.querySelector(`td[data-col="${rect.maxCol}"][data-row="${rect.maxRow}"]`)
+    if (single || editing || !a || !b) {
+      mq.style.display = 'none'
+      return
+    }
+    const cr = root.getBoundingClientRect()
+    const ar = a.getBoundingClientRect()
+    const br = b.getBoundingClientRect()
+    mq.style.display = 'block'
+    mq.style.left = `${ar.left - cr.left + root.scrollLeft}px`
+    mq.style.top = `${ar.top - cr.top + root.scrollTop}px`
+    mq.style.width = `${br.right - ar.left}px`
+    mq.style.height = `${br.bottom - ar.top}px`
+  })
 
   useEffect(() => {
     if (editing) inputRef.current?.focus()
@@ -1287,8 +1312,14 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       {formulaBar && (
         <div className="defter__formulabar" data-defter-theme={theme}>
           <span className="defter__cellref">
-            {columnLabel(sel.focus.col)}
-            {sel.focus.row}
+            {rect.minCol === rect.maxCol && rect.minRow === rect.maxRow
+              ? `${columnLabel(sel.focus.col)}${sel.focus.row}`
+              : `${columnLabel(rect.minCol)}${rect.minRow}:${columnLabel(rect.maxCol)}${rect.maxRow}`}
+            {(rect.minCol !== rect.maxCol || rect.minRow !== rect.maxRow) && (
+              <span className="defter__cellref-dims">
+                {rect.maxRow - rect.minRow + 1}R × {rect.maxCol - rect.minCol + 1}C
+              </span>
+            )}
           </span>
           <span className="defter__fx-label">fx</span>
           <input
@@ -1396,6 +1427,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             )}
           </tbody>
         </table>
+        <div ref={marqueeRef} className="defter__marquee" aria-hidden="true" style={{ display: 'none' }} />
       </div>
 
       {menu && (

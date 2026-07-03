@@ -327,15 +327,23 @@
   border-bottom: 1px solid var(--defter-grid-line-strong);
 }
 .defter__cellref {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
   font-family: var(--defter-font-mono);
   font-size: 12px;
   color: var(--defter-fg);
   min-width: 54px;
-  text-align: center;
+  justify-content: center;
   padding: 4px 8px;
   border: 1px solid var(--defter-grid-line-strong);
   border-radius: 5px;
   background: var(--defter-bg);
+  white-space: nowrap;
+}
+.defter__cellref-dims {
+  color: var(--defter-muted-fg);
+  font-size: 11px;
 }
 .defter__fx-label {
   font-family: var(--defter-font-mono);
@@ -361,6 +369,15 @@
   flex: 1;
   overflow: auto;
   background: var(--defter-bg);
+}
+/* Single crisp outline around a multi-cell selection (positioned in JS from the corner cells). */
+.defter__marquee {
+  position: absolute;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 2px solid var(--defter-selection-border);
+  border-radius: 1px;
+  z-index: 4;
 }
 .defter:focus {
   outline: none;
