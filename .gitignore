@@ -8,3 +8,6 @@ coverage/
 .vite/
 
 storybook-static/
+
+# browser MCP snapshots
+.playwright-mcp/

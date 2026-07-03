@@ -425,12 +425,12 @@
   color: var(--defter-accent);
 }
 /*
- * Selection is a background layer (a solid-color gradient painted over the cell's background-color,
- * so it works over cells that already have a fill) — backgrounds are always clipped to the cell's
- * border box, so nothing can bleed into neighbouring cells. The active cell gets a contained ring.
+ * Selection tint is a large inset box-shadow that fills the cell over its background — box-shadows
+ * paint on the border box and (unlike background-image with max-width:0) never mis-size, so nothing
+ * bleeds into neighbouring cells. The active cell gets a 2px ring the same way. A cell is never both.
  */
 .defter__cell--insel {
-  background-image: linear-gradient(var(--defter-selection-bg), var(--defter-selection-bg));
+  box-shadow: inset 0 0 0 100px var(--defter-selection-bg);
 }
 .defter__cell--focus {
   box-shadow: inset 0 0 0 2px var(--defter-selection-border);

@@ -17,6 +17,7 @@ import {
   insertCols,
   insertRows,
   isError,
+  offsetReferences,
   parse,
   parseLiteral,
   renameSheet,
@@ -260,6 +261,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const inputRef = useRef<HTMLInputElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
+  const autoScrollRaf = useRef(0)
+  // Internal clipboard: preserves raw cells (incl. formulas) so an in-app paste keeps formulas and
+  // shifts their relative refs by the paste offset. `tsv` fingerprints our own copy so we can tell
+  // an internal paste from one pasted in from another app (which only gives us plain text).
+  const clip = useRef<{ cells: string[][]; tsv: string; origin: { col: number; row: number }; cut: boolean } | null>(null)
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null)
   const [localW, setLocalW] = useState<Record<number, number>>({})
   const resizeRef = useRef<{ col: number; startX: number; startW: number } | null>(null)
@@ -663,25 +669,43 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     ],
   )
 
+  // Write the selection to both the OS clipboard (values, tab-separated, for other apps) and our
+  // internal clipboard (raw cells, so an in-app paste keeps formulas). `cut` marks the source to clear.
+  const writeClipboard = useCallback(
+    (e: React.ClipboardEvent, cut: boolean) => {
+      const raws: string[][] = []
+      const valLines: string[] = []
+      for (let r = rect.minRow; r <= rect.maxRow; r++) {
+        const rawRow: string[] = []
+        const valRow: string[] = []
+        for (let c = rect.minCol; c <= rect.maxCol; c++) {
+          const raw = rawAt(c, r)
+          rawRow.push(raw)
+          valRow.push(raw.trim().startsWith('=') ? formatValue(valueAt(c, r), { locale }) : raw)
+        }
+        raws.push(rawRow)
+        valLines.push(valRow.join('\t'))
+      }
+      const tsv = valLines.join('\n')
+      clip.current = { cells: raws, tsv, origin: { col: rect.minCol, row: rect.minRow }, cut }
+      e.clipboardData.setData('text/plain', tsv)
+      e.preventDefault()
+    },
+    [rect, rawAt, valueAt, locale],
+  )
   const onCopy = useCallback(
     (e: React.ClipboardEvent) => {
       if (editing) return
-      const lines: string[] = []
-      for (let r = rect.minRow; r <= rect.maxRow; r++) {
-        const cells: string[] = []
-        for (let c = rect.minCol; c <= rect.maxCol; c++) {
-          const raw = rawAt(c, r)
-          const val = raw.trim().startsWith('=')
-            ? formatValue(valueAt(c, r), { locale })
-            : raw
-          cells.push(val)
-        }
-        lines.push(cells.join('\t'))
-      }
-      e.clipboardData.setData('text/plain', lines.join('\n'))
-      e.preventDefault()
+      writeClipboard(e, false)
     },
-    [editing, rect, rawAt, valueAt, locale],
+    [editing, writeClipboard],
+  )
+  const onCut = useCallback(
+    (e: React.ClipboardEvent) => {
+      if (editing || !editable) return
+      writeClipboard(e, true)
+    },
+    [editing, editable, writeClipboard],
   )
 
   const onPaste = useCallback(
@@ -689,8 +713,37 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       if (editing || !editable) return
       const data = e.clipboardData.getData('text/plain')
       if (!data) return
-      const rows = data.replace(/\r/g, '').replace(/\n$/, '').split('\n')
       const writes: { col: number; row: number; value: string }[] = []
+      // Internal paste (our own copy, unchanged): keep raw cells and shift relative refs by the offset.
+      const buf = clip.current
+      if (buf && buf.tsv === data.replace(/\r/g, '').replace(/\n$/, '')) {
+        const dCol = rect.minCol - buf.origin.col
+        const dRow = rect.minRow - buf.origin.row
+        const target = new Set<string>()
+        buf.cells.forEach((row, dr) => {
+          row.forEach((raw, dc) => {
+            const col = rect.minCol + dc
+            const r = rect.minRow + dr
+            target.add(`${col},${r}`)
+            writes.push({ col, row: r, value: raw.trim().startsWith('=') ? offsetReferences(raw, dCol, dRow) : raw })
+          })
+        })
+        // On cut, clear the source — but not any cell the paste already overwrote (overlapping move).
+        if (buf.cut) {
+          for (let dr = 0; dr < buf.cells.length; dr++)
+            for (let dc = 0; dc < buf.cells[0]!.length; dc++) {
+              const col = buf.origin.col + dc
+              const r = buf.origin.row + dr
+              if (!target.has(`${col},${r}`)) writes.push({ col, row: r, value: '' })
+            }
+          clip.current = null
+        }
+        commitMany(writes)
+        e.preventDefault()
+        return
+      }
+      // External paste: split TSV/newlines into a literal grid at the anchor.
+      const rows = data.replace(/\r/g, '').replace(/\n$/, '').split('\n')
       rows.forEach((line, dr) => {
         line.split('\t').forEach((cell, dc) => {
           writes.push({ col: rect.minCol + dc, row: rect.minRow + dr, value: cell })
@@ -701,6 +754,73 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     },
     [editing, editable, rect, commitMany],
   )
+
+  // Map a viewport point to a cell, so a parked-at-the-edge drag keeps extending as content scrolls.
+  const HEAD_W = 44
+  const colAtX = useCallback(
+    (clientX: number) => {
+      const root = rootRef.current
+      if (!root) return 0
+      let x = clientX - root.getBoundingClientRect().left + root.scrollLeft - HEAD_W
+      if (x < 0) return 0
+      for (let c = 0; c < totalCols; c++) {
+        const w = colWidth(c)
+        if (x < w) return c
+        x -= w
+      }
+      return totalCols - 1
+    },
+    [totalCols, colWidth],
+  )
+  const rowAtY = useCallback(
+    (clientY: number) => {
+      const root = rootRef.current
+      if (!root) return 1
+      const r = Math.floor((clientY - root.getBoundingClientRect().top + root.scrollTop) / rowHeight)
+      return Math.max(1, Math.min(totalRows, r))
+    },
+    [rowHeight, totalRows],
+  )
+  // Auto-scroll the grid while a selection drag is held near an edge (so you can select past the viewport).
+  const beginDragAutoScroll = useCallback(() => {
+    const root = rootRef.current
+    if (!root || autoScrollRaf.current) return
+    let px = 0
+    let py = 0
+    let seen = false
+    const move = (ev: MouseEvent) => {
+      px = ev.clientX
+      py = ev.clientY
+      seen = true
+    }
+    document.addEventListener('mousemove', move)
+    const EDGE = 26
+    const SPEED = 16
+    const tick = () => {
+      if (!dragging.current) {
+        document.removeEventListener('mousemove', move)
+        autoScrollRaf.current = 0
+        return
+      }
+      const el = rootRef.current
+      if (el && seen) {
+        const box = el.getBoundingClientRect()
+        let dx = 0
+        let dy = 0
+        if (py < box.top + rowHeight + EDGE) dy = -SPEED
+        else if (py > box.bottom - EDGE) dy = SPEED
+        if (px < box.left + HEAD_W + EDGE) dx = -SPEED
+        else if (px > box.right - EDGE) dx = SPEED
+        if (dx || dy) {
+          el.scrollLeft += dx
+          el.scrollTop += dy
+          setSel((s) => ({ anchor: s.anchor, focus: { col: colAtX(px), row: rowAtY(py) } }))
+        }
+      }
+      autoScrollRaf.current = requestAnimationFrame(tick)
+    }
+    autoScrollRaf.current = requestAnimationFrame(tick)
+  }, [colAtX, rowAtY, rowHeight])
 
   const painterRef = useRef<StyleAttrs | null>(null)
   const [painterOn, setPainterOn] = useState(false)
@@ -721,9 +841,10 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         return
       }
       dragging.current = true
+      beginDragAutoScroll()
       setSel((s) => (shift ? { anchor: s.anchor, focus: { col, row } } : { anchor: { col, row }, focus: { col, row } }))
     },
-    [model, si, pushEdit],
+    [model, si, pushEdit, beginDragAutoScroll],
   )
   const onCellMouseEnter = useCallback((col: number, row: number) => {
     if (dragging.current) setSel((s) => ({ anchor: s.anchor, focus: { col, row } }))
@@ -1088,6 +1209,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         aria-label={`Defter sheet: ${sheet.name}`}
         onKeyDown={onKeyDown}
         onCopy={onCopy}
+        onCut={onCut}
         onPaste={onPaste}
         onContextMenu={onContextMenu}
         onScroll={
