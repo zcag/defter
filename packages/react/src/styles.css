@@ -418,7 +418,18 @@
   padding: 5px 8px;
   border-radius: 6px;
   box-shadow: 0 6px 18px -6px rgba(10, 10, 30, 0.4);
-  animation: defter-pop-in 90ms ease-out;
+  animation: defter-tip-in 90ms ease-out;
+}
+/* Keeps translateX(-50%) through the fade so the tooltip stays centered (not just at the end). */
+@keyframes defter-tip-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 /* Motion: quick, tasteful hover/press transitions + a subtle pop-in for floating surfaces. */
@@ -484,24 +495,24 @@
   border-right: 1px solid var(--defter-grid-line-strong);
   border-bottom: 1px solid var(--defter-grid-line-strong);
   user-select: none;
-  z-index: 1;
+  z-index: 6;
 }
 .defter__corner {
   left: 0;
   top: 0;
-  z-index: 3;
+  z-index: 8;
   background: var(--defter-corner-bg);
   width: var(--defter-head-width);
 }
 .defter__colhead {
   top: 0;
-  z-index: 2;
+  z-index: 7;
   height: var(--defter-row-height);
   min-width: var(--defter-col-width);
 }
 .defter__rowhead {
   left: 0;
-  z-index: 2;
+  z-index: 7;
   width: var(--defter-head-width);
   min-width: var(--defter-head-width);
 }
@@ -610,26 +621,26 @@
   background: var(--defter-selection-border);
   border: 1px solid var(--defter-bg);
   cursor: crosshair;
-  z-index: 6;
+  z-index: 9;
 }
 .defter__cell--frozen {
   position: sticky;
   top: var(--defter-row-height);
-  z-index: 1;
+  z-index: 6;
   background: var(--defter-header-bg);
 }
 .defter__rowhead--frozen {
   top: var(--defter-row-height);
-  z-index: 3;
+  z-index: 8;
 }
 .defter__cell--frozen-col {
   position: sticky;
   left: var(--defter-head-width);
-  z-index: 2;
+  z-index: 7;
   background: var(--defter-bg);
 }
 .defter__cell--frozen.defter__cell--frozen-col {
-  z-index: 3;
+  z-index: 8;
   background: var(--defter-header-bg);
 }
 /* Frozen-pane shadows: only once scrolled, so the pinned edge reads as a layer above the content. */
