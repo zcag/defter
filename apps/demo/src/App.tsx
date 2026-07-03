@@ -1,6 +1,7 @@
 import {
   csvToModel,
   modelToCsv,
+  modelToCsvSheets,
   parse,
   projectProse,
   projectText,
@@ -54,6 +55,7 @@ export function App() {
   const [proj, setProj] = useState<ProjView>('off')
   const [accent, setAccent] = useState('')
   const [activeSheet, setActiveSheet] = useState(0)
+  const [csvMenu, setCsvMenu] = useState(false)
   // Host-driven theming: map one chosen colour onto the grid's public --defter-* tokens. Passed as
   // the `style` prop, these inline vars win over the built-in theme and update the grid live.
   const accentStyle = useMemo<CSSProperties | undefined>(() => {
@@ -99,14 +101,23 @@ export function App() {
     return out
   }, [text, engine])
 
-  // CSV holds one table, so — like Sheets/Excel — export the sheet you're viewing, named after it.
-  // (For the whole workbook in one file, use XLSX.)
-  const exportCsv = () => {
+  const slug = (s: string) => (s || 'sheet').replace(/[^\w.-]+/g, '_')
+  // CSV holds one table. Export the sheet you're viewing…
+  const exportCsvSheet = () => {
     const m = parse(text)
     const idx = m.sheets[activeSheet] ? activeSheet : 0
-    const name = (m.sheets[idx]?.name ?? 'sheet').replace(/[^\w.-]+/g, '_')
-    const suffix = m.sheets.length > 1 ? `-${name}` : ''
+    const suffix = m.sheets.length > 1 ? `-${slug(m.sheets[idx]!.name)}` : ''
     download(`defter${suffix}.csv`, modelToCsv(m, { sheetIndex: idx, computed: engine.compute(m) }), 'text/csv')
+  }
+  // …or every sheet as its own file (staggered so browsers don't drop any of the downloads).
+  const exportCsvAll = () => {
+    const m = parse(text)
+    const sheets = modelToCsvSheets(m, { computed: engine.compute(m) })
+    sheets.forEach((s, i) => setTimeout(() => download(`defter-${slug(s.name)}.csv`, s.csv, 'text/csv'), i * 200))
+  }
+  const onCsvClick = () => {
+    if (parse(text).sheets.length <= 1) exportCsvSheet()
+    else setCsvMenu((v) => !v)
   }
   const exportXlsx = async () => {
     const m = parse(text)
@@ -191,9 +202,17 @@ export function App() {
               <button className="chip" onClick={() => fileRef.current?.click()}>
                 ↑ Import
               </button>
-              <button className="chip" onClick={exportCsv} title="Export the active sheet (CSV is one table)">
-                ↓ CSV
-              </button>
+              <span className="csvwrap">
+                <button className="chip" onClick={onCsvClick} title="Export CSV">
+                  ↓ CSV
+                </button>
+                {csvMenu && (
+                  <div className="csvmenu" onMouseLeave={() => setCsvMenu(false)}>
+                    <button onClick={() => (exportCsvSheet(), setCsvMenu(false))}>This sheet</button>
+                    <button onClick={() => (exportCsvAll(), setCsvMenu(false))}>All sheets · one file each</button>
+                  </div>
+                )}
+              </span>
               <button className="chip" onClick={exportXlsx} title="Export the whole workbook — every sheet">
                 ↓ XLSX
               </button>
