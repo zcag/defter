@@ -263,10 +263,20 @@
 .defter__cellref {
   font-family: var(--defter-font-mono);
   font-size: 12px;
+  color: var(--defter-fg);
+  min-width: 54px;
+  text-align: center;
+  padding: 4px 8px;
+  border: 1px solid var(--defter-grid-line-strong);
+  border-radius: 5px;
+  background: var(--defter-bg);
+}
+.defter__fx-label {
+  font-family: var(--defter-font-mono);
+  font-style: italic;
+  font-size: 12.5px;
   color: var(--defter-muted-fg);
-  min-width: 42px;
-  padding: 0 6px;
-  border-right: 1px solid var(--defter-grid-line);
+  padding: 0 2px 0 4px;
 }
 .defter__fx {
   flex: 1;

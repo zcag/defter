@@ -1043,6 +1043,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             {columnLabel(sel.focus.col)}
             {sel.focus.row}
           </span>
+          <span className="defter__fx-label">fx</span>
           <input
             className="defter__fx"
             value={editing ? editing.value : activeRaw}
