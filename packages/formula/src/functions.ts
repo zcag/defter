@@ -182,7 +182,7 @@ function concat(args: Node[], ctx: EvalContext): CellValue {
   return s
 }
 
-/** Build a predicate from an Excel-style criterion (">5", "<=3", "abc", 42). */
+/** Build a predicate from an Excel-style criterion (">5", "<=3", "abc", "a*", 42). */
 function criterion(crit: CellValue): (v: CellValue) => boolean {
   if (typeof crit === 'number') return (v) => toNumber(v) === crit
   const s = stringify(crit)
@@ -191,6 +191,12 @@ function criterion(crit: CellValue): (v: CellValue) => boolean {
   const rhs = m[2]!
   const rhsNum = Number(rhs)
   const numeric = rhs !== '' && !Number.isNaN(rhsNum)
+  // `*` (any run) and `?` (one char) wildcards for = / <> string matching.
+  let re: RegExp | null = null
+  if (!numeric && /[*?]/.test(rhs) && (op === '=' || op === '<>')) {
+    const pat = rhs.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.')
+    re = new RegExp(`^${pat}$`, 'i')
+  }
   return (v) => {
     if (numeric) {
       const n = toNumber(v)
@@ -209,6 +215,10 @@ function criterion(crit: CellValue): (v: CellValue) => boolean {
         case '>=':
           return n >= rhsNum
       }
+    }
+    if (re) {
+      const hit = re.test(stringify(v))
+      return op === '<>' ? !hit : hit
     }
     const sv = stringify(v).toLowerCase()
     const r = rhs.toLowerCase()
@@ -233,6 +243,7 @@ Object.assign(FUNCTIONS, {
     str1(a, c, (s) => {
       const start = toNumber(c.eval(a[1]!)) ?? 1
       const len = toNumber(c.eval(a[2]!)) ?? 0
+      if (start < 1 || len < 0) return ERR.value
       return s.slice(start - 1, start - 1 + len)
     }),
   FIND: (a: Node[], c: EvalContext) => {

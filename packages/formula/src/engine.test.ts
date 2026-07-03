@@ -123,11 +123,11 @@ describe('formula engine', () => {
     expect(one('=DATEDIF("2020-06-15", "2026-07-03", "Y")')).toBe(6)
   })
 
-  it('SUMIF / COUNTIF', () => {
+  it('SUMIF / COUNTIF (incl. wildcards)', () => {
     const src =
-      '| Cat | Amt |\n| --- | ---: |\n| a | 10 |\n| b | 20 |\n| a | 30 |\n| s | =SUMIF(A2:A4, "a", B2:B4) | \n| c | =COUNTIF(B2:B4, ">15") |\n'
+      '| Cat | Amt |\n| --- | ---: |\n| apple | 10 |\n| banana | 20 |\n| avocado | 30 |\n| s | =SUMIF(A2:A4, "a*", B2:B4) | \n| c | =COUNTIF(B2:B4, ">15") |\n'
     const grid = createEngine().compute(parse(src))
-    expect(grid.get('Sheet1', 1, 5)).toBe(40) // 10 + 30
+    expect(grid.get('Sheet1', 1, 5)).toBe(40) // apple + avocado (a*)
     expect(grid.get('Sheet1', 1, 6)).toBe(2) // 20, 30
   })
 })
