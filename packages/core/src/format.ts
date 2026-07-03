@@ -24,11 +24,21 @@ export function formatNumber(n: number, format: string | undefined, locale: Loca
   if (!Number.isFinite(n)) return String(n)
   if (!format) return defaultNumber(n, locale)
 
-  const percent = format.includes('%')
+  // Excel format sections: positive;negative;zero. A negative section carries its own sign
+  // notation (e.g. parentheses). `[Red]`/`[Color]` tokens are stripped (color is the renderer's job).
+  const sections = format.split(';')
+  const usesNegSection = n < 0 && sections[1] !== undefined
+  let fmt = usesNegSection
+    ? sections[1]!
+    : n === 0 && sections[2] !== undefined
+      ? sections[2]!
+      : sections[0]!
+  fmt = fmt.replace(/\[[^\]]*\]/g, '')
+
+  const percent = fmt.includes('%')
   let x = percent ? n * 100 : n
 
-  // Extract a numeric skeleton `[#,]0(.0*)` and any literal prefix/suffix around it.
-  const m = /([^#0.,]*)([#0.,]+)([^#0.,]*)/.exec(format.replace('%', ''))
+  const m = /([^#0.,]*)([#0.,]+)([^#0.,]*)/.exec(fmt.replace('%', ''))
   const prefix = m?.[1] ?? ''
   const skeleton = m?.[2] ?? '0'
   const suffix = (m?.[3] ?? '') + (percent ? '%' : '')
@@ -37,7 +47,7 @@ export function formatNumber(n: number, format: string | undefined, locale: Loca
   const dot = skeleton.indexOf('.')
   const decimals = dot >= 0 ? skeleton.length - dot - 1 : 0
 
-  const neg = x < 0
+  const neg = x < 0 && !usesNegSection
   x = Math.abs(x)
   let body = decimals > 0 ? x.toFixed(decimals) : Math.round(x).toString()
   if (grouped) body = groupThousands(body, locale)
