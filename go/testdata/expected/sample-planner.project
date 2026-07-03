@@ -1,0 +1,13 @@
+## Sheet: Roadmap
+
+| Feature | Effort | Impact | Score | Priority | Status |
+| --- | --: | --: | --: | :-: | :-: |
+| Minimal-splice CRDT | 8 | 10 | =C2/B2 | =IF(D2>=1,"P0","P1") | Done |
+| Charts in style layer | 5 | 7 | =C3/B3 | =IF(D3>=1,"P0","P1") | Done |
+| xlsx import | 3 | 6 | =C4/B4 | =IF(D4>=1,"P0","P1") | Doing |
+| Multi-cursor awareness | 6 | 5 | =C5/B5 | =IF(D5>=1,"P0","P1") | Todo |
+
+```defter-style
+when D2:D5 >= 1  fill=success-soft
+validate F2:F5 list=Todo,Doing,Done
+```

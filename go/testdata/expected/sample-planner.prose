@@ -1,0 +1,4 @@
+Roadmap — Feature: Minimal-splice CRDT, Effort: 8, Impact: 10, Score: =C2/B2, Priority: =IF(D2>=1,"P0","P1"), Status: Done
+Roadmap — Feature: Charts in style layer, Effort: 5, Impact: 7, Score: =C3/B3, Priority: =IF(D3>=1,"P0","P1"), Status: Done
+Roadmap — Feature: xlsx import, Effort: 3, Impact: 6, Score: =C4/B4, Priority: =IF(D4>=1,"P0","P1"), Status: Doing
+Roadmap — Feature: Multi-cursor awareness, Effort: 6, Impact: 5, Score: =C5/B5, Priority: =IF(D5>=1,"P0","P1"), Status: Todo

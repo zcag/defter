@@ -1,0 +1,9 @@
+| h |
+| :-: |
+| v |
+
+```defter-style
+A1  bold italic underline strike valign=middle font=mono size=14
+A:A  align=right
+1:1  bold
+```

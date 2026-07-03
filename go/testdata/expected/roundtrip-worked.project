@@ -1,0 +1,7 @@
+## Sheet: Budget
+
+| Item | Qty | Unit | Total |
+| --- | --- | --- | --- |
+| Widget | 3 | 4.00 | =B2*C2 |
+| Gadget | 5 | 2.50 | =B3*C3 |
+| **Total** |  |  | =SUM(D2:D3) |

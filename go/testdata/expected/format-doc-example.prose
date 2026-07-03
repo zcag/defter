@@ -1,0 +1,3 @@
+Budget — Item: Widget, Qty: 3, Unit: 4.00, Total: =B2*C2
+Budget — Item: Gadget, Qty: 5, Unit: 2.50, Total: =B3*C3
+Budget — Item: **Total**, Total: =SUM(D2:D3)

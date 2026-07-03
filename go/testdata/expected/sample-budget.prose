@@ -1,0 +1,5 @@
+Q3 Budget — Team: Engineering, Planned: 42000, Actual: 39120, Variance: =B2-C2, Status: =IF(D2>=0,"under","over")
+Q3 Budget — Team: Design, Planned: 18000, Actual: 19850, Variance: =B3-C3, Status: =IF(D3>=0,"under","over")
+Q3 Budget — Team: Marketing, Planned: 27000, Actual: 24300, Variance: =B4-C4, Status: =IF(D4>=0,"under","over")
+Q3 Budget — Team: Ops, Planned: 15500, Actual: 15500, Variance: =B5-C5, Status: =IF(D5>=0,"under","over")
+Q3 Budget — Team: **All teams**, Planned: =SUM(B2:B5), Actual: =SUM(C2:C5), Variance: =B6-C6, Status: =IF(D6>=0,"under","over")

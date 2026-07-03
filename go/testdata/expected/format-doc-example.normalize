@@ -1,0 +1,13 @@
+## Sheet: Budget
+
+| Item | Qty | Unit | Total |
+| --- | --- | --- | --- |
+| Widget | 3 | 4.00 | =B2*C2 |
+| Gadget | 5 | 2.50 | =B3*C3 |
+| **Total** |  |  | =SUM(D2:D3) |
+
+```defter-style
+A1:D1  bold fill=surface-2 align=center
+C2:D4  format=#,##0.00
+D5  bold
+```

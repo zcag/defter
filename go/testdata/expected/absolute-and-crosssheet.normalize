@@ -1,0 +1,9 @@
+## Sheet: Ref
+
+| x | y |
+| --- | --- |
+| 1 | =$A$2+Other!B2 |
+
+```defter-style
+name Fixed = $A$2:$B$5
+```

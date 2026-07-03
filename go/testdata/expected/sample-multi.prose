@@ -1,0 +1,7 @@
+Sales — Month: Jan, Units: 120, Price: 29, Revenue: =B2*C2
+Sales — Month: Feb, Units: 145, Price: 29, Revenue: =B3*C3
+Sales — Month: Mar, Units: 190, Price: 32, Revenue: =B4*C4
+Summary — Metric: Total units, Value: =SUM(Sales!B2:B4)
+Summary — Metric: Total revenue, Value: =SUM(Revenue)
+Summary — Metric: Avg price, Value: =Summary!B3/Summary!B2
+Summary — Metric: Best month, Value: =Sales!A4

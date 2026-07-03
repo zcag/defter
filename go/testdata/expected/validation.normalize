@@ -1,0 +1,10 @@
+## Sheet: S
+
+| Task | Status |
+| --- | :-: |
+| A | Todo |
+| B | Done |
+
+```defter-style
+validate B2:B3 list=Todo,Doing,Done
+```

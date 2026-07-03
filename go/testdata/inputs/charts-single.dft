@@ -1,0 +1,12 @@
+## Sheet: S
+
+| Month | Sales |
+| --- | ---: |
+| Jan | 10 |
+| Feb | 20 |
+| Mar | 30 |
+
+```defter-style
+A1:B1  bold
+chart type=bar title="Monthly sales" x=A2:A4 y=B2:B4
+```

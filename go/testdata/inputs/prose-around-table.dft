@@ -1,0 +1,8 @@
+Some intro prose that should be ignored.
+
+| Name | Age |
+| --- | ---: |
+| Alice | 30 |
+| Bob | 25 |
+
+A trailing paragraph, also ignored.

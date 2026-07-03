@@ -1,0 +1,10 @@
+## Sheet: Invoice
+
+| Item | Qty | Unit | Total |
+| --- | --: | --: | --: |
+| Design system audit | 12 | 140 | =B2*C2 |
+| Component build | 34 | 120 | =B3*C3 |
+| Motion & polish | 8 | 160 | =B4*C4 |
+| Subtotal |  |  | =SUM(D2:D4) |
+| Tax (20%) |  |  | =D5*0.2 |
+| **Total due** |  |  | =D5+D6 |

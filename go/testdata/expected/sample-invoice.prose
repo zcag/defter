@@ -1,0 +1,6 @@
+Invoice — Item: Design system audit, Qty: 12, Unit: 140, Total: =B2*C2
+Invoice — Item: Component build, Qty: 34, Unit: 120, Total: =B3*C3
+Invoice — Item: Motion & polish, Qty: 8, Unit: 160, Total: =B4*C4
+Invoice — Item: Subtotal, Total: =SUM(D2:D4)
+Invoice — Item: Tax (20%), Total: =D5*0.2
+Invoice — Item: **Total due**, Total: =D5+D6

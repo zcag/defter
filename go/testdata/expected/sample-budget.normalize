@@ -1,0 +1,19 @@
+## Sheet: Q3 Budget
+
+| Team | Planned | Actual | Variance | Status |
+| --- | --: | --: | --: | :-: |
+| Engineering | 42000 | 39120 | =B2-C2 | =IF(D2>=0,"under","over") |
+| Design | 18000 | 19850 | =B3-C3 | =IF(D3>=0,"under","over") |
+| Marketing | 27000 | 24300 | =B4-C4 | =IF(D4>=0,"under","over") |
+| Ops | 15500 | 15500 | =B5-C5 | =IF(D5>=0,"under","over") |
+| **All teams** | =SUM(B2:B5) | =SUM(C2:C5) | =B6-C6 | =IF(D6>=0,"under","over") |
+
+```defter-style
+A1:E1  bold fill=surface-3
+B2:D6  format=#,##0
+A6:E6  bold border=top
+when D2:D6 >= 0  color=success
+when D2:D6 < 0  bold color=danger
+chart type=bar title="Planned vs Actual" x=A2:A5 y=B2:B5,C2:C5
+chart type=pie title="Budget share" x=A2:A5 y=B2:B5
+```

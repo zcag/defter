@@ -1,0 +1,20 @@
+## Sheet: Sales
+
+| Month | Units | Price | Revenue |
+| --- | --: | --: | --: |
+| Jan | 120 | 29 | =B2*C2 |
+| Feb | 145 | 29 | =B3*C3 |
+| Mar | 190 | 32 | =B4*C4 |
+
+```defter-style
+name Revenue = D2:D4
+```
+
+## Sheet: Summary
+
+| Metric | Value |
+| --- | --: |
+| Total units | =SUM(Sales!B2:B4) |
+| Total revenue | =SUM(Revenue) |
+| Avg price | =Summary!B3/Summary!B2 |
+| Best month | =Sales!A4 |

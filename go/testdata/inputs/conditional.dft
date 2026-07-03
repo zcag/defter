@@ -1,0 +1,13 @@
+## Sheet: S
+
+| Team | Var |
+| --- | ---: |
+| A | 5 |
+| B | -3 |
+| C | 0 |
+
+```defter-style
+A1:B1  bold
+when B2:B4 < 0  color=danger bold
+when B2:B4 >= 0  color=success
+```

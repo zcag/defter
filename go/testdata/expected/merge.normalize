@@ -1,0 +1,9 @@
+## Sheet: Merged
+
+| Q1 | Q2 | Q3 | Q4 |
+| --- | --- | --- | --- |
+| 1 | 2 | 3 | 4 |
+
+```defter-style
+A1:D1  bold merge fill=surface-2 align=center
+```

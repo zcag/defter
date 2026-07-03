@@ -1,0 +1,10 @@
+## Sheet: S
+
+| m | a | b |
+|---|---:|---:|
+| Jan | 1 | 4 |
+| Feb | 2 | 5 |
+
+```defter-style
+chart type=bar x=A2:A3 y=B2:B3,C2:C3
+```
