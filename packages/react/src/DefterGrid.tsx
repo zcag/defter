@@ -201,13 +201,25 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     if (editing) inputRef.current?.focus()
   }, [editing])
 
+  const fillDragging = useRef(false)
+  const fillTargetRef = useRef<Pos | null>(null)
   useEffect(() => {
     const up = () => {
+      if (fillDragging.current) {
+        fillDragging.current = false
+        const t = fillTargetRef.current
+        fillTargetRef.current = null
+        if (t && t.row > rect.maxRow) {
+          pushEdit(serialize(fillDown(model, si, rect.minCol, rect.maxCol, rect.minRow, t.row)))
+        } else if (t && t.col > rect.maxCol) {
+          pushEdit(serialize(fillRight(model, si, rect.minCol, t.col, rect.minRow, rect.maxRow)))
+        }
+      }
       dragging.current = false
     }
     window.addEventListener('mouseup', up)
     return () => window.removeEventListener('mouseup', up)
-  }, [])
+  }, [rect, model, si, pushEdit])
 
   // Column resize (drag the header's right edge); commit persists into the style layer.
   useEffect(() => {
@@ -560,6 +572,27 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     if (dragging.current) setSel((s) => ({ anchor: s.anchor, focus: { col, row } }))
   }, [])
 
+  // Fill-handle drag tracks the target via a document mousemove (robust across real drags).
+  const onFillStart = useCallback(() => {
+    fillDragging.current = true
+    fillTargetRef.current = null
+    const move = (ev: MouseEvent) => {
+      const el = (ev.target as HTMLElement | null)?.closest?.('[data-col][data-row]') as HTMLElement | null
+      if (el?.dataset.col !== undefined && el.dataset.row !== undefined) {
+        fillTargetRef.current = { col: Number(el.dataset.col), row: Number(el.dataset.row) }
+      }
+    }
+    document.addEventListener('mousemove', move)
+    document.addEventListener(
+      'mouseup',
+      function done() {
+        document.removeEventListener('mousemove', move)
+        document.removeEventListener('mouseup', done)
+      },
+      { once: true },
+    )
+  }, [])
+
   const stats = useMemo(() => {
     if (rect.minCol === rect.maxCol && rect.minRow === rect.maxRow) return null
     let sum = 0
@@ -838,6 +871,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                         inSelection={inSel && !isFocus}
                         frozen={freezeHeader && row === 1}
                         frozenCol={freezeCol && col === 0}
+                        fillHandle={isFocus && editable}
+                        onFillStart={onFillStart}
                         colSpan={span?.colspan}
                         rowSpan={span?.rowspan}
                         editing={editing?.col === col && editing?.row === row ? editing.value : null}
@@ -1020,6 +1055,8 @@ interface CellProps {
   inSelection: boolean
   frozen?: boolean
   frozenCol?: boolean
+  fillHandle?: boolean
+  onFillStart?: () => void
   colSpan?: number
   rowSpan?: number
   editing: string | null
@@ -1143,6 +1180,15 @@ function Cell(p: CellProps): React.JSX.Element {
         <>
           {display}
           {validation && <span className="defter__caret" aria-hidden="true">▾</span>}
+          {p.fillHandle && (
+            <span
+              className="defter__fill-handle"
+              onMouseDown={(e) => {
+                e.stopPropagation()
+                p.onFillStart?.()
+              }}
+            />
+          )}
         </>
       )}
     </td>
