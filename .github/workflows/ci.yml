@@ -15,7 +15,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      # esbuild's binary ships via its platform optional-dep, so skipping lifecycle
+      # scripts is safe and avoids pnpm's build-approval gate failing in fresh CI.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Build packages
         run: pnpm -r --filter "./packages/*" build
       - name: Test
