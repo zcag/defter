@@ -405,6 +405,101 @@ Object.assign(FUNCTIONS, {
   },
 })
 
+Object.assign(FUNCTIONS, {
+  ISNUMBER: (a: Node[], c: EvalContext) => typeof c.eval(a[0]!) === 'number',
+  ISTEXT: (a: Node[], c: EvalContext) => typeof c.eval(a[0]!) === 'string',
+  ISLOGICAL: (a: Node[], c: EvalContext) => typeof c.eval(a[0]!) === 'boolean',
+  ISBLANK: (a: Node[], c: EvalContext) => c.eval(a[0]!) === null,
+  ISERROR: (a: Node[], c: EvalContext) => isError(c.eval(a[0]!)),
+  ISNA: (a: Node[], c: EvalContext) => {
+    const v = c.eval(a[0]!)
+    return isError(v) && v.error === '#N/A'
+  },
+  N: (a: Node[], c: EvalContext) => {
+    const v = c.eval(a[0]!)
+    if (isError(v)) return v
+    return typeof v === 'number' ? v : typeof v === 'boolean' ? (v ? 1 : 0) : 0
+  },
+  VALUE: (a: Node[], c: EvalContext) => {
+    const n = toNumber(c.eval(a[0]!))
+    return n === null ? ERR.value : n
+  },
+  REPT: (a: Node[], c: EvalContext) => {
+    const s = stringify(c.eval(a[0]!))
+    const n = Math.max(0, Math.floor(toNumber(c.eval(a[1]!)) ?? 0))
+    return s.repeat(n)
+  },
+  PROPER: (a: Node[], c: EvalContext) =>
+    stringify(c.eval(a[0]!)).replace(/\b\w/g, (ch) => ch.toUpperCase()).replace(/\B\w/g, (ch) => ch.toLowerCase()),
+  MEDIAN: (a: Node[], c: EvalContext) => {
+    const ns = numbers(a, c)
+    if (!Array.isArray(ns)) return ns
+    if (!ns.length) return ERR.num
+    const sorted = [...ns].sort((x, y) => x - y)
+    const mid = Math.floor(sorted.length / 2)
+    return sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2
+  },
+  LARGE: (a: Node[], c: EvalContext) => nthOrdered(a, c, 'large'),
+  SMALL: (a: Node[], c: EvalContext) => nthOrdered(a, c, 'small'),
+  RANK: (a: Node[], c: EvalContext) => {
+    const x = toNumber(c.eval(a[0]!))
+    const arr = ctxNumbers(c, a[1]!)
+    if (x === null) return ERR.value
+    const order = a[2] ? (toNumber(c.eval(a[2])) ?? 0) : 0
+    const sorted = [...arr].sort((p, q) => (order ? p - q : q - p))
+    const idx = sorted.indexOf(x)
+    return idx < 0 ? ERR.na : idx + 1
+  },
+  COUNTIFS: (a: Node[], c: EvalContext) => multiCriteria(a, c, null),
+  SUMIFS: (a: Node[], c: EvalContext) => multiCriteria(a.slice(1), c, c.spill(a[0]!)),
+  XLOOKUP: (a: Node[], c: EvalContext) => {
+    const target = c.eval(a[0]!)
+    const keys = c.spill(a[1]!)
+    const vals = c.spill(a[2]!)
+    const ts = stringify(target).toLowerCase()
+    for (let i = 0; i < keys.length; i++) {
+      if (stringify(keys[i]!).toLowerCase() === ts) return vals[i] ?? ERR.ref
+    }
+    return a[3] ? c.eval(a[3]) : ERR.na
+  },
+})
+
+function ctxNumbers(ctx: EvalContext, node: Node): number[] {
+  const out: number[] = []
+  for (const v of ctx.spill(node)) if (typeof v === 'number') out.push(v)
+  return out
+}
+
+function nthOrdered(args: Node[], ctx: EvalContext, which: 'large' | 'small'): CellValue {
+  const arr = ctxNumbers(ctx, args[0]!)
+  const k = Math.floor(toNumber(ctx.eval(args[1]!)) ?? 0)
+  if (k < 1 || k > arr.length) return ERR.num
+  const sorted = [...arr].sort((p, q) => (which === 'large' ? q - p : p - q))
+  return sorted[k - 1]!
+}
+
+/** COUNTIFS / SUMIFS: pairs of (range, criterion) that must all hold per row index. */
+function multiCriteria(pairs: Node[], ctx: EvalContext, sumRange: CellValue[] | null): CellValue {
+  const ranges: CellValue[][] = []
+  const preds: ((v: CellValue) => boolean)[] = []
+  for (let i = 0; i + 1 < pairs.length; i += 2) {
+    ranges.push(ctx.spill(pairs[i]!))
+    preds.push(criterion(ctx.eval(pairs[i + 1]!)))
+  }
+  const len = ranges[0]?.length ?? 0
+  let count = 0
+  let total = 0
+  for (let r = 0; r < len; r++) {
+    if (!ranges.every((rg, k) => preds[k]!(rg[r]!))) continue
+    count++
+    if (sumRange) {
+      const raw = sumRange[r] ?? null
+      if (typeof raw === 'number') total += raw
+    }
+  }
+  return sumRange ? total : count
+}
+
 function conditionalAgg(args: Node[], ctx: EvalContext, mode: 'sum' | 'count' | 'avg'): CellValue {
   const range = ctx.spill(args[0]!)
   const pred = criterion(ctx.eval(args[1]!))

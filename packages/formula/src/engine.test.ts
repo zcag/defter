@@ -112,6 +112,21 @@ describe('formula engine', () => {
     expect(grid.get('Sheet1', 2, 5)).toBe('Paris') // INDEX/MATCH Sam's city
   })
 
+  it('IS-functions, stats, and multi-criteria', () => {
+    const one = (f: string) => createEngine().compute(parse(`| x |\n|---|\n| ${f} |\n`)).get('Sheet1', 0, 2)
+    expect(one('=ISNUMBER(5)')).toBe(true)
+    expect(one('=ISTEXT("a")')).toBe(true)
+    expect(one('=ISERROR(1/0)')).toBe(true)
+    expect(one('=MEDIAN(1, 3, 2, 5, 4)')).toBe(3)
+    const src =
+      '| Cat | Amt |\n| --- | ---: |\n| a | 10 |\n| b | 20 |\n| a | 30 |\n| r | =SUMIFS(B2:B4, A2:A4, "a") | =COUNTIFS(A2:A4, "a", B2:B4, ">15") |\n| l | =LARGE(B2:B4, 2) | =XLOOKUP("b", A2:A4, B2:B4) |\n'
+    const g = createEngine().compute(parse(src))
+    expect(g.get('Sheet1', 1, 5)).toBe(40) // SUMIFS a → 10+30
+    expect(g.get('Sheet1', 2, 5)).toBe(1) // COUNTIFS a AND >15 → only 30
+    expect(g.get('Sheet1', 1, 6)).toBe(20) // LARGE 2nd = 20
+    expect(g.get('Sheet1', 2, 6)).toBe(20) // XLOOKUP b → 20
+  })
+
   it('date functions', () => {
     const one = (f: string) => createEngine().compute(parse(`| x |\n|---|\n| ${f} |\n`)).get('Sheet1', 0, 2)
     expect(one('=DATE(2026, 7, 3)')).toBe('2026-07-03')
