@@ -851,6 +851,51 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     [rect, rawAt, valueAt, locale],
   )
 
+  // Apply pasted plain text at the anchor. Shared by the paste event and the async-clipboard fallback.
+  const pasteViaEvent = useRef(false)
+  const applyPaste = useCallback(
+    (data: string) => {
+      if (!editable || !data) return
+      setCopyRect(null) // paste consumes the marching-ants marquee
+      const writes: { col: number; row: number; value: string }[] = []
+      const buf = clip.current
+      // Internal paste (our own copy, unchanged): keep raw cells and shift relative refs by the offset.
+      if (buf && buf.tsv === data.replace(/\r/g, '').replace(/\n$/, '')) {
+        const dCol = rect.minCol - buf.origin.col
+        const dRow = rect.minRow - buf.origin.row
+        const target = new Set<string>()
+        buf.cells.forEach((row, dr) => {
+          row.forEach((raw, dc) => {
+            const col = rect.minCol + dc
+            const r = rect.minRow + dr
+            target.add(`${col},${r}`)
+            writes.push({ col, row: r, value: raw.trim().startsWith('=') ? offsetReferences(raw, dCol, dRow) : raw })
+          })
+        })
+        if (buf.cut) {
+          for (let dr = 0; dr < buf.cells.length; dr++)
+            for (let dc = 0; dc < buf.cells[0]!.length; dc++) {
+              const col = buf.origin.col + dc
+              const r = buf.origin.row + dr
+              if (!target.has(`${col},${r}`)) writes.push({ col, row: r, value: '' })
+            }
+          clip.current = null
+        }
+        commitMany(writes)
+        return
+      }
+      // External paste: split TSV/newlines into a literal grid at the anchor.
+      const rows = data.replace(/\r/g, '').replace(/\n$/, '').split('\n')
+      rows.forEach((line, dr) => {
+        line.split('\t').forEach((cell, dc) => {
+          writes.push({ col: rect.minCol + dc, row: rect.minRow + dr, value: cell })
+        })
+      })
+      commitMany(writes)
+    },
+    [editable, rect, commitMany],
+  )
+
   const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLElement>) => {
       if (editing) return
@@ -871,6 +916,23 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           ta.select()
         }
         return // do NOT preventDefault — let the native copy/cut of the selected text proceed
+      }
+      // Paste: the paste event doesn't reliably deliver data on iOS, so also read via the async
+      // Clipboard API from this keydown gesture. A flag prevents a double-apply on desktop.
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && /^[vV]$/.test(e.key) && editable) {
+        pasteViaEvent.current = false
+        const ta = keyCatcherRef.current
+        if (ta) ta.value = ''
+        // Defer, so on desktop the paste event handles it first (no clipboard-read prompt); only if
+        // it didn't (iOS: event brings no data) do we fall back to the async Clipboard API.
+        setTimeout(() => {
+          if (pasteViaEvent.current) return
+          navigator.clipboard
+            ?.readText?.()
+            .then((text) => text && applyPaste(text))
+            .catch(() => {})
+        }, 50)
+        return
       }
       if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
         if (e.shiftKey) redo()
@@ -1027,6 +1089,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       sheet,
       copyRect,
       buildClipboard,
+      applyPaste,
     ],
   )
 
@@ -1057,47 +1120,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       if (editing || !editable) return
       const data = e.clipboardData.getData('text/plain')
       if (!data) return
-      setCopyRect(null) // paste consumes the marching-ants marquee
-      const writes: { col: number; row: number; value: string }[] = []
-      // Internal paste (our own copy, unchanged): keep raw cells and shift relative refs by the offset.
-      const buf = clip.current
-      if (buf && buf.tsv === data.replace(/\r/g, '').replace(/\n$/, '')) {
-        const dCol = rect.minCol - buf.origin.col
-        const dRow = rect.minRow - buf.origin.row
-        const target = new Set<string>()
-        buf.cells.forEach((row, dr) => {
-          row.forEach((raw, dc) => {
-            const col = rect.minCol + dc
-            const r = rect.minRow + dr
-            target.add(`${col},${r}`)
-            writes.push({ col, row: r, value: raw.trim().startsWith('=') ? offsetReferences(raw, dCol, dRow) : raw })
-          })
-        })
-        // On cut, clear the source — but not any cell the paste already overwrote (overlapping move).
-        if (buf.cut) {
-          for (let dr = 0; dr < buf.cells.length; dr++)
-            for (let dc = 0; dc < buf.cells[0]!.length; dc++) {
-              const col = buf.origin.col + dc
-              const r = buf.origin.row + dr
-              if (!target.has(`${col},${r}`)) writes.push({ col, row: r, value: '' })
-            }
-          clip.current = null
-        }
-        commitMany(writes)
-        e.preventDefault()
-        return
-      }
-      // External paste: split TSV/newlines into a literal grid at the anchor.
-      const rows = data.replace(/\r/g, '').replace(/\n$/, '').split('\n')
-      rows.forEach((line, dr) => {
-        line.split('\t').forEach((cell, dc) => {
-          writes.push({ col: rect.minCol + dc, row: rect.minRow + dr, value: cell })
-        })
-      })
-      commitMany(writes)
+      pasteViaEvent.current = true // tell the keydown/readText fallback the event already handled it
+      applyPaste(data)
       e.preventDefault()
     },
-    [editing, editable, rect, commitMany],
+    [editing, editable, applyPaste],
   )
 
   // Map a viewport point to a cell, so a parked-at-the-edge drag keeps extending as content scrolls.
