@@ -33,8 +33,12 @@ Read [`docs/FORMAT.md`](docs/FORMAT.md) for the normative format, and
 
 | Package | What it is |
 |---|---|
-| [`@defter/core`](packages/core) | Headless, framework-agnostic TypeScript. Parse/serialize, A1 coordinates, minimal-splice edits, reference rewriting, projection. No React, no DOM. |
-| `@defter/react` | The grid renderer — a thin, themeable (CSS-variable) projection of the text model. Bring your own `Y.Text` for collaboration; no bundled network provider. |
+| [`@defter/core`](packages/core) | Headless, framework-agnostic TypeScript. Parse/serialize, A1 coordinates, values/formatting, structured edits, reference rewriting, minimal-splice diff, projection, lint. No React, no DOM. |
+| [`@defter/formula`](packages/formula) | The default formula engine — a compact, dependency-free Excel-style evaluator (~30 functions, cross-sheet, cycle-safe). Implements core's pluggable `FormulaEngine`. |
+| [`@defter/react`](packages/react) | The grid renderer — a thin, themeable (CSS-variable) projection of the text. Selection, formula bar, copy/paste, merges, sheet tabs, undo/redo, 3 themes. |
+| [`@defter/yjs`](packages/yjs) | Collaboration binding: hand it a `Y.Text` and it keeps the canonical text in sync via minimal splices. Ships no network provider — inject the shared type. |
+
+**For agents:** [`docs/AGENTS.md`](docs/AGENTS.md) is the complete contract for authoring and editing Defter sheets.
 
 ## Status
 
