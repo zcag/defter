@@ -13,14 +13,22 @@
     "typecheck": "tsc -b",
     "demo": "pnpm --filter @defter/demo dev",
     "demo:build": "pnpm --filter @defter/demo build",
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build -o storybook-static",
     "lint": "biome check .",
     "format": "biome format --write ."
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@storybook/react": "^8.5.3",
+    "@storybook/react-vite": "^8.5.3",
     "@types/react": "^19.0.8",
+    "@vitejs/plugin-react": "^4.3.4",
     "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "storybook": "^8.5.3",
     "typescript": "^5.7.3",
+    "vite": "^6.0.11",
     "vitest": "^3.0.5",
     "fast-check": "^3.23.2",
     "yjs": "^13.6.20"

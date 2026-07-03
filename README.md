@@ -8,7 +8,7 @@ The plain-text markdown document *is* the source of truth. The grid is a live, e
 projection of it — so collaboration, versioning, full-text search, and AI agents all
 operate on ordinary text instead of a hidden binary/JSON model.
 
-[Live demo → defter.cagdas.io](https://defter.cagdas.io) · [Format spec](docs/FORMAT.md)
+[Live demo → defter.cagdas.io](https://defter.cagdas.io) · [Storybook](https://defter.cagdas.io/storybook/) · [Format spec](docs/FORMAT.md)
 
 </div>
 
@@ -48,9 +48,11 @@ Early and moving fast. See the [live demo](https://defter.cagdas.io) for what cu
 
 ```bash
 pnpm install
-pnpm test          # vitest
-pnpm build         # build all packages
-pnpm demo          # run the demo site
+pnpm test              # vitest (43 tests)
+pnpm build             # build all packages
+pnpm demo              # run the demo site
+pnpm storybook         # component stories for every state
+bash scripts/deploy.sh # build + deploy demo & storybook to defter.cagdas.io
 ```
 
 ## License
