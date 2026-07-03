@@ -81,6 +81,18 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+/** Increase/decrease the decimal-place count of a number format (preserving grouping). */
+function adjustDecimals(format: string | undefined, delta: number): string {
+  const sec = (format || '#,##0').split(';')[0]!
+  const dot = sec.indexOf('.')
+  const current = dot >= 0 ? (sec.slice(dot + 1).match(/0/g) || []).length : 0
+  const decimals = Math.max(0, Math.min(9, current + delta))
+  const grouped = sec.includes(',')
+  const currency = /^[$€£₺¥]/.exec(sec)?.[0] ?? ''
+  const int = `${currency}${grouped ? '#,##0' : '0'}`
+  return decimals > 0 ? `${int}.${'0'.repeat(decimals)}` : int
+}
+
 interface Pos {
   col: number
   row: number
@@ -740,6 +752,29 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             </button>
           ))}
           <span className="defter__tb-sep" />
+          <button className="defter__tb" title="Percent" onClick={() => applyStyle({ format: '0%' })}>
+            %
+          </button>
+          <button className="defter__tb" title="Currency" onClick={() => applyStyle({ format: '$#,##0.00' })}>
+            $
+          </button>
+          <button className="defter__tb" title="Thousands" onClick={() => applyStyle({ format: '#,##0' })}>
+            ,
+          </button>
+          <button
+            className="defter__tb"
+            title="Fewer decimals"
+            onClick={() => applyStyle({ format: adjustDecimals(activeAttrs.format, -1) })}
+          >
+            .0−
+          </button>
+          <button
+            className="defter__tb"
+            title="More decimals"
+            onClick={() => applyStyle({ format: adjustDecimals(activeAttrs.format, 1) })}
+          >
+            .0+
+          </button>
           <select
             className="defter__tb-select"
             value={activeAttrs.format ?? ''}
