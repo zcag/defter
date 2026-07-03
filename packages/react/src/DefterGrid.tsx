@@ -880,11 +880,22 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         const span = styles.mergeAnchor(col, row)
         const isFocus = sel.focus.col === col && sel.focus.row === row
         const inSel = col >= rect.minCol && col <= rect.maxCol && row >= rect.minRow && row <= rect.maxRow
+        const selBorder = inSel
+          ? [
+              row === rect.minRow && 'inset 0 2px 0 0 var(--defter-selection-border)',
+              row === rect.maxRow && 'inset 0 -2px 0 0 var(--defter-selection-border)',
+              col === rect.minCol && 'inset 2px 0 0 0 var(--defter-selection-border)',
+              col === rect.maxCol && 'inset -2px 0 0 0 var(--defter-selection-border)',
+            ]
+              .filter(Boolean)
+              .join(', ')
+          : ''
         return (
           <Cell
             key={col}
             col={col}
             row={row}
+            selBorder={selBorder}
             sheet={sheet}
             styles={styles}
             computed={computed}
@@ -1277,6 +1288,7 @@ interface CellProps {
   colAlign: 'left' | 'center' | 'right' | null
   focus: boolean
   inSelection: boolean
+  selBorder?: string
   frozen?: boolean
   frozenCol?: boolean
   fillHandle?: boolean
@@ -1450,6 +1462,7 @@ function Cell(p: CellProps): React.JSX.Element {
 
   const css = styleToCss(attrs)
   if (!attrs.align && p.colAlign) css.textAlign = p.colAlign
+  if (p.selBorder) css.boxShadow = p.selBorder
   if (numVal !== null && attrs.format && !attrs.color) {
     const fc = formatColor(numVal, attrs.format)
     if (fc) css.color = resolveColor(fc)

@@ -417,7 +417,6 @@
   background: var(--defter-selection-bg);
 }
 .defter__cell--focus {
-  box-shadow: inset 0 0 0 2px var(--defter-selection-border);
   position: relative;
 }
 .defter__fill-handle {
