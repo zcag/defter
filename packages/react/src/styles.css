@@ -203,6 +203,7 @@
 }
 .defter__tb-select {
   height: 28px;
+  min-width: 62px;
   border: 1px solid var(--defter-grid-line-strong);
   border-radius: 6px;
   background: var(--defter-bg);
@@ -211,6 +212,50 @@
   padding: 0 6px;
   cursor: pointer;
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+.defter__tb-select .defter__caret {
+  position: static;
+  transform: none;
+}
+/* Vertical option list (number-format picker) sharing the popover container. */
+.defter__popover--list {
+  display: block;
+  grid-template-columns: none;
+  min-width: 180px;
+  padding: 5px;
+}
+.defter__pop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-size: 13px;
+  color: var(--defter-fg);
+  cursor: pointer;
+  text-align: left;
+}
+.defter__pop-row:hover {
+  background: var(--defter-grid-line);
+}
+.defter__pop-row--on {
+  color: var(--defter-accent);
+}
+.defter__pop-sample {
+  color: var(--defter-muted-fg);
+  font-family: var(--defter-font-mono);
+  font-size: 12px;
+}
+.defter__pop-row--on .defter__pop-sample {
+  color: var(--defter-accent);
 }
 .defter__popover {
   position: absolute;
@@ -514,8 +559,32 @@
   pointer-events: none;
 }
 .defter__select-editor {
-  padding: 0 2px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: var(--defter-row-height);
+  padding: 0 6px;
+  box-sizing: border-box;
+  background: var(--defter-bg);
+  outline: 2px solid var(--defter-focus-ring);
+  outline-offset: -2px;
   cursor: pointer;
+}
+.defter__select-value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.defter__select-editor .defter__caret {
+  pointer-events: none;
+}
+.defter__select-list {
+  font-family: var(--defter-font);
+}
+.defter__select-list .defter__opt--sel {
+  font-weight: 600;
 }
 .defter__cell--editing {
   overflow: visible;

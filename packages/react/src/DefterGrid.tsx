@@ -106,6 +106,16 @@ function adjustDecimals(format: string | undefined, delta: number): string {
   })
 }
 
+/** Number-format presets for the toolbar picker (value stored on the cell, label shown as a sample). */
+const NUMBER_FORMATS: { value: string; label: string; name: string }[] = [
+  { value: '', label: '123', name: 'Plain' },
+  { value: '#,##0', label: '1,234', name: 'Number' },
+  { value: '#,##0.00', label: '1,234.00', name: 'Number (2dp)' },
+  { value: '$#,##0.00', label: '$1,234.00', name: 'Currency' },
+  { value: '0%', label: '0%', name: 'Percent' },
+  { value: '0.00%', label: '0.00%', name: 'Percent (2dp)' },
+]
+
 function Icon({ name }: { name: string }): React.JSX.Element {
   const c = {
     width: 16,
@@ -1091,14 +1101,14 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const activeAttrs = styles.attrs(sel.focus.col, sel.focus.row)
   const activeRaw = rawAt(sel.focus.col, sel.focus.row)
 
-  const [popover, setPopover] = useState<{ kind: 'fill' | 'text' | 'border'; x: number; y: number } | null>(null)
+  const [popover, setPopover] = useState<{ kind: 'fill' | 'text' | 'border' | 'format'; x: number; y: number } | null>(null)
   useEffect(() => {
     if (!popover) return
     const close = () => setPopover(null)
     window.addEventListener('click', close)
     return () => window.removeEventListener('click', close)
   }, [popover])
-  const openPopover = (kind: 'fill' | 'text' | 'border', e: React.MouseEvent) => {
+  const openPopover = (kind: 'fill' | 'text' | 'border' | 'format', e: React.MouseEvent) => {
     e.stopPropagation()
     if (popover?.kind === kind) return setPopover(null)
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
@@ -1215,14 +1225,10 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           <button className="defter__tb defter__tb--wide" title="More decimals" onClick={() => applyStyle({ format: adjustDecimals(activeAttrs.format, 1) })}>
             .00
           </button>
-          <select className="defter__tb-select" value={activeAttrs.format ?? ''} title="Number format" onChange={(e) => applyStyle({ format: e.target.value || undefined })}>
-            <option value="">123</option>
-            <option value="#,##0">1,234</option>
-            <option value="#,##0.00">1,234.00</option>
-            <option value="$#,##0.00">$1,234.00</option>
-            <option value="0%">0%</option>
-            <option value="0.00%">0.00%</option>
-          </select>
+          <button className="defter__tb defter__tb-select" title="Number format" onClick={(e) => openPopover('format', e)}>
+            {NUMBER_FORMATS.find((f) => f.value === (activeAttrs.format ?? ''))?.label ?? '123'}
+            <span className="defter__caret" aria-hidden="true">▾</span>
+          </button>
           <span className="defter__tb-sep" />
 
           <button className={`defter__tb defter__tb--strong${activeAttrs.bold ? ' defter__tb--on' : ''}`} title="Bold (Ctrl+B)" onClick={() => applyStyle({ bold: !activeAttrs.bold })}>
@@ -1427,12 +1433,26 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
 
       {popover && (
         <div
-          className={`defter__popover${popover.kind === 'border' ? ' defter__popover--border' : ''}`}
+          className={`defter__popover${popover.kind === 'border' ? ' defter__popover--border' : ''}${popover.kind === 'format' ? ' defter__popover--list' : ''}`}
           style={{ position: 'fixed', left: popover.x, top: popover.y }}
           data-defter-theme={theme}
           onClick={(e) => e.stopPropagation()}
         >
-          {popover.kind === 'border' ? (
+          {popover.kind === 'format' ? (
+            NUMBER_FORMATS.map((f) => (
+              <button
+                key={f.value}
+                className={`defter__pop-row${(activeAttrs.format ?? '') === f.value ? ' defter__pop-row--on' : ''}`}
+                onClick={() => {
+                  applyStyle({ format: f.value || undefined })
+                  setPopover(null)
+                }}
+              >
+                <span>{f.name}</span>
+                <span className="defter__pop-sample">{f.label}</span>
+              </button>
+            ))
+          ) : popover.kind === 'border' ? (
             ([
               ['all', 'All borders'],
               ['inner', 'Inner borders'],
@@ -1772,6 +1792,70 @@ function CellEditor(p: {
   )
 }
 
+/** Themed dropdown for a data-validation cell — replaces the native <select> (OS chrome). */
+function SelectEditor(p: {
+  value: string
+  options: string[]
+  onCommit: (v: string) => void
+  onCancel: () => void
+}): React.JSX.Element {
+  const ref = useRef<HTMLDivElement>(null)
+  const [active, setActive] = useState(() => Math.max(0, p.options.indexOf(p.value)))
+  useEffect(() => {
+    ref.current?.focus()
+  }, [])
+  return (
+    <div
+      ref={ref}
+      className="defter__select-editor"
+      tabIndex={-1}
+      role="listbox"
+      onMouseDown={(e) => e.stopPropagation()}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) p.onCancel()
+      }}
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'ArrowDown') {
+          setActive((a) => Math.min(p.options.length - 1, a + 1))
+          e.preventDefault()
+        } else if (e.key === 'ArrowUp') {
+          setActive((a) => Math.max(0, a - 1))
+          e.preventDefault()
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+          p.onCommit(p.options[active] ?? '')
+          e.preventDefault()
+        } else if (e.key === 'Escape') {
+          p.onCancel()
+          e.preventDefault()
+        }
+      }}
+    >
+      <span className="defter__select-value">{p.value || ' '}</span>
+      <span className="defter__caret" aria-hidden="true">
+        ▾
+      </span>
+      <ul className="defter__autocomplete defter__select-list">
+        {p.options.map((o, i) => (
+          <li
+            key={o}
+            role="option"
+            aria-selected={o === p.value}
+            className={`${i === active ? 'defter__ac--on' : ''}${o === p.value ? ' defter__opt--sel' : ''}`}
+            onMouseEnter={() => setActive(i)}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              p.onCommit(o)
+            }}
+          >
+            {o}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 function Cell(p: CellProps): React.JSX.Element {
   const staticAttrs = p.styles.attrs(p.col, p.row)
   const attrs =
@@ -1838,25 +1922,12 @@ function Cell(p: CellProps): React.JSX.Element {
       onDoubleClick={p.onBeginEdit}
     >
       {p.editing !== null && validation ? (
-        <select
-          className="defter__editor defter__select-editor"
-          value={validation.includes(p.editing) ? p.editing : ''}
-          autoFocus
-          onChange={(e) => p.onCommit(e.target.value, 'down')}
-          onBlur={() => p.onCancel()}
-          onMouseDown={(e) => e.stopPropagation()}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') p.onCancel()
-            e.stopPropagation()
-          }}
-        >
-          <option value="" />
-          {validation.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
+        <SelectEditor
+          value={p.editing}
+          options={validation}
+          onCommit={(v) => p.onCommit(v, 'down')}
+          onCancel={p.onCancel}
+        />
       ) : p.editing !== null ? (
         <CellEditor
           value={p.editing}
