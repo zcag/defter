@@ -307,6 +307,17 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     pushEdit(serialize(clearStylesIn(model, si, rect.minCol, rect.minRow, rect.maxCol, rect.maxRow)))
   }, [model, pushEdit, si, rect])
 
+  const autoSum = useCallback(() => {
+    const { col, row } = sel.focus
+    const end = row - 1
+    if (end < 2) return
+    let start = end
+    while (start > 2 && typeof parseLiteral(getCell(sheet, col, start - 1), locale) === 'number') start--
+    const c = columnLabel(col)
+    pushEdit(serialize(setCell(model, si, col, row, `=SUM(${c}${start}:${c}${end})`)))
+    setSel({ anchor: { col, row }, focus: { col, row } })
+  }, [sel.focus, sheet, locale, model, si, pushEdit])
+
   const commit = useCallback(
     (col: number, row: number, value: string, move?: Pos) => {
       pushEdit(serialize(setCell(model, si, col, row, value)))
@@ -752,6 +763,40 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
               {token ? '' : '⊘'}
             </button>
           ))}
+          <span className="defter__tb-sep" />
+          {(
+            [
+              ['', 'default'],
+              ['accent', 'blue'],
+              ['success', 'green'],
+              ['warning', 'amber'],
+              ['danger', 'red'],
+            ] as const
+          ).map(([token, label]) => (
+            <button
+              key={`fg-${label}`}
+              className="defter__swatch defter__swatch--fg"
+              title={`Text ${label}`}
+              style={{ color: token ? `var(--defter-token-${token})` : 'var(--defter-fg)' }}
+              onClick={() => applyStyle({ color: token || undefined })}
+            >
+              A
+            </button>
+          ))}
+          <span className="defter__tb-sep" />
+          <button
+            className={`defter__tb${activeAttrs.wrap ? ' defter__tb--on' : ''}`}
+            title="Wrap text"
+            onClick={() => applyStyle({ wrap: !activeAttrs.wrap })}
+          >
+            ⤶
+          </button>
+          <button className="defter__tb" title="Borders" onClick={() => applyStyle({ border: 'all' })}>
+            ▦
+          </button>
+          <button className="defter__tb" title="Sum the column above" onClick={autoSum}>
+            Σ
+          </button>
           <span className="defter__tb-sep" />
           <button className="defter__tb" title="Percent" onClick={() => applyStyle({ format: '0%' })}>
             %

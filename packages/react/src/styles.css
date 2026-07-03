@@ -175,6 +175,11 @@
   align-items: center;
   justify-content: center;
 }
+.defter__swatch--fg {
+  background: var(--defter-bg);
+  font-weight: 700;
+  font-size: 12px;
+}
 .defter__tb-select {
   height: 26px;
   border: 1px solid var(--defter-grid-line-strong);
