@@ -70,14 +70,33 @@ Two adversarial review passes; 58 tests. See the [live demo](https://defter.cagd
 
 ## Develop
 
+A `Makefile` wraps every task — run `make` to list them:
+
 ```bash
-pnpm install
-pnpm test              # vitest (43 tests)
-pnpm build             # build all packages
-pnpm demo              # run the demo site
-pnpm storybook         # component stories for every state
-bash scripts/deploy.sh # build + deploy demo & storybook to defter.cagdas.io
+make install     # install dependencies
+make test        # vitest
+make build       # build all packages
+make demo        # run the demo site
+make storybook   # component stories for every state
+make deploy      # build + deploy demo & storybook to defter.cagdas.io
 ```
+
+## Release
+
+Packages are published to npm under the `@defter` scope. `workspace:*` deps are rewritten to the
+real version on publish, and only `dist/` ships (sources are inlined into the sourcemaps).
+
+```bash
+npm login              # once, as a member of the @defter npm org
+make publish-dry       # preview exactly what would be pushed
+make publish           # build + publish all packages to npm
+
+make pack              # OR: tarballs in ./dist-tarballs/ to install without npm
+                       #     (elsewhere: pnpm add /abs/path/to/defter-react-0.1.0.tgz)
+```
+
+Bump the `version` in each `packages/*/package.json` before publishing a new release.
+See [`docs/INTEGRATION.md`](docs/INTEGRATION.md) for how a host app consumes the packages.
 
 ## License
 
