@@ -305,6 +305,9 @@
   border-spacing: 0;
   table-layout: fixed;
   width: max-content;
+  /* Dragging a cell selection must not also start a native text selection over the cell text. */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .defter__corner,
@@ -539,6 +542,9 @@
   padding: 0 5px;
   margin: 0;
   box-sizing: border-box;
+  /* Inputs stay text-selectable even though the grid around them disables selection. */
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Status bar */

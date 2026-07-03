@@ -553,6 +553,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           e.preventDefault()
           return
         }
+        if (k === 'u') {
+          applyStyle({ underline: !styles.attrs(sel.focus.col, sel.focus.row).underline })
+          e.preventDefault()
+          return
+        }
         if (k === 'd') {
           pushEdit(serialize(fillDown(model, si, rect.minCol, rect.maxCol, rect.minRow, rect.maxRow)))
           e.preventDefault()
@@ -906,6 +911,29 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     },
     [colWidth],
   )
+  // Auto-fit a column to its widest cell (double-click its right border, like a spreadsheet).
+  // A DOM Range over each cell's contents measures the real painted text geometry — exact across
+  // bold/fonts and unaffected by the cell's own overflow clip (the text still lays out full-width).
+  const autoFitCol = useCallback(
+    (col: number) => {
+      const root = rootRef.current
+      if (!root) return
+      const range = document.createRange()
+      let max = 0
+      root.querySelectorAll<HTMLElement>(`td[data-col="${col}"]`).forEach((el) => {
+        if (!el.firstChild) return
+        range.selectNodeContents(el)
+        // Exclude the fill-handle corner marker so it doesn't inflate the measured content width.
+        const handle = el.querySelector(':scope > .defter__fill-handle')
+        if (handle) range.setEndBefore(handle)
+        const w = range.getBoundingClientRect().width
+        if (w > max) max = w
+      })
+      const width = Math.min(400, Math.max(48, Math.ceil(max) + 16)) // 12px cell padding + 4px slack
+      pushEdit(serialize(setColumnWidth(model, si, col, width)))
+    },
+    [model, si, pushEdit],
+  )
 
   const onContextMenu = useCallback(
     (e: React.MouseEvent) => {
@@ -1120,6 +1148,9 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           <button className={`defter__tb defter__tb--strong${activeAttrs.italic ? ' defter__tb--on' : ''}`} title="Italic (Ctrl+I)" onClick={() => applyStyle({ italic: !activeAttrs.italic })}>
             <i>I</i>
           </button>
+          <button className={`defter__tb defter__tb--strong${activeAttrs.underline ? ' defter__tb--on' : ''}`} title="Underline (Ctrl+U)" onClick={() => applyStyle({ underline: !activeAttrs.underline })}>
+            <u>U</u>
+          </button>
           <button className={`defter__tb defter__tb--strong${activeAttrs.strike ? ' defter__tb--on' : ''}`} title="Strikethrough" onClick={() => applyStyle({ strike: !activeAttrs.strike })}>
             <s>S</s>
           </button>
@@ -1248,8 +1279,13 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                   {editable && (
                     <span
                       className="defter__resizer"
+                      title="Drag to resize · double-click to fit"
                       onMouseDown={(e) => startResize(c, e)}
                       onClick={(e) => e.stopPropagation()}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation()
+                        autoFitCol(c)
+                      }}
                     />
                   )}
                 </th>
