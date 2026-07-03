@@ -9,6 +9,8 @@ import {
   columnLabel,
   deleteCols,
   deleteRows,
+  fillDown,
+  fillRight,
   formatValue,
   getCell,
   insertCols,
@@ -229,6 +231,21 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     [rawAt, computed, sheet.name, locale],
   )
 
+  const applyStyle = useCallback(
+    (attrs: StyleAttrs) => {
+      const range = {
+        start: { col: rect.minCol, row: rect.minRow, colAbs: false, rowAbs: false },
+        end: { col: rect.maxCol, row: rect.maxRow, colAbs: false, rowAbs: false },
+        sheet: undefined,
+      }
+      pushEdit(serialize(setStyle(model, si, { kind: 'range', range }, attrs)))
+    },
+    [model, pushEdit, si, rect],
+  )
+  const clearFormatting = useCallback(() => {
+    pushEdit(serialize(clearStylesIn(model, si, rect.minCol, rect.minRow, rect.maxCol, rect.maxRow)))
+  }, [model, pushEdit, si, rect])
+
   const commit = useCallback(
     (col: number, row: number, value: string, move?: Pos) => {
       pushEdit(serialize(setCell(model, si, col, row, value)))
@@ -284,6 +301,34 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         e.preventDefault()
         return
       }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && editable) {
+        const k = e.key.toLowerCase()
+        if (k === 'b') {
+          applyStyle({ bold: !styles.attrs(sel.focus.col, sel.focus.row).bold })
+          e.preventDefault()
+          return
+        }
+        if (k === 'i') {
+          applyStyle({ italic: !styles.attrs(sel.focus.col, sel.focus.row).italic })
+          e.preventDefault()
+          return
+        }
+        if (k === 'd') {
+          pushEdit(serialize(fillDown(model, si, rect.minCol, rect.maxCol, rect.minRow, rect.maxRow)))
+          e.preventDefault()
+          return
+        }
+        if (k === 'r') {
+          pushEdit(serialize(fillRight(model, si, rect.minCol, rect.maxCol, rect.minRow, rect.maxRow)))
+          e.preventDefault()
+          return
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
+        setSel({ anchor: { col: 0, row: 1 }, focus: { col: totalCols - 1, row: totalRows } })
+        e.preventDefault()
+        return
+      }
       const { col, row } = sel.focus
       const shift = e.shiftKey
       switch (e.key) {
@@ -331,7 +376,25 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           }
       }
     },
-    [editing, sel.focus, moveFocus, rect, rawAt, commitMany, editable, beginEdit, undo, redo],
+    [
+      editing,
+      sel.focus,
+      moveFocus,
+      rect,
+      rawAt,
+      commitMany,
+      editable,
+      beginEdit,
+      undo,
+      redo,
+      applyStyle,
+      styles,
+      model,
+      pushEdit,
+      si,
+      totalCols,
+      totalRows,
+    ],
   )
 
   const onCopy = useCallback(
@@ -438,21 +501,6 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     commitMany(writes)
     setMenu(null)
   }, [rect, rawAt, commitMany])
-
-  const applyStyle = useCallback(
-    (attrs: StyleAttrs) => {
-      const range = {
-        start: { col: rect.minCol, row: rect.minRow, colAbs: false, rowAbs: false },
-        end: { col: rect.maxCol, row: rect.maxRow, colAbs: false, rowAbs: false },
-        sheet: undefined,
-      }
-      pushEdit(serialize(setStyle(model, si, { kind: 'range', range }, attrs)))
-    },
-    [model, pushEdit, si, rect],
-  )
-  const clearFormatting = useCallback(() => {
-    pushEdit(serialize(clearStylesIn(model, si, rect.minCol, rect.minRow, rect.maxCol, rect.maxRow)))
-  }, [model, pushEdit, si, rect])
 
   const activeAttrs = styles.attrs(sel.focus.col, sel.focus.row)
   const activeRaw = rawAt(sel.focus.col, sel.focus.row)

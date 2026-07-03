@@ -179,6 +179,57 @@ function rewriteRefToken(
   return `${sheetPrefix}${colAbs ? '$' : ''}${columnLabel(newCol)}${rowAbs ? '$' : ''}${newRow}`
 }
 
+/**
+ * Offset the *relative* references in a formula by (dCol, dRow) — the semantics of filling a
+ * formula across cells. Absolute (`$`) parts stay put; sheet prefixes are preserved.
+ */
+export function offsetReferences(formula: string, dCol: number, dRow: number): string {
+  let out = ''
+  let i = 0
+  const n = formula.length
+  while (i < n) {
+    const ch = formula[i]!
+    if (ch === '"') {
+      out += ch
+      i++
+      while (i < n) {
+        out += formula[i]
+        if (formula[i] === '"') {
+          if (formula[i + 1] === '"') {
+            out += formula[i + 1]
+            i += 2
+            continue
+          }
+          i++
+          break
+        }
+        i++
+      }
+      continue
+    }
+    const prev = i > 0 ? formula[i - 1]! : ''
+    if (!/[A-Za-z0-9_$.!']/.test(prev)) {
+      const m = REF_TOKEN.exec(formula.slice(i))
+      if (m) {
+        const after = formula[i + m[0].length] ?? ''
+        if (after !== '(' && !/[A-Za-z0-9_]/.test(after)) {
+          const sheetPrefix = m[1] ?? ''
+          const colAbs = m[2] === '$'
+          const rowAbs = m[4] === '$'
+          const col = colAbs ? columnIndex(m[3]!) : Math.max(0, columnIndex(m[3]!) + dCol)
+          const row = rowAbs ? Number.parseInt(m[5]!, 10) : Math.max(1, Number.parseInt(m[5]!, 10) + dRow)
+          out += `${sheetPrefix}${colAbs ? '$' : ''}${columnLabel(col)}${rowAbs ? '$' : ''}${row}`
+          i += m[0].length
+          continue
+        }
+      }
+    }
+    out += ch
+    i++
+  }
+  return out
+}
+
 function shiftStyleTargets(rules: StyleRule[], axis: Axis, at: number, delta: number): StyleRule[] {
   const out: StyleRule[] = []
   for (const rule of rules) {

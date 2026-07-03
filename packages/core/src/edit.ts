@@ -13,7 +13,7 @@ import {
   cloneModel,
   emptySheet,
 } from './model.js'
-import { shiftReferencesInModel } from './refs.js'
+import { offsetReferences, shiftReferencesInModel } from './refs.js'
 
 function grow(sheet: Sheet, minWidth: number, minRows: number): void {
   if (minWidth > sheet.width) {
@@ -66,6 +66,36 @@ export function insertCols(model: Model, sheetIndex: number, at: number, count =
   sheet.colAlign.splice(index, 0, ...Array(count).fill(null))
   sheet.width += count
   shiftReferencesInModel(next, sheet.name, 'col', at, count)
+  return next
+}
+
+function fillOne(src: string, dCol: number, dRow: number): string {
+  return src.trim().startsWith('=') ? `=${offsetReferences(src.trim().slice(1), dCol, dRow)}` : src
+}
+
+/** Fill the top row of the range down into the rows below, adjusting relative references. */
+export function fillDown(model: Model, sheetIndex: number, minCol: number, maxCol: number, minRow: number, maxRow: number): Model {
+  const next = cloneModel(model)
+  const sheet = next.sheets[sheetIndex]
+  if (!sheet) return next
+  grow(sheet, maxCol + 1, maxRow)
+  for (let c = minCol; c <= maxCol; c++) {
+    const src = sheet.grid[minRow - 1]?.[c] ?? ''
+    for (let r = minRow + 1; r <= maxRow; r++) sheet.grid[r - 1]![c] = fillOne(src, 0, r - minRow)
+  }
+  return next
+}
+
+/** Fill the left column of the range rightward, adjusting relative references. */
+export function fillRight(model: Model, sheetIndex: number, minCol: number, maxCol: number, minRow: number, maxRow: number): Model {
+  const next = cloneModel(model)
+  const sheet = next.sheets[sheetIndex]
+  if (!sheet) return next
+  grow(sheet, maxCol + 1, maxRow)
+  for (let r = minRow; r <= maxRow; r++) {
+    const src = sheet.grid[r - 1]?.[minCol] ?? ''
+    for (let c = minCol + 1; c <= maxCol; c++) sheet.grid[r - 1]![c] = fillOne(src, c - minCol, 0)
+  }
   return next
 }
 

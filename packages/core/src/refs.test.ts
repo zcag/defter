@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { deleteCols, deleteRows, insertCols, insertRows, setCell } from './edit.js'
+import { deleteCols, deleteRows, fillDown, insertCols, insertRows, setCell } from './edit.js'
 import { getCell } from './model.js'
 import { parse } from './parse.js'
-import { rewriteFormula } from './refs.js'
+import { offsetReferences, rewriteFormula } from './refs.js'
 import { serialize } from './serialize.js'
 
 describe('rewriteFormula', () => {
@@ -49,6 +49,20 @@ describe('structural edits keep formulas correct', () => {
     const m = setCell(parse('| a |\n|---|\n| 1 |\n'), 0, 2, 3, 'hi')
     expect(getCell(m.sheets[0]!, 2, 3)).toBe('hi')
     expect(serialize(parse(serialize(m)))).toBe(serialize(m))
+  })
+
+  it('offsetReferences adjusts only relative parts', () => {
+    expect(offsetReferences('B2*C2', 0, 1)).toBe('B3*C3')
+    expect(offsetReferences('B$2*$C2', 0, 1)).toBe('B$2*$C3')
+    expect(offsetReferences('SUM(A1:A3)', 1, 0)).toBe('SUM(B1:B3)')
+  })
+
+  it('fillDown copies the top cell with relative refs shifted', () => {
+    const src = '| n | sq |\n|---|---|\n| 2 | =A2*A2 |\n| 3 |  |\n| 4 |  |\n'
+    const m = fillDown(parse(src), 0, 1, 1, 2, 4)
+    const sheet = m.sheets[0]!
+    expect(getCell(sheet, 1, 3)).toBe('=A3*A3')
+    expect(getCell(sheet, 1, 4)).toBe('=A4*A4')
   })
 
   it('insertCols shifts style targets', () => {
