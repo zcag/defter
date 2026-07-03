@@ -27,7 +27,7 @@
   --defter-bar-bg: #fbfbfc;
 
   --defter-accent: #2f6df6;
-  --defter-selection-bg: rgba(47, 109, 246, 0.10);
+  --defter-selection-bg: rgba(47, 109, 246, 0.18);
   --defter-selection-border: #2f6df6;
   --defter-focus-ring: #2f6df6;
 
@@ -74,7 +74,7 @@
   --defter-corner-bg: #20242d;
   --defter-bar-bg: #191c23;
   --defter-accent: #5b8bff;
-  --defter-selection-bg: rgba(91, 139, 255, 0.16);
+  --defter-selection-bg: rgba(91, 139, 255, 0.26);
   --defter-selection-border: #5b8bff;
   --defter-focus-ring: #5b8bff;
   --defter-token-surface-1: #14161c;
@@ -108,7 +108,7 @@
   --defter-corner-bg: #ece2ce;
   --defter-bar-bg: #f5efe3;
   --defter-accent: #b6552b;
-  --defter-selection-bg: rgba(182, 85, 43, 0.12);
+  --defter-selection-bg: rgba(182, 85, 43, 0.20);
   --defter-selection-border: #b6552b;
   --defter-focus-ring: #b6552b;
   --defter-token-surface-1: #faf6ee;
@@ -396,6 +396,7 @@
 }
 
 .defter__cell {
+  position: relative;
   height: var(--defter-row-height);
   padding: 0 6px;
   border-right: 1px solid var(--defter-grid-line);
@@ -423,12 +424,24 @@
   font-family: var(--defter-font-mono);
   color: var(--defter-accent);
 }
-.defter__cell--insel {
+/*
+ * Selection is drawn as a color overlay strictly inside each cell (::after with inset:0, clipped
+ * by the cell's overflow:hidden) — so it works over cells that already have a fill and can never
+ * bleed into neighbouring cells. The active cell gets a clean contained ring.
+ */
+.defter__cell--insel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: var(--defter-selection-bg);
+  pointer-events: none;
 }
-.defter__cell--focus {
-  position: relative;
+.defter__cell--focus::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   box-shadow: inset 0 0 0 2px var(--defter-selection-border);
+  pointer-events: none;
 }
 .defter__fill-handle {
   position: absolute;
