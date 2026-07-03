@@ -1,6 +1,6 @@
 {
   "name": "@defterjs/yjs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Bind a Defter grid to a Yjs Y.Text for collaboration. Inject the shared type; the transport, persistence, and awareness stay entirely the host's concern.",
   "license": "MIT",
   "type": "module",
