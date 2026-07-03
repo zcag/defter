@@ -192,6 +192,27 @@ body {
   color: #fff;
   border-color: var(--accent);
 }
+.chip--x {
+  padding: 2px 8px;
+  line-height: 1;
+}
+.accent {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-family: var(--mono);
+}
+.accent input[type='color'] {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: none;
+  cursor: pointer;
+}
 .io {
   display: flex;
   gap: 6px;

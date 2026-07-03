@@ -11,7 +11,7 @@ import { FUNCTION_NAMES, createEngine } from '@defter/formula'
 import { DefterChart, DefterGrid } from '@defter/react'
 import { useYText } from '@defter/yjs'
 import ironcalcWasmUrl from '@ironcalc/wasm/wasm_bg.wasm?url'
-import { useMemo, useRef, useState } from 'react'
+import { type CSSProperties, useMemo, useRef, useState } from 'react'
 import * as Y from 'yjs'
 import { SAMPLES } from './samples.js'
 
@@ -52,6 +52,23 @@ export function App() {
   const [theme, setTheme] = useState<Theme>('light')
   const [showFormulas, setShowFormulas] = useState(false)
   const [proj, setProj] = useState<ProjView>('off')
+  const [accent, setAccent] = useState('')
+  // Host-driven theming: map one chosen colour onto the grid's public --defter-* tokens. Passed as
+  // the `style` prop, these inline vars win over the built-in theme and update the grid live.
+  const accentStyle = useMemo<CSSProperties | undefined>(() => {
+    if (!accent) return undefined
+    const n = Number.parseInt(accent.slice(1), 16)
+    const rgb = `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+    return {
+      '--defter-accent': accent,
+      '--defter-selection-border': accent,
+      '--defter-focus-ring': accent,
+      '--defter-selection-bg': `rgba(${rgb}, 0.18)`,
+      '--defter-token-accent': accent,
+      '--defter-header-active-fg': accent,
+      '--defter-header-active-bg': `rgba(${rgb}, 0.14)`,
+    } as CSSProperties
+  }, [accent])
 
   const selectSample = (id: string) => {
     const s = SAMPLES.find((x) => x.id === id)!
@@ -130,6 +147,15 @@ export function App() {
               ]}
               onChange={(v) => setTheme(v as Theme)}
             />
+            <label className="accent" title="Live host theming — maps one colour onto the grid's --defter-* tokens via the style prop">
+              <span>Accent</span>
+              <input type="color" value={accent || '#2f6df6'} onChange={(e) => setAccent(e.target.value)} />
+              {accent && (
+                <button className="chip chip--x" onClick={() => setAccent('')} title="Reset to theme default">
+                  ×
+                </button>
+              )}
+            </label>
             <button
               className={`chip${showFormulas ? ' chip--on' : ''}`}
               onClick={() => setShowFormulas((v) => !v)}
@@ -202,6 +228,7 @@ export function App() {
                 onChange={setText}
                 engine={engine}
                 theme={theme}
+                style={accentStyle}
                 showFormulas={showFormulas}
                 toolbar
                 formulaBar

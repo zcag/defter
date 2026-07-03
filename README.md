@@ -30,6 +30,8 @@ natively. Computed formula values are derived at read time, never stored.
 
 Read [`docs/FORMAT.md`](docs/FORMAT.md) for the normative format, and
 [`docs/RATIONALE.md`](docs/RATIONALE.md) for the design decisions and their trade-offs.
+Theming the grid with your own colours (statically or live at runtime) is documented in
+[`docs/THEMING.md`](docs/THEMING.md).
 
 ## Packages
 
