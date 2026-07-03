@@ -212,13 +212,14 @@ function parseChartLine(line: string): ChartSpec | null {
   for (const m of rest.matchAll(CHART_ATTR)) kv[m[1]!.toLowerCase()] = m[2] ?? m[3] ?? ''
   const type = (kv.type ?? 'bar') as ChartSpec['type']
   if (!['bar', 'line', 'pie', 'area'].includes(type)) return null
-  if (!kv.y && !kv.values) return null
+  const yRaw = kv.y ?? kv.values
+  if (!yRaw) return null
   try {
     return {
       type,
       title: kv.title || undefined,
       labels: kv.x ? parseRange(kv.x) : undefined,
-      values: parseRange(kv.y ?? kv.values!),
+      values: yRaw.split(',').map((r) => parseRange(r.trim())),
     }
   } catch {
     return null
@@ -250,6 +251,6 @@ function serializeChart(ch: ChartSpec): string {
   const parts = [`chart type=${ch.type}`]
   if (ch.title) parts.push(`title="${ch.title}"`)
   if (ch.labels) parts.push(`x=${formatRange(ch.labels)}`)
-  parts.push(`y=${formatRange(ch.values)}`)
+  parts.push(`y=${ch.values.map(formatRange).join(',')}`)
   return parts.join(' ')
 }

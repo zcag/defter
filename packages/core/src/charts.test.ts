@@ -46,13 +46,23 @@ describe('charts', () => {
     const chart = m.sheets[0]!.charts[0]!
     // labels A2:A4 → A3:A5, values B2:B4 → B3:B5
     expect(chart.labels?.start.row).toBe(3)
-    expect(chart.values.end.row).toBe(5)
+    expect(chart.values[0]!.end.row).toBe(5)
   })
 
   it('resolves chart data via a computed grid', () => {
     const m = parse(SRC)
     const data = resolveChartData('S', m.sheets[0]!.charts[0]!, literalGrid(m))
     expect(data.labels).toEqual(['Jan', 'Feb', 'Mar'])
-    expect(data.values).toEqual([10, 20, 30])
+    expect(data.series[0]).toEqual([10, 20, 30])
+  })
+
+  it('supports multiple series (y=B..,C..)', () => {
+    const src =
+      '## Sheet: S\n\n| m | a | b |\n|---|---:|---:|\n| Jan | 1 | 4 |\n| Feb | 2 | 5 |\n\n```defter-style\nchart type=bar x=A2:A3 y=B2:B3,C2:C3\n```\n'
+    const m = parse(src)
+    expect(m.sheets[0]!.charts[0]!.values).toHaveLength(2)
+    const data = resolveChartData('S', m.sheets[0]!.charts[0]!, literalGrid(m))
+    expect(data.series).toEqual([[1, 2], [4, 5]])
+    expect(serialize(parse(serialize(m)))).toBe(serialize(m))
   })
 })

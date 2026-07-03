@@ -57,8 +57,8 @@ export interface ChartSpec {
   title?: string
   /** Range of category labels (x axis). */
   labels?: Range
-  /** Range of values (single series). */
-  values: Range
+  /** One or more value series (each a range). `y=B2:B5,C2:C5` gives two series. */
+  values: Range[]
 }
 
 export interface StyleRule {

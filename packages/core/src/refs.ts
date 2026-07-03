@@ -98,10 +98,14 @@ function shiftChart(
     if (r.sheet && !sameSheet(r.sheet, editedSheet)) return r
     return shiftRange(r, axis, at, delta)
   }
-  const values = shiftIfLocal(chart.values)
-  if (values === null) return null // the data range was deleted → drop the chart
+  const values: Range[] = []
+  for (const v of chart.values) {
+    const s = shiftIfLocal(v)
+    if (s) values.push(s)
+  }
+  if (!values.length) return null // every series deleted → drop the chart
   const labels = shiftIfLocal(chart.labels)
-  return { ...chart, values: values!, labels: labels === null ? undefined : labels }
+  return { ...chart, values, labels: labels === null ? undefined : labels }
 }
 
 function sameSheet(a: string, b: string): boolean {

@@ -8,7 +8,8 @@ import { type Locale, toNumber } from './values.js'
 
 export interface ChartData {
   labels: string[]
-  values: number[]
+  /** One array of numbers per series. */
+  series: number[][]
 }
 
 export function resolveChartData(
@@ -17,11 +18,13 @@ export function resolveChartData(
   computed: ComputedGrid,
   locale?: Locale,
 ): ChartData {
-  const valSheet = chart.values.sheet ?? sheetName
-  const values: number[] = []
-  for (const { col, row } of cellsInRange(chart.values)) {
-    values.push(toNumber(computed.get(valSheet, col, row)) ?? 0)
-  }
+  const series = chart.values.map((range) => {
+    const valSheet = range.sheet ?? sheetName
+    const out: number[] = []
+    for (const { col, row } of cellsInRange(range)) out.push(toNumber(computed.get(valSheet, col, row)) ?? 0)
+    return out
+  })
+  const maxLen = Math.max(0, ...series.map((s) => s.length))
   const labels: string[] = []
   if (chart.labels) {
     const labSheet = chart.labels.sheet ?? sheetName
@@ -29,6 +32,6 @@ export function resolveChartData(
       labels.push(formatValue(computed.get(labSheet, col, row), { locale }))
     }
   }
-  while (labels.length < values.length) labels.push(String(labels.length + 1))
-  return { labels, values }
+  while (labels.length < maxLen) labels.push(String(labels.length + 1))
+  return { labels, series }
 }
