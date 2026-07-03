@@ -404,7 +404,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  background: var(--defter-bg);
+  background-color: var(--defter-bg);
   vertical-align: middle;
   max-width: 0;
   cursor: cell;
@@ -425,23 +425,15 @@
   color: var(--defter-accent);
 }
 /*
- * Selection is drawn as a color overlay strictly inside each cell (::after with inset:0, clipped
- * by the cell's overflow:hidden) — so it works over cells that already have a fill and can never
- * bleed into neighbouring cells. The active cell gets a clean contained ring.
+ * Selection is a background layer (a solid-color gradient painted over the cell's background-color,
+ * so it works over cells that already have a fill) — backgrounds are always clipped to the cell's
+ * border box, so nothing can bleed into neighbouring cells. The active cell gets a contained ring.
  */
-.defter__cell--insel::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--defter-selection-bg);
-  pointer-events: none;
+.defter__cell--insel {
+  background-image: linear-gradient(var(--defter-selection-bg), var(--defter-selection-bg));
 }
-.defter__cell--focus::after {
-  content: '';
-  position: absolute;
-  inset: 0;
+.defter__cell--focus {
   box-shadow: inset 0 0 0 2px var(--defter-selection-border);
-  pointer-events: none;
 }
 .defter__fill-handle {
   position: absolute;

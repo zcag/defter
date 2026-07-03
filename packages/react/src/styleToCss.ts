@@ -16,7 +16,7 @@ export function styleToCss(attrs: StyleAttrs): CSSProperties {
   if (attrs.underline) deco.push('underline')
   if (attrs.strike) deco.push('line-through')
   if (deco.length) css.textDecoration = deco.join(' ')
-  if (attrs.fill) css.background = resolveColor(attrs.fill)
+  if (attrs.fill) css.backgroundColor = resolveColor(attrs.fill)
   if (attrs.color) css.color = resolveColor(attrs.color)
   if (attrs.align) css.textAlign = attrs.align
   if (attrs.valign) css.verticalAlign = attrs.valign
