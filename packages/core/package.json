@@ -1,6 +1,6 @@
 {
   "name": "@defterjs/core",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Headless, framework-agnostic core for Defter \u2014 a text-canonical collaborative spreadsheet. Parse/serialize, coordinates, minimal-splice edits, reference rewriting, projection.",
   "license": "MIT",
   "type": "module",
@@ -14,12 +14,13 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "AGENTS.md"
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -b",
-    "prepublishOnly": "tsc -b"
+    "build": "node ./scripts/gen-authoring-guide.mjs && tsc -b",
+    "prepublishOnly": "node ./scripts/gen-authoring-guide.mjs && tsc -b"
   },
   "repository": {
     "type": "git",

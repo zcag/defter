@@ -1,6 +1,6 @@
 {
   "name": "@defterjs/formula",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Default formula engine for Defter \u2014 a compact, dependency-free Excel-style evaluator implementing the @defterjs/core FormulaEngine interface.",
   "license": "MIT",
   "type": "module",

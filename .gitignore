@@ -9,5 +9,8 @@ coverage/
 
 storybook-static/
 
+# generated at build from docs/AGENTS.md (shipped in the @defterjs/core tarball)
+/packages/core/AGENTS.md
+
 # browser MCP snapshots
 .playwright-mcp/
