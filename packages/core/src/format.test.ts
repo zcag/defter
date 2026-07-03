@@ -21,6 +21,11 @@ describe('number formatting', () => {
     expect(formatNumber(-5, '[Red]#,##0;[Red](#,##0)', LOCALE_EN)).toBe('(5)') // color tokens stripped
   })
 
+  it('does not emit -0 for magnitudes that round to zero', () => {
+    expect(formatNumber(-0.4, '0', LOCALE_EN)).toBe('0')
+    expect(formatNumber(-0.001, '0.00', LOCALE_EN)).toBe('0.00')
+  })
+
   it('passes through errors and text', () => {
     expect(formatValue(ERR.div0)).toBe('#DIV/0!')
     expect(formatValue('hello')).toBe('hello')

@@ -200,7 +200,7 @@ function criterion(crit: CellValue): (v: CellValue) => boolean {
   return (v) => {
     if (numeric) {
       const n = toNumber(v)
-      if (n === null) return false
+      if (n === null) return op === '<>' // a non-numeric cell is "not equal to" a number
       switch (op) {
         case '=':
           return n === rhsNum
@@ -443,7 +443,8 @@ Object.assign(FUNCTIONS, {
   SMALL: (a: Node[], c: EvalContext) => nthOrdered(a, c, 'small'),
   RANK: (a: Node[], c: EvalContext) => {
     const x = toNumber(c.eval(a[0]!))
-    const arr = ctxNumbers(c, a[1]!)
+    const arr = numbers([a[1]!], c)
+    if (!Array.isArray(arr)) return arr
     if (x === null) return ERR.value
     const order = a[2] ? (toNumber(c.eval(a[2])) ?? 0) : 0
     const sorted = [...arr].sort((p, q) => (order ? p - q : q - p))
@@ -464,14 +465,9 @@ Object.assign(FUNCTIONS, {
   },
 })
 
-function ctxNumbers(ctx: EvalContext, node: Node): number[] {
-  const out: number[] = []
-  for (const v of ctx.spill(node)) if (typeof v === 'number') out.push(v)
-  return out
-}
-
 function nthOrdered(args: Node[], ctx: EvalContext, which: 'large' | 'small'): CellValue {
-  const arr = ctxNumbers(ctx, args[0]!)
+  const arr = numbers([args[0]!], ctx) // propagates errors, ignores text
+  if (!Array.isArray(arr)) return arr
   const k = Math.floor(toNumber(ctx.eval(args[1]!)) ?? 0)
   if (k < 1 || k > arr.length) return ERR.num
   const sorted = [...arr].sort((p, q) => (which === 'large' ? q - p : p - q))

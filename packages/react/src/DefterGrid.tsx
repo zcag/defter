@@ -82,16 +82,19 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-/** Increase/decrease the decimal-place count of a number format (preserving grouping). */
+/**
+ * Increase/decrease the decimal places of a number format, preserving prefix/suffix (currency, %),
+ * grouping, and every `;` section — only the digit-skeleton's fractional part changes.
+ */
 function adjustDecimals(format: string | undefined, delta: number): string {
-  const sec = (format || '#,##0').split(';')[0]!
-  const dot = sec.indexOf('.')
-  const current = dot >= 0 ? (sec.slice(dot + 1).match(/0/g) || []).length : 0
-  const decimals = Math.max(0, Math.min(9, current + delta))
-  const grouped = sec.includes(',')
-  const currency = /^[$€£₺¥]/.exec(sec)?.[0] ?? ''
-  const int = `${currency}${grouped ? '#,##0' : '0'}`
-  return decimals > 0 ? `${int}.${'0'.repeat(decimals)}` : int
+  const base = format || '#,##0'
+  return base.replace(/[#0][#0,]*(?:\.[0#]+)?/g, (skel) => {
+    const dot = skel.indexOf('.')
+    const intPart = dot >= 0 ? skel.slice(0, dot) : skel
+    const cur = dot >= 0 ? (skel.slice(dot + 1).match(/0/g) || []).length : 0
+    const dec = Math.max(0, Math.min(9, cur + delta))
+    return dec > 0 ? `${intPart}.${'0'.repeat(dec)}` : intPart
+  })
 }
 
 interface Pos {
@@ -197,7 +200,9 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     winStart = Math.max(1, Math.floor(vp.top / rowHeight) + 1 - OVERSCAN)
     winEnd = Math.min(totalRows, winStart + visible + OVERSCAN * 2)
   }
-  const padTop = (winStart - 1) * rowHeight
+  // Under virtualization, force-render the frozen header row (row 1) even when scrolled past it.
+  const forceHeader = virtualize && freezeHeader && winStart > 1
+  const padTop = (winStart - 1 - (forceHeader ? 1 : 0)) * rowHeight
   const padBottom = (totalRows - winEnd) * rowHeight
 
   const rect: Rect = useMemo(() => {
@@ -604,6 +609,14 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       const el = (ev.target as HTMLElement | null)?.closest?.('[data-col][data-row]') as HTMLElement | null
       if (el?.dataset.col !== undefined && el.dataset.row !== undefined) {
         fillTargetRef.current = { col: Number(el.dataset.col), row: Number(el.dataset.row) }
+        return
+      }
+      // Over a virtualization spacer (no data cell): derive the row from geometry.
+      const root = rootRef.current
+      if (root) {
+        const box = root.getBoundingClientRect()
+        const row = Math.max(1, Math.floor((ev.clientY - box.top + root.scrollTop) / rowHeight))
+        fillTargetRef.current = { col: fillTargetRef.current?.col ?? sel.focus.col, row }
       }
     }
     document.addEventListener('mousemove', move)
@@ -615,7 +628,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       },
       { once: true },
     )
-  }, [])
+  }, [sel.focus.col, rowHeight])
 
   const stats = useMemo(() => {
     if (rect.minCol === rect.maxCol && rect.minRow === rect.maxRow) return null
@@ -694,8 +707,13 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     if (finder && matches.length) {
       const m = matches[curMatch]!
       setSel({ anchor: m, focus: m })
+      const el = rootRef.current
+      if (el) {
+        if (virtualize) el.scrollTop = Math.max(0, (m.row - 1) * rowHeight - el.clientHeight / 2)
+        else el.querySelector(`[data-col="${m.col}"][data-row="${m.row}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+      }
     }
-  }, [curMatch, matches, finder])
+  }, [curMatch, matches, finder, virtualize, rowHeight])
 
   const doReplace = useCallback(() => {
     if (!finder || !editable || !matches.length) return
@@ -712,6 +730,56 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
 
   const activeAttrs = styles.attrs(sel.focus.col, sel.focus.row)
   const activeRaw = rawAt(sel.focus.col, sel.focus.row)
+
+  const renderRow = (row: number) => (
+    <tr key={row} role="row" aria-rowindex={row}>
+      <th
+        data-row={row}
+        role="rowheader"
+        className={`defter__rowhead${row >= rect.minRow && row <= rect.maxRow ? ' defter__rowhead--active' : ''}${freezeHeader && row === 1 ? ' defter__rowhead--frozen' : ''}`}
+      >
+        {row}
+      </th>
+      {Array.from({ length: totalCols }, (_, col) => {
+        if (styles.isCovered(col, row)) return null
+        const span = styles.mergeAnchor(col, row)
+        const isFocus = sel.focus.col === col && sel.focus.row === row
+        const inSel = col >= rect.minCol && col <= rect.maxCol && row >= rect.minRow && row <= rect.maxRow
+        return (
+          <Cell
+            key={col}
+            col={col}
+            row={row}
+            sheet={sheet}
+            styles={styles}
+            computed={computed}
+            sheetName={sheet.name}
+            locale={locale}
+            showFormulas={showFormulas}
+            colAlign={sheet.colAlign[col] ?? null}
+            focus={isFocus}
+            inSelection={inSel && !isFocus}
+            frozen={freezeHeader && row === 1}
+            frozenCol={freezeCol && col === 0}
+            fillHandle={isFocus && editable}
+            onFillStart={onFillStart}
+            colSpan={span?.colspan}
+            rowSpan={span?.rowspan}
+            editing={editing?.col === col && editing?.row === row ? editing.value : null}
+            inputRef={inputRef}
+            onMouseDown={(shift) => onCellMouseDown(col, row, shift)}
+            onMouseEnter={() => onCellMouseEnter(col, row)}
+            onBeginEdit={() => beginEdit(col, row)}
+            onEditChange={(v) => setEditing({ col, row, value: v })}
+            onCommit={(v, dir) =>
+              commit(col, row, v, dir === 'down' ? { col, row: row + 1 } : { col: col + 1, row })
+            }
+            onCancel={() => setEditing(null)}
+          />
+        )
+      })}
+    </tr>
+  )
 
   return (
     <div className={`defter-shell${props.className ? ` ${props.className}` : ''}`} style={props.style}>
@@ -915,63 +983,13 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             </tr>
           </thead>
           <tbody>
+            {forceHeader && renderRow(1)}
             {padTop > 0 && (
               <tr aria-hidden="true">
                 <td colSpan={totalCols + 1} style={{ height: padTop, padding: 0, border: 0 }} />
               </tr>
             )}
-            {Array.from({ length: winEnd - winStart + 1 }, (_, k) => {
-              const row = winStart + k
-              return (
-                <tr key={row} role="row" aria-rowindex={row}>
-                  <th
-                    data-row={row}
-                    role="rowheader"
-                    className={`defter__rowhead${row >= rect.minRow && row <= rect.maxRow ? ' defter__rowhead--active' : ''}${freezeHeader && row === 1 ? ' defter__rowhead--frozen' : ''}`}
-                  >
-                    {row}
-                  </th>
-                  {Array.from({ length: totalCols }, (_, col) => {
-                    if (styles.isCovered(col, row)) return null
-                    const span = styles.mergeAnchor(col, row)
-                    const isFocus = sel.focus.col === col && sel.focus.row === row
-                    const inSel = col >= rect.minCol && col <= rect.maxCol && row >= rect.minRow && row <= rect.maxRow
-                    return (
-                      <Cell
-                        key={col}
-                        col={col}
-                        row={row}
-                        sheet={sheet}
-                        styles={styles}
-                        computed={computed}
-                        sheetName={sheet.name}
-                        locale={locale}
-                        showFormulas={showFormulas}
-                        colAlign={sheet.colAlign[col] ?? null}
-                        focus={isFocus}
-                        inSelection={inSel && !isFocus}
-                        frozen={freezeHeader && row === 1}
-                        frozenCol={freezeCol && col === 0}
-                        fillHandle={isFocus && editable}
-                        onFillStart={onFillStart}
-                        colSpan={span?.colspan}
-                        rowSpan={span?.rowspan}
-                        editing={editing?.col === col && editing?.row === row ? editing.value : null}
-                        inputRef={inputRef}
-                        onMouseDown={(shift) => onCellMouseDown(col, row, shift)}
-                        onMouseEnter={() => onCellMouseEnter(col, row)}
-                        onBeginEdit={() => beginEdit(col, row)}
-                        onEditChange={(v) => setEditing({ col, row, value: v })}
-                        onCommit={(v, dir) =>
-                          commit(col, row, v, dir === 'down' ? { col, row: row + 1 } : { col: col + 1, row })
-                        }
-                        onCancel={() => setEditing(null)}
-                      />
-                    )
-                  })}
-                </tr>
-              )
-            })}
+            {Array.from({ length: winEnd - winStart + 1 }, (_, k) => renderRow(winStart + k))}
             {padBottom > 0 && (
               <tr aria-hidden="true">
                 <td colSpan={totalCols + 1} style={{ height: padBottom, padding: 0, border: 0 }} />

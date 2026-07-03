@@ -127,6 +127,16 @@ describe('formula engine', () => {
     expect(g.get('Sheet1', 2, 6)).toBe(20) // XLOOKUP b → 20
   })
 
+  it('COUNTIF <> counts non-numeric cells; LARGE propagates errors', () => {
+    const src =
+      '| v | r |\n| --- | --- |\n| apple | =COUNTIF(A2:A4, "<>5") |\n| 5 | =LARGE(A2:A4, 1) |\n| 10 | |\n'
+    const g = createEngine().compute(parse(src))
+    expect(g.get('Sheet1', 1, 2)).toBe(2) // apple and 10 are <> 5
+    const errSrc = '| v | r |\n| --- | --- |\n| =1/0 | =LARGE(A2:A3, 1) |\n| 5 | |\n'
+    const g2 = createEngine().compute(parse(errSrc))
+    expect(isError(g2.get('Sheet1', 1, 2))).toBe(true) // error in range propagates
+  })
+
   it('date functions', () => {
     const one = (f: string) => createEngine().compute(parse(`| x |\n|---|\n| ${f} |\n`)).get('Sheet1', 0, 2)
     expect(one('=DATE(2026, 7, 3)')).toBe('2026-07-03')

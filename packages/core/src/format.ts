@@ -65,9 +65,10 @@ export function formatNumber(n: number, format: string | undefined, locale: Loca
   const dot = skeleton.indexOf('.')
   const decimals = dot >= 0 ? skeleton.length - dot - 1 : 0
 
-  const neg = x < 0 && !usesNegSection
+  const negRaw = x < 0 && !usesNegSection
   x = Math.abs(x)
   let body = decimals > 0 ? x.toFixed(decimals) : Math.round(x).toString()
+  const neg = negRaw && Number(body) !== 0 // a magnitude that rounds to 0 shows no minus
   if (grouped) body = groupThousands(body, locale)
   else body = body.split('.').join(locale.decimal)
 

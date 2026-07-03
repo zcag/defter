@@ -1,0 +1,912 @@
+- generic [ref=f25e3]:
+  - navigation [ref=f25e4]:
+    - link "📒 defter" [ref=f25e5] [cursor=pointer]:
+      - /url: "#top"
+    - generic [ref=f25e6]:
+      - link "Playground" [ref=f25e7] [cursor=pointer]:
+        - /url: "#playground"
+      - link "Collab" [ref=f25e8] [cursor=pointer]:
+        - /url: "#collab"
+      - link "Why" [ref=f25e9] [cursor=pointer]:
+        - /url: "#why"
+      - link "GitHub ↗" [ref=f25e10] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter
+  - banner [ref=f25e11]:
+    - generic [ref=f25e12]: text-canonical · collaborative · agent-friendly
+    - heading "The spreadsheet that's just text." [level=1] [ref=f25e13]:
+      - text: The spreadsheet that's
+      - emphasis [ref=f25e14]: just text.
+    - paragraph [ref=f25e15]:
+      - text: The plain-text markdown document
+      - strong [ref=f25e16]: is
+      - text: the source of truth. The grid is a live, editable projection of it — so version control, real-time collaboration, full-text search, and AI agents all operate on ordinary text instead of a hidden binary model.
+    - generic [ref=f25e17]:
+      - link "Try it live" [ref=f25e18] [cursor=pointer]:
+        - /url: "#playground"
+      - link "View source" [ref=f25e19] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter
+  - generic [ref=f25e20]:
+    - generic [ref=f25e21]:
+      - generic [ref=f25e22]:
+        - button "Invoice" [ref=f25e23] [cursor=pointer]
+        - button "Budget" [ref=f25e24] [cursor=pointer]
+        - button "Roadmap" [ref=f25e25] [cursor=pointer]
+        - button "Multi-sheet" [ref=f25e26] [cursor=pointer]
+      - generic [ref=f25e27]:
+        - generic [ref=f25e28]:
+          - generic [ref=f25e29]: Theme
+          - generic [ref=f25e30]:
+            - button "Light" [ref=f25e31] [cursor=pointer]
+            - button "Dark" [ref=f25e32] [cursor=pointer]
+            - button "Paper" [ref=f25e33] [cursor=pointer]
+        - button "ƒ formulas" [ref=f25e34] [cursor=pointer]
+        - generic [ref=f25e35]:
+          - generic [ref=f25e36]: Engine
+          - generic [ref=f25e37]:
+            - button "JS" [ref=f25e38] [cursor=pointer]
+            - button "IronCalc" [ref=f25e39] [cursor=pointer]
+        - generic [ref=f25e40]:
+          - generic [ref=f25e41]: Projection
+          - generic [ref=f25e42]:
+            - button "Off" [ref=f25e43] [cursor=pointer]
+            - button "Values" [ref=f25e44] [cursor=pointer]
+            - button "RAG" [ref=f25e45] [cursor=pointer]
+        - generic [ref=f25e46]:
+          - button "↑ Import" [ref=f25e47] [cursor=pointer]
+          - button "↓ CSV" [ref=f25e48] [cursor=pointer]
+          - button "↓ XLSX" [ref=f25e49] [cursor=pointer]
+    - generic [ref=f25e50]:
+      - generic [ref=f25e51]:
+        - generic [ref=f25e52]: canonical text · the source of truth · edit me
+        - textbox [ref=f25e53]: "## Sheet: Invoice | Item | Qty | Unit | Total | | --- | ---: | ---: | ---: | | Design system audit | 12 | 140 | =B2*C2 | | Component build | 34 | 120 | =B3*C3 | | Motion & polish | 8 | 160 | =B4*C4 | | Subtotal | | | =SUM(D2:D4) | | Tax (20%) | | | =D5*0.2 | | **Total due** | | | =D5+D6 | ```defter-style A1:D1 bold fill=surface-3 align=center D2:D7 format=$#,##0.00 A5:A7 bold D5:D7 bold border=top A7:D7 fill=accent-soft ```"
+      - generic [ref=f25e54]:
+        - generic [ref=f25e55]: live grid · a projection · edit me too
+        - generic [ref=f25e57]:
+          - generic [ref=f25e58]:
+            - button "B" [ref=f25e59] [cursor=pointer]:
+              - generic [ref=f25e60]: B
+            - button "I" [ref=f25e61] [cursor=pointer]:
+              - generic [ref=f25e62]: I
+            - button "⯇" [ref=f25e64] [cursor=pointer]
+            - button "≡" [ref=f25e65] [cursor=pointer]
+            - button "⯈" [ref=f25e66] [cursor=pointer]
+            - button "⊘" [ref=f25e68] [cursor=pointer]
+            - button "Fill gray" [ref=f25e69] [cursor=pointer]
+            - button "Fill blue" [ref=f25e70] [cursor=pointer]
+            - button "Fill green" [ref=f25e71] [cursor=pointer]
+            - button "Fill amber" [ref=f25e72] [cursor=pointer]
+            - button "Fill red" [ref=f25e73] [cursor=pointer]
+            - button "A" [ref=f25e75] [cursor=pointer]
+            - button "A" [ref=f25e76] [cursor=pointer]
+            - button "A" [ref=f25e77] [cursor=pointer]
+            - button "A" [ref=f25e78] [cursor=pointer]
+            - button "A" [ref=f25e79] [cursor=pointer]
+            - button "⤶" [ref=f25e81] [cursor=pointer]
+            - button "▦" [ref=f25e82] [cursor=pointer]
+            - button "Σ" [ref=f25e83] [cursor=pointer]
+            - button "%" [ref=f25e85] [cursor=pointer]
+            - button "$" [ref=f25e86] [cursor=pointer]
+            - button "," [ref=f25e87] [cursor=pointer]
+            - button ".0−" [ref=f25e88] [cursor=pointer]
+            - button ".0+" [ref=f25e89] [cursor=pointer]
+            - combobox "Number format" [ref=f25e90] [cursor=pointer]:
+              - option "General" [selected]
+              - option "1,234"
+              - option "1,234.00"
+              - option "$1,234.00"
+              - option "0%"
+              - option "0.00%"
+            - button "⌫ clear" [ref=f25e92] [cursor=pointer]
+          - generic [ref=f25e93]:
+            - generic [ref=f25e94]: A2
+            - textbox "Enter a value or =formula" [ref=f25e95]: Design system audit
+          - 'application "Defter sheet: Invoice" [ref=f25e96]':
+            - grid [ref=f25e97]:
+              - rowgroup [ref=f25e107]:
+                - row "A B C D E F G" [ref=f25e108]:
+                  - columnheader [ref=f25e109]
+                  - columnheader "A" [ref=f25e110]: A
+                  - columnheader "B" [ref=f25e112]: B
+                  - columnheader "C" [ref=f25e114]: C
+                  - columnheader "D" [ref=f25e116]: D
+                  - columnheader "E" [ref=f25e118]: E
+                  - columnheader "F" [ref=f25e120]: F
+                  - columnheader "G" [ref=f25e122]: G
+              - rowgroup [ref=f25e124]:
+                - row "1 Item Qty Unit Total" [ref=f25e125]:
+                  - rowheader "1" [ref=f25e126]
+                  - gridcell "Item" [ref=f25e127]
+                  - gridcell "Qty" [ref=f25e128]
+                  - gridcell "Unit" [ref=f25e129]
+                  - gridcell "Total" [ref=f25e130]
+                  - gridcell [ref=f25e131]
+                  - gridcell [ref=f25e132]
+                  - gridcell [ref=f25e133]
+                - row "2 Design system audit 12 140 $1,680.00" [ref=f25e134]:
+                  - rowheader "2" [ref=f25e135]
+                  - gridcell "Design system audit" [selected] [ref=f25e136]: Design system audit
+                  - gridcell "12" [ref=f25e138]
+                  - gridcell "140" [ref=f25e139]
+                  - gridcell "$1,680.00" [ref=f25e140]
+                  - gridcell [ref=f25e141]
+                  - gridcell [ref=f25e142]
+                  - gridcell [ref=f25e143]
+                - row "3 Component build 34 120 $4,080.00" [ref=f25e144]:
+                  - rowheader "3" [ref=f25e145]
+                  - gridcell "Component build" [ref=f25e146]
+                  - gridcell "34" [ref=f25e147]
+                  - gridcell "120" [ref=f25e148]
+                  - gridcell "$4,080.00" [ref=f25e149]
+                  - gridcell [ref=f25e150]
+                  - gridcell [ref=f25e151]
+                  - gridcell [ref=f25e152]
+                - row "4 Motion & polish 8 160 $1,280.00" [ref=f25e153]:
+                  - rowheader "4" [ref=f25e154]
+                  - gridcell "Motion & polish" [ref=f25e155]
+                  - gridcell "8" [ref=f25e156]
+                  - gridcell "160" [ref=f25e157]
+                  - gridcell "$1,280.00" [ref=f25e158]
+                  - gridcell [ref=f25e159]
+                  - gridcell [ref=f25e160]
+                  - gridcell [ref=f25e161]
+                - row "5 Subtotal $7,040.00" [ref=f25e162]:
+                  - rowheader "5" [ref=f25e163]
+                  - gridcell "Subtotal" [ref=f25e164]
+                  - gridcell [ref=f25e165]
+                  - gridcell [ref=f25e166]
+                  - gridcell "$7,040.00" [ref=f25e167]
+                  - gridcell [ref=f25e168]
+                  - gridcell [ref=f25e169]
+                  - gridcell [ref=f25e170]
+                - row "6 Tax (20%) $1,408.00" [ref=f25e171]:
+                  - rowheader "6" [ref=f25e172]
+                  - gridcell "Tax (20%)" [ref=f25e173]
+                  - gridcell [ref=f25e174]
+                  - gridcell [ref=f25e175]
+                  - gridcell "$1,408.00" [ref=f25e176]
+                  - gridcell [ref=f25e177]
+                  - gridcell [ref=f25e178]
+                  - gridcell [ref=f25e179]
+                - row "7 Total due $8,448.00" [ref=f25e180]:
+                  - rowheader "7" [ref=f25e181]
+                  - gridcell "Total due" [ref=f25e182]:
+                    - strong [ref=f25e183]: Total due
+                  - gridcell [ref=f25e184]
+                  - gridcell [ref=f25e185]
+                  - gridcell "$8,448.00" [ref=f25e186]
+                  - gridcell [ref=f25e187]
+                  - gridcell [ref=f25e188]
+                  - gridcell [ref=f25e189]
+                - row "8" [ref=f25e190]:
+                  - rowheader "8" [ref=f25e191]
+                  - gridcell [ref=f25e192]
+                  - gridcell [ref=f25e193]
+                  - gridcell [ref=f25e194]
+                  - gridcell [ref=f25e195]
+                  - gridcell [ref=f25e196]
+                  - gridcell [ref=f25e197]
+                  - gridcell [ref=f25e198]
+                - row "9" [ref=f25e199]:
+                  - rowheader "9" [ref=f25e200]
+                  - gridcell [ref=f25e201]
+                  - gridcell [ref=f25e202]
+                  - gridcell [ref=f25e203]
+                  - gridcell [ref=f25e204]
+                  - gridcell [ref=f25e205]
+                  - gridcell [ref=f25e206]
+                  - gridcell [ref=f25e207]
+                - row "10" [ref=f25e208]:
+                  - rowheader "10" [ref=f25e209]
+                  - gridcell [ref=f25e210]
+                  - gridcell [ref=f25e211]
+                  - gridcell [ref=f25e212]
+                  - gridcell [ref=f25e213]
+                  - gridcell [ref=f25e214]
+                  - gridcell [ref=f25e215]
+                  - gridcell [ref=f25e216]
+                - row "11" [ref=f25e217]:
+                  - rowheader "11" [ref=f25e218]
+                  - gridcell [ref=f25e219]
+                  - gridcell [ref=f25e220]
+                  - gridcell [ref=f25e221]
+                  - gridcell [ref=f25e222]
+                  - gridcell [ref=f25e223]
+                  - gridcell [ref=f25e224]
+                  - gridcell [ref=f25e225]
+                - row "12" [ref=f25e226]:
+                  - rowheader "12" [ref=f25e227]
+                  - gridcell [ref=f25e228]
+                  - gridcell [ref=f25e229]
+                  - gridcell [ref=f25e230]
+                  - gridcell [ref=f25e231]
+                  - gridcell [ref=f25e232]
+                  - gridcell [ref=f25e233]
+                  - gridcell [ref=f25e234]
+                - row "13" [ref=f25e235]:
+                  - rowheader "13" [ref=f25e236]
+                  - gridcell [ref=f25e237]
+                  - gridcell [ref=f25e238]
+                  - gridcell [ref=f25e239]
+                  - gridcell [ref=f25e240]
+                  - gridcell [ref=f25e241]
+                  - gridcell [ref=f25e242]
+                  - gridcell [ref=f25e243]
+          - generic [ref=f25e245]: A2
+          - generic [ref=f25e246]:
+            - button "Invoice" [ref=f25e247] [cursor=pointer]
+            - button "+" [ref=f25e248] [cursor=pointer]
+  - generic [ref=f25e249]:
+    - generic [ref=f25e250]:
+      - heading "Collaboration, for free." [level=2] [ref=f25e251]
+      - paragraph [ref=f25e252]:
+        - text: Two independent Yjs documents, synced only by exchanging CRDT updates — no shared memory. Edit either grid; because a cell edit is a minimal text splice, edits to different cells occupy disjoint character spans and merge cleanly. Defter ships
+        - emphasis [ref=f25e253]: "no"
+        - text: "network provider: you hand it a"
+        - code [ref=f25e254]: Y.Text
+        - text: ", it binds the grid."
+      - generic [ref=f25e255]: ● both replicas converged
+    - generic [ref=f25e256]:
+      - generic [ref=f25e257]:
+        - generic [ref=f25e258]: Replica A
+        - generic [ref=f25e261]:
+          - 'application "Defter sheet: Sprint" [ref=f25e262]':
+            - grid [ref=f25e263]:
+              - rowgroup [ref=f25e273]:
+                - row "A B C D E F G" [ref=f25e274]:
+                  - columnheader [ref=f25e275]
+                  - columnheader "A" [ref=f25e276]: A
+                  - columnheader "B" [ref=f25e278]: B
+                  - columnheader "C" [ref=f25e280]: C
+                  - columnheader "D" [ref=f25e282]: D
+                  - columnheader "E" [ref=f25e284]: E
+                  - columnheader "F" [ref=f25e286]: F
+                  - columnheader "G" [ref=f25e288]: G
+              - rowgroup [ref=f25e290]:
+                - row "1 Task Owner Points Done" [ref=f25e291]:
+                  - rowheader "1" [ref=f25e292]
+                  - gridcell "Task" [ref=f25e293]
+                  - gridcell "Owner" [ref=f25e294]
+                  - gridcell "Points" [ref=f25e295]
+                  - gridcell "Done" [ref=f25e296]
+                  - gridcell [ref=f25e297]
+                  - gridcell [ref=f25e298]
+                  - gridcell [ref=f25e299]
+                - 'row "2 Parser Ada 5 #CYCLE!" [ref=f25e300]':
+                  - rowheader "2" [ref=f25e301]
+                  - gridcell "Parser" [selected] [ref=f25e302]: Parser
+                  - gridcell "Ada" [ref=f25e304]
+                  - gridcell "5" [ref=f25e305]
+                  - gridcell "#CYCLE!" [ref=f25e306]
+                  - gridcell [ref=f25e307]
+                  - gridcell [ref=f25e308]
+                  - gridcell [ref=f25e309]
+                - 'row "3 Engine Lin 8 #CYCLE!" [ref=f25e310]':
+                  - rowheader "3" [ref=f25e311]
+                  - gridcell "Engine" [ref=f25e312]
+                  - gridcell "Lin" [ref=f25e313]
+                  - gridcell "8" [ref=f25e314]
+                  - gridcell "#CYCLE!" [ref=f25e315]
+                  - gridcell [ref=f25e316]
+                  - gridcell [ref=f25e317]
+                  - gridcell [ref=f25e318]
+                - 'row "4 Grid UI Sam 5 #CYCLE!" [ref=f25e319]':
+                  - rowheader "4" [ref=f25e320]
+                  - gridcell "Grid UI" [ref=f25e321]
+                  - gridcell "Sam" [ref=f25e322]
+                  - gridcell "5" [ref=f25e323]
+                  - gridcell "#CYCLE!" [ref=f25e324]
+                  - gridcell [ref=f25e325]
+                  - gridcell [ref=f25e326]
+                  - gridcell [ref=f25e327]
+                - 'row "5 Shipped 18 #CYCLE!" [ref=f25e328]':
+                  - rowheader "5" [ref=f25e329]
+                  - gridcell "Shipped" [ref=f25e330]
+                  - gridcell [ref=f25e331]
+                  - gridcell "18" [ref=f25e332]
+                  - gridcell "#CYCLE!" [ref=f25e333]
+                  - gridcell [ref=f25e334]
+                  - gridcell [ref=f25e335]
+                  - gridcell [ref=f25e336]
+                - row "6" [ref=f25e337]:
+                  - rowheader "6" [ref=f25e338]
+                  - gridcell [ref=f25e339]
+                  - gridcell [ref=f25e340]
+                  - gridcell [ref=f25e341]
+                  - gridcell [ref=f25e342]
+                  - gridcell [ref=f25e343]
+                  - gridcell [ref=f25e344]
+                  - gridcell [ref=f25e345]
+                - row "7" [ref=f25e346]:
+                  - rowheader "7" [ref=f25e347]
+                  - gridcell [ref=f25e348]
+                  - gridcell [ref=f25e349]
+                  - gridcell [ref=f25e350]
+                  - gridcell [ref=f25e351]
+                  - gridcell [ref=f25e352]
+                  - gridcell [ref=f25e353]
+                  - gridcell [ref=f25e354]
+                - row "8" [ref=f25e355]:
+                  - rowheader "8" [ref=f25e356]
+                  - gridcell [ref=f25e357]
+                  - gridcell [ref=f25e358]
+                  - gridcell [ref=f25e359]
+                  - gridcell [ref=f25e360]
+                  - gridcell [ref=f25e361]
+                  - gridcell [ref=f25e362]
+                  - gridcell [ref=f25e363]
+                - row "9" [ref=f25e364]:
+                  - rowheader "9" [ref=f25e365]
+                  - gridcell [ref=f25e366]
+                  - gridcell [ref=f25e367]
+                  - gridcell [ref=f25e368]
+                  - gridcell [ref=f25e369]
+                  - gridcell [ref=f25e370]
+                  - gridcell [ref=f25e371]
+                  - gridcell [ref=f25e372]
+                - row "10" [ref=f25e373]:
+                  - rowheader "10" [ref=f25e374]
+                  - gridcell [ref=f25e375]
+                  - gridcell [ref=f25e376]
+                  - gridcell [ref=f25e377]
+                  - gridcell [ref=f25e378]
+                  - gridcell [ref=f25e379]
+                  - gridcell [ref=f25e380]
+                  - gridcell [ref=f25e381]
+                - row "11" [ref=f25e382]:
+                  - rowheader "11" [ref=f25e383]
+                  - gridcell [ref=f25e384]
+                  - gridcell [ref=f25e385]
+                  - gridcell [ref=f25e386]
+                  - gridcell [ref=f25e387]
+                  - gridcell [ref=f25e388]
+                  - gridcell [ref=f25e389]
+                  - gridcell [ref=f25e390]
+          - generic [ref=f25e392]: A2
+      - generic [ref=f25e393]:
+        - generic [ref=f25e394]: Replica B
+        - generic [ref=f25e397]:
+          - 'application "Defter sheet: Sprint" [ref=f25e398]':
+            - grid [ref=f25e399]:
+              - rowgroup [ref=f25e409]:
+                - row "A B C D E F G" [ref=f25e410]:
+                  - columnheader [ref=f25e411]
+                  - columnheader "A" [ref=f25e412]: A
+                  - columnheader "B" [ref=f25e414]: B
+                  - columnheader "C" [ref=f25e416]: C
+                  - columnheader "D" [ref=f25e418]: D
+                  - columnheader "E" [ref=f25e420]: E
+                  - columnheader "F" [ref=f25e422]: F
+                  - columnheader "G" [ref=f25e424]: G
+              - rowgroup [ref=f25e426]:
+                - row "1 Task Owner Points Done" [ref=f25e427]:
+                  - rowheader "1" [ref=f25e428]
+                  - gridcell "Task" [ref=f25e429]
+                  - gridcell "Owner" [ref=f25e430]
+                  - gridcell "Points" [ref=f25e431]
+                  - gridcell "Done" [ref=f25e432]
+                  - gridcell [ref=f25e433]
+                  - gridcell [ref=f25e434]
+                  - gridcell [ref=f25e435]
+                - 'row "2 Parser Ada 5 #CYCLE!" [ref=f25e436]':
+                  - rowheader "2" [ref=f25e437]
+                  - gridcell "Parser" [selected] [ref=f25e438]: Parser
+                  - gridcell "Ada" [ref=f25e440]
+                  - gridcell "5" [ref=f25e441]
+                  - gridcell "#CYCLE!" [ref=f25e442]
+                  - gridcell [ref=f25e443]
+                  - gridcell [ref=f25e444]
+                  - gridcell [ref=f25e445]
+                - 'row "3 Engine Lin 8 #CYCLE!" [ref=f25e446]':
+                  - rowheader "3" [ref=f25e447]
+                  - gridcell "Engine" [ref=f25e448]
+                  - gridcell "Lin" [ref=f25e449]
+                  - gridcell "8" [ref=f25e450]
+                  - gridcell "#CYCLE!" [ref=f25e451]
+                  - gridcell [ref=f25e452]
+                  - gridcell [ref=f25e453]
+                  - gridcell [ref=f25e454]
+                - 'row "4 Grid UI Sam 5 #CYCLE!" [ref=f25e455]':
+                  - rowheader "4" [ref=f25e456]
+                  - gridcell "Grid UI" [ref=f25e457]
+                  - gridcell "Sam" [ref=f25e458]
+                  - gridcell "5" [ref=f25e459]
+                  - gridcell "#CYCLE!" [ref=f25e460]
+                  - gridcell [ref=f25e461]
+                  - gridcell [ref=f25e462]
+                  - gridcell [ref=f25e463]
+                - 'row "5 Shipped 18 #CYCLE!" [ref=f25e464]':
+                  - rowheader "5" [ref=f25e465]
+                  - gridcell "Shipped" [ref=f25e466]
+                  - gridcell [ref=f25e467]
+                  - gridcell "18" [ref=f25e468]
+                  - gridcell "#CYCLE!" [ref=f25e469]
+                  - gridcell [ref=f25e470]
+                  - gridcell [ref=f25e471]
+                  - gridcell [ref=f25e472]
+                - row "6" [ref=f25e473]:
+                  - rowheader "6" [ref=f25e474]
+                  - gridcell [ref=f25e475]
+                  - gridcell [ref=f25e476]
+                  - gridcell [ref=f25e477]
+                  - gridcell [ref=f25e478]
+                  - gridcell [ref=f25e479]
+                  - gridcell [ref=f25e480]
+                  - gridcell [ref=f25e481]
+                - row "7" [ref=f25e482]:
+                  - rowheader "7" [ref=f25e483]
+                  - gridcell [ref=f25e484]
+                  - gridcell [ref=f25e485]
+                  - gridcell [ref=f25e486]
+                  - gridcell [ref=f25e487]
+                  - gridcell [ref=f25e488]
+                  - gridcell [ref=f25e489]
+                  - gridcell [ref=f25e490]
+                - row "8" [ref=f25e491]:
+                  - rowheader "8" [ref=f25e492]
+                  - gridcell [ref=f25e493]
+                  - gridcell [ref=f25e494]
+                  - gridcell [ref=f25e495]
+                  - gridcell [ref=f25e496]
+                  - gridcell [ref=f25e497]
+                  - gridcell [ref=f25e498]
+                  - gridcell [ref=f25e499]
+                - row "9" [ref=f25e500]:
+                  - rowheader "9" [ref=f25e501]
+                  - gridcell [ref=f25e502]
+                  - gridcell [ref=f25e503]
+                  - gridcell [ref=f25e504]
+                  - gridcell [ref=f25e505]
+                  - gridcell [ref=f25e506]
+                  - gridcell [ref=f25e507]
+                  - gridcell [ref=f25e508]
+                - row "10" [ref=f25e509]:
+                  - rowheader "10" [ref=f25e510]
+                  - gridcell [ref=f25e511]
+                  - gridcell [ref=f25e512]
+                  - gridcell [ref=f25e513]
+                  - gridcell [ref=f25e514]
+                  - gridcell [ref=f25e515]
+                  - gridcell [ref=f25e516]
+                  - gridcell [ref=f25e517]
+                - row "11" [ref=f25e518]:
+                  - rowheader "11" [ref=f25e519]
+                  - gridcell [ref=f25e520]
+                  - gridcell [ref=f25e521]
+                  - gridcell [ref=f25e522]
+                  - gridcell [ref=f25e523]
+                  - gridcell [ref=f25e524]
+                  - gridcell [ref=f25e525]
+                  - gridcell [ref=f25e526]
+          - generic [ref=f25e528]: A2
+  - generic [ref=f25e529]:
+    - heading "Every state, one component." [level=2] [ref=f25e530]
+    - paragraph [ref=f25e531]:
+      - text: The same
+      - code [ref=f25e532]: <DefterGrid>
+      - text: across the states an embedder cares about — driven entirely by text and CSS-variable themes.
+    - generic [ref=f25e533]:
+      - generic [ref=f25e534]:
+        - generic [ref=f25e535]:
+          - strong [ref=f25e536]: Empty
+          - generic [ref=f25e537]: a blank editable grid
+        - 'application "Defter sheet: Sheet1" [ref=f25e540]':
+          - grid [ref=f25e541]:
+            - rowgroup [ref=f25e548]:
+              - row "A B C D" [ref=f25e549]:
+                - columnheader [ref=f25e550]
+                - columnheader "A" [ref=f25e551]: A
+                - columnheader "B" [ref=f25e553]: B
+                - columnheader "C" [ref=f25e555]: C
+                - columnheader "D" [ref=f25e557]: D
+            - rowgroup [ref=f25e559]:
+              - row "1 A B C" [ref=f25e560]:
+                - rowheader "1" [ref=f25e561]
+                - gridcell "A" [ref=f25e562]
+                - gridcell "B" [ref=f25e563]
+                - gridcell "C" [ref=f25e564]
+                - gridcell [ref=f25e565]
+              - row "2" [ref=f25e566]:
+                - rowheader "2" [ref=f25e567]
+                - gridcell [selected] [ref=f25e568]
+                - gridcell [ref=f25e570]
+                - gridcell [ref=f25e571]
+                - gridcell [ref=f25e572]
+              - row "3" [ref=f25e573]:
+                - rowheader "3" [ref=f25e574]
+                - gridcell [ref=f25e575]
+                - gridcell [ref=f25e576]
+                - gridcell [ref=f25e577]
+                - gridcell [ref=f25e578]
+              - row "4" [ref=f25e579]:
+                - rowheader "4" [ref=f25e580]
+                - gridcell [ref=f25e581]
+                - gridcell [ref=f25e582]
+                - gridcell [ref=f25e583]
+                - gridcell [ref=f25e584]
+      - generic [ref=f25e585]:
+        - generic [ref=f25e586]:
+          - strong [ref=f25e587]: Formulas & styling
+          - generic [ref=f25e588]: computed values, fills, number formats
+        - 'application "Defter sheet: Sheet1" [ref=f25e591]':
+          - grid [ref=f25e592]:
+            - rowgroup [ref=f25e599]:
+              - row "A B C D" [ref=f25e600]:
+                - columnheader [ref=f25e601]
+                - columnheader "A" [ref=f25e602]: A
+                - columnheader "B" [ref=f25e604]: B
+                - columnheader "C" [ref=f25e606]: C
+                - columnheader "D" [ref=f25e608]: D
+            - rowgroup [ref=f25e610]:
+              - row "1 Item Qty Total" [ref=f25e611]:
+                - rowheader "1" [ref=f25e612]
+                - gridcell "Item" [ref=f25e613]
+                - gridcell "Qty" [ref=f25e614]
+                - gridcell "Total" [ref=f25e615]
+                - gridcell [ref=f25e616]
+              - row "2 Widget 3 $120" [ref=f25e617]:
+                - rowheader "2" [ref=f25e618]
+                - gridcell "Widget" [selected] [ref=f25e619]: Widget
+                - gridcell "3" [ref=f25e621]
+                - gridcell "$120" [ref=f25e622]
+                - gridcell [ref=f25e623]
+              - row "3 Gadget 5 $125" [ref=f25e624]:
+                - rowheader "3" [ref=f25e625]
+                - gridcell "Gadget" [ref=f25e626]
+                - gridcell "5" [ref=f25e627]
+                - gridcell "$125" [ref=f25e628]
+                - gridcell [ref=f25e629]
+              - row "4 Sum $245" [ref=f25e630]:
+                - rowheader "4" [ref=f25e631]
+                - gridcell "Sum" [ref=f25e632]
+                - gridcell [ref=f25e633]
+                - gridcell "$245" [ref=f25e634]
+                - gridcell [ref=f25e635]
+              - row "5" [ref=f25e636]:
+                - rowheader "5" [ref=f25e637]
+                - gridcell [ref=f25e638]
+                - gridcell [ref=f25e639]
+                - gridcell [ref=f25e640]
+                - gridcell [ref=f25e641]
+              - row "6" [ref=f25e642]:
+                - rowheader "6" [ref=f25e643]
+                - gridcell [ref=f25e644]
+                - gridcell [ref=f25e645]
+                - gridcell [ref=f25e646]
+                - gridcell [ref=f25e647]
+      - generic [ref=f25e648]:
+        - generic [ref=f25e649]:
+          - strong [ref=f25e650]: Errors
+          - generic [ref=f25e651]: division by zero, bad refs, unknown names
+        - 'application "Defter sheet: Sheet1" [ref=f25e654]':
+          - grid [ref=f25e655]:
+            - rowgroup [ref=f25e661]:
+              - row "A B C" [ref=f25e662]:
+                - columnheader [ref=f25e663]
+                - columnheader "A" [ref=f25e664]: A
+                - columnheader "B" [ref=f25e666]: B
+                - columnheader "C" [ref=f25e668]: C
+            - rowgroup [ref=f25e670]:
+              - row "1 Case Result" [ref=f25e671]:
+                - rowheader "1" [ref=f25e672]
+                - gridcell "Case" [ref=f25e673]
+                - gridcell "Result" [ref=f25e674]
+                - gridcell [ref=f25e675]
+              - 'row "2 div by zero #DIV/0!" [ref=f25e676]':
+                - rowheader "2" [ref=f25e677]
+                - gridcell "div by zero" [selected] [ref=f25e678]: div by zero
+                - gridcell "#DIV/0!" [ref=f25e680]
+                - gridcell [ref=f25e681]
+              - 'row "3 bad value #VALUE!" [ref=f25e682]':
+                - rowheader "3" [ref=f25e683]
+                - gridcell "bad value" [ref=f25e684]
+                - gridcell "#VALUE!" [ref=f25e685]
+                - gridcell [ref=f25e686]
+              - 'row "4 unknown fn #NAME?" [ref=f25e687]':
+                - rowheader "4" [ref=f25e688]
+                - gridcell "unknown fn" [ref=f25e689]
+                - gridcell "#NAME?" [ref=f25e690]
+                - gridcell [ref=f25e691]
+              - 'row "5 cycle #CYCLE!" [ref=f25e692]':
+                - rowheader "5" [ref=f25e693]
+                - gridcell "cycle" [ref=f25e694]
+                - gridcell "#CYCLE!" [ref=f25e695]
+                - gridcell [ref=f25e696]
+              - row "6" [ref=f25e697]:
+                - rowheader "6" [ref=f25e698]
+                - gridcell [ref=f25e699]
+                - gridcell [ref=f25e700]
+                - gridcell [ref=f25e701]
+              - row "7" [ref=f25e702]:
+                - rowheader "7" [ref=f25e703]
+                - gridcell [ref=f25e704]
+                - gridcell [ref=f25e705]
+                - gridcell [ref=f25e706]
+      - generic [ref=f25e707]:
+        - generic [ref=f25e708]:
+          - strong [ref=f25e709]: Read-only
+          - generic [ref=f25e710]: a non-editable projection
+        - 'application "Defter sheet: Sheet1" [ref=f25e713]':
+          - grid [ref=f25e714]:
+            - rowgroup [ref=f25e721]:
+              - row "A B C D" [ref=f25e722]:
+                - columnheader [ref=f25e723]
+                - columnheader "A" [ref=f25e724]
+                - columnheader "B" [ref=f25e725]
+                - columnheader "C" [ref=f25e726]
+                - columnheader "D" [ref=f25e727]
+            - rowgroup [ref=f25e728]:
+              - row "1 Metric Q1 Q2" [ref=f25e729]:
+                - rowheader "1" [ref=f25e730]
+                - gridcell "Metric" [ref=f25e731]
+                - gridcell "Q1" [ref=f25e732]
+                - gridcell "Q2" [ref=f25e733]
+                - gridcell [ref=f25e734]
+              - row "2 Revenue 42 58" [ref=f25e735]:
+                - rowheader "2" [ref=f25e736]
+                - gridcell "Revenue" [selected] [ref=f25e737]
+                - gridcell "42" [ref=f25e738]
+                - gridcell "58" [ref=f25e739]
+                - gridcell [ref=f25e740]
+              - row "3 Growth 42 16" [ref=f25e741]:
+                - rowheader "3" [ref=f25e742]
+                - gridcell "Growth" [ref=f25e743]
+                - gridcell "42" [ref=f25e744]
+                - gridcell "16" [ref=f25e745]
+                - gridcell [ref=f25e746]
+              - row "4" [ref=f25e747]:
+                - rowheader "4" [ref=f25e748]
+                - gridcell [ref=f25e749]
+                - gridcell [ref=f25e750]
+                - gridcell [ref=f25e751]
+                - gridcell [ref=f25e752]
+              - row "5" [ref=f25e753]:
+                - rowheader "5" [ref=f25e754]
+                - gridcell [ref=f25e755]
+                - gridcell [ref=f25e756]
+                - gridcell [ref=f25e757]
+                - gridcell [ref=f25e758]
+      - generic [ref=f25e759]:
+        - generic [ref=f25e760]:
+          - strong [ref=f25e761]: Large (virtualized)
+          - generic [ref=f25e762]: 1,000 rows, only the visible window in the DOM
+        - 'application "Defter sheet: Sheet1" [ref=f25e765]':
+          - grid [ref=f25e766]:
+            - rowgroup [ref=f25e774]:
+              - row "A B C D E" [ref=f25e775]:
+                - columnheader [ref=f25e776]
+                - columnheader "A" [ref=f25e777]: A
+                - columnheader "B" [ref=f25e779]: B
+                - columnheader "C" [ref=f25e781]: C
+                - columnheader "D" [ref=f25e783]: D
+                - columnheader "E" [ref=f25e785]: E
+            - rowgroup [ref=f25e787]:
+              - row "1 Item Qty Price Total" [ref=f25e788]:
+                - rowheader "1" [ref=f25e789]
+                - gridcell "Item" [ref=f25e790]
+                - gridcell "Qty" [ref=f25e791]
+                - gridcell "Price" [ref=f25e792]
+                - gridcell "Total" [ref=f25e793]
+                - gridcell [ref=f25e794]
+              - row "2 Item 1 1 1 $1" [ref=f25e795]:
+                - rowheader "2" [ref=f25e796]
+                - gridcell "Item 1" [selected] [ref=f25e797]: Item 1
+                - gridcell "1" [ref=f25e799]
+                - gridcell "1" [ref=f25e800]
+                - gridcell "$1" [ref=f25e801]
+                - gridcell [ref=f25e802]
+              - row "3 Item 2 38 2 $76" [ref=f25e803]:
+                - rowheader "3" [ref=f25e804]
+                - gridcell "Item 2" [ref=f25e805]
+                - gridcell "38" [ref=f25e806]
+                - gridcell "2" [ref=f25e807]
+                - gridcell "$76" [ref=f25e808]
+                - gridcell [ref=f25e809]
+              - row "4 Item 3 75 3 $225" [ref=f25e810]:
+                - rowheader "4" [ref=f25e811]
+                - gridcell "Item 3" [ref=f25e812]
+                - gridcell "75" [ref=f25e813]
+                - gridcell "3" [ref=f25e814]
+                - gridcell "$225" [ref=f25e815]
+                - gridcell [ref=f25e816]
+              - row "5 Item 4 112 4 $448" [ref=f25e817]:
+                - rowheader "5" [ref=f25e818]
+                - gridcell "Item 4" [ref=f25e819]
+                - gridcell "112" [ref=f25e820]
+                - gridcell "4" [ref=f25e821]
+                - gridcell "$448" [ref=f25e822]
+                - gridcell [ref=f25e823]
+              - row "6 Item 5 149 5 $745" [ref=f25e824]:
+                - rowheader "6" [ref=f25e825]
+                - gridcell "Item 5" [ref=f25e826]
+                - gridcell "149" [ref=f25e827]
+                - gridcell "5" [ref=f25e828]
+                - gridcell "$745" [ref=f25e829]
+                - gridcell [ref=f25e830]
+              - row "7 Item 6 186 6 $1,116" [ref=f25e831]:
+                - rowheader "7" [ref=f25e832]
+                - gridcell "Item 6" [ref=f25e833]
+                - gridcell "186" [ref=f25e834]
+                - gridcell "6" [ref=f25e835]
+                - gridcell "$1,116" [ref=f25e836]
+                - gridcell [ref=f25e837]
+              - row "8 Item 7 223 7 $1,561" [ref=f25e838]:
+                - rowheader "8" [ref=f25e839]
+                - gridcell "Item 7" [ref=f25e840]
+                - gridcell "223" [ref=f25e841]
+                - gridcell "7" [ref=f25e842]
+                - gridcell "$1,561" [ref=f25e843]
+                - gridcell [ref=f25e844]
+              - row "9 Item 8 260 8 $2,080" [ref=f25e845]:
+                - rowheader "9" [ref=f25e846]
+                - gridcell "Item 8" [ref=f25e847]
+                - gridcell "260" [ref=f25e848]
+                - gridcell "8" [ref=f25e849]
+                - gridcell "$2,080" [ref=f25e850]
+                - gridcell [ref=f25e851]
+              - row "10 Item 9 297 9 $2,673" [ref=f25e852]:
+                - rowheader "10" [ref=f25e853]
+                - gridcell "Item 9" [ref=f25e854]
+                - gridcell "297" [ref=f25e855]
+                - gridcell "9" [ref=f25e856]
+                - gridcell "$2,673" [ref=f25e857]
+                - gridcell [ref=f25e858]
+              - row "11 Item 10 334 10 $3,340" [ref=f25e859]:
+                - rowheader "11" [ref=f25e860]
+                - gridcell "Item 10" [ref=f25e861]
+                - gridcell "334" [ref=f25e862]
+                - gridcell "10" [ref=f25e863]
+                - gridcell "$3,340" [ref=f25e864]
+                - gridcell [ref=f25e865]
+              - row "12 Item 11 371 11 $4,081" [ref=f25e866]:
+                - rowheader "12" [ref=f25e867]
+                - gridcell "Item 11" [ref=f25e868]
+                - gridcell "371" [ref=f25e869]
+                - gridcell "11" [ref=f25e870]
+                - gridcell "$4,081" [ref=f25e871]
+                - gridcell [ref=f25e872]
+              - row "13 Item 12 408 12 $4,896" [ref=f25e873]:
+                - rowheader "13" [ref=f25e874]
+                - gridcell "Item 12" [ref=f25e875]
+                - gridcell "408" [ref=f25e876]
+                - gridcell "12" [ref=f25e877]
+                - gridcell "$4,896" [ref=f25e878]
+                - gridcell [ref=f25e879]
+              - row "14 Item 13 445 1 $445" [ref=f25e880]:
+                - rowheader "14" [ref=f25e881]
+                - gridcell "Item 13" [ref=f25e882]
+                - gridcell "445" [ref=f25e883]
+                - gridcell "1" [ref=f25e884]
+                - gridcell "$445" [ref=f25e885]
+                - gridcell [ref=f25e886]
+              - row "15 Item 14 482 2 $964" [ref=f25e887]:
+                - rowheader "15" [ref=f25e888]
+                - gridcell "Item 14" [ref=f25e889]
+                - gridcell "482" [ref=f25e890]
+                - gridcell "2" [ref=f25e891]
+                - gridcell "$964" [ref=f25e892]
+                - gridcell [ref=f25e893]
+              - row "16 Item 15 19 3 $57" [ref=f25e894]:
+                - rowheader "16" [ref=f25e895]
+                - gridcell "Item 15" [ref=f25e896]
+                - gridcell "19" [ref=f25e897]
+                - gridcell "3" [ref=f25e898]
+                - gridcell "$57" [ref=f25e899]
+                - gridcell [ref=f25e900]
+              - row "17 Item 16 56 4 $224" [ref=f25e901]:
+                - rowheader "17" [ref=f25e902]
+                - gridcell "Item 16" [ref=f25e903]
+                - gridcell "56" [ref=f25e904]
+                - gridcell "4" [ref=f25e905]
+                - gridcell "$224" [ref=f25e906]
+                - gridcell [ref=f25e907]
+              - row "18 Item 17 93 5 $465" [ref=f25e908]:
+                - rowheader "18" [ref=f25e909]
+                - gridcell "Item 17" [ref=f25e910]
+                - gridcell "93" [ref=f25e911]
+                - gridcell "5" [ref=f25e912]
+                - gridcell "$465" [ref=f25e913]
+                - gridcell [ref=f25e914]
+              - row "19 Item 18 130 6 $780" [ref=f25e915]:
+                - rowheader "19" [ref=f25e916]
+                - gridcell "Item 18" [ref=f25e917]
+                - gridcell "130" [ref=f25e918]
+                - gridcell "6" [ref=f25e919]
+                - gridcell "$780" [ref=f25e920]
+                - gridcell [ref=f25e921]
+              - row "20 Item 19 167 7 $1,169" [ref=f25e922]:
+                - rowheader "20" [ref=f25e923]
+                - gridcell "Item 19" [ref=f25e924]
+                - gridcell "167" [ref=f25e925]
+                - gridcell "7" [ref=f25e926]
+                - gridcell "$1,169" [ref=f25e927]
+                - gridcell [ref=f25e928]
+              - row "21 Item 20 204 8 $1,632" [ref=f25e929]:
+                - rowheader "21" [ref=f25e930]
+                - gridcell "Item 20" [ref=f25e931]
+                - gridcell "204" [ref=f25e932]
+                - gridcell "8" [ref=f25e933]
+                - gridcell "$1,632" [ref=f25e934]
+                - gridcell [ref=f25e935]
+              - row "22 Item 21 241 9 $2,169" [ref=f25e936]:
+                - rowheader "22" [ref=f25e937]
+                - gridcell "Item 21" [ref=f25e938]
+                - gridcell "241" [ref=f25e939]
+                - gridcell "9" [ref=f25e940]
+                - gridcell "$2,169" [ref=f25e941]
+                - gridcell [ref=f25e942]
+              - row "23 Item 22 278 10 $2,780" [ref=f25e943]:
+                - rowheader "23" [ref=f25e944]
+                - gridcell "Item 22" [ref=f25e945]
+                - gridcell "278" [ref=f25e946]
+                - gridcell "10" [ref=f25e947]
+                - gridcell "$2,780" [ref=f25e948]
+                - gridcell [ref=f25e949]
+              - row "24 Item 23 315 11 $3,465" [ref=f25e950]:
+                - rowheader "24" [ref=f25e951]
+                - gridcell "Item 23" [ref=f25e952]
+                - gridcell "315" [ref=f25e953]
+                - gridcell "11" [ref=f25e954]
+                - gridcell "$3,465" [ref=f25e955]
+                - gridcell [ref=f25e956]
+              - row "25 Item 24 352 12 $4,224" [ref=f25e957]:
+                - rowheader "25" [ref=f25e958]
+                - gridcell "Item 24" [ref=f25e959]
+                - gridcell "352" [ref=f25e960]
+                - gridcell "12" [ref=f25e961]
+                - gridcell "$4,224" [ref=f25e962]
+                - gridcell [ref=f25e963]
+              - row [ref=f25e964]:
+                - gridcell [ref=f25e965]
+  - generic [ref=f25e966]:
+    - heading "Five properties, one text file." [level=2] [ref=f25e967]
+    - generic [ref=f25e968]:
+      - generic [ref=f25e969]:
+        - generic [ref=f25e970]: 📝
+        - heading "Text is truth" [level=3] [ref=f25e971]
+        - paragraph [ref=f25e972]: A compact, one-row-one-line markdown table. No opaque blob — ever. It diffs, greps, and syncs like any text file.
+      - generic [ref=f25e973]:
+        - generic [ref=f25e974]: 👥
+        - heading "Collaboration for free" [level=3] [ref=f25e975]
+        - paragraph [ref=f25e976]: Bind the canonical text to a text CRDT (Yjs Y.Text). Bring your own provider; Defter never owns the socket.
+      - generic [ref=f25e977]:
+        - generic [ref=f25e978]: 🤖
+        - heading "Agents read & write it" [level=3] [ref=f25e979]
+        - paragraph [ref=f25e980]: An LLM authors a markdown table and edits via structured ops. The projection gives search and RAG clean, values-materialized text.
+      - generic [ref=f25e981]:
+        - generic [ref=f25e982]: 🎨
+        - heading "Rich, but still text" [level=3] [ref=f25e983]
+        - paragraph [ref=f25e984]: Fills, formats, merges, borders, alignment — a co-canonical style layer keyed by A1 range. Themed entirely through CSS variables.
+    - generic [ref=f25e985]:
+      - generic [ref=f25e986]: formulas (~55 fns)
+      - generic [ref=f25e987]: cross-sheet refs
+      - generic [ref=f25e988]: VLOOKUP / INDEX-MATCH
+      - generic [ref=f25e989]: conditional formatting
+      - generic [ref=f25e990]: data validation
+      - generic [ref=f25e991]: charts
+      - generic [ref=f25e992]: merged cells
+      - generic [ref=f25e993]: number formats
+      - generic [ref=f25e994]: copy / paste
+      - generic [ref=f25e995]: undo / redo
+      - generic [ref=f25e996]: fill down / right
+      - generic [ref=f25e997]: insert / delete row-col
+      - generic [ref=f25e998]: column resize
+      - generic [ref=f25e999]: freeze header / column
+      - generic [ref=f25e1000]: multi-sheet
+      - generic [ref=f25e1001]: CSV / XLSX import-export
+      - generic [ref=f25e1002]: row virtualization
+      - generic [ref=f25e1003]: 3 themes
+      - generic [ref=f25e1004]: real-time collab
+      - generic [ref=f25e1005]: RAG projection
+  - contentinfo [ref=f25e1006]:
+    - generic [ref=f25e1007]:
+      - strong [ref=f25e1008]: Defter
+      - text: — Turkish for
+      - emphasis [ref=f25e1009]: ledger / notebook
+      - text: . MIT licensed.
+    - generic [ref=f25e1010]:
+      - link "GitHub" [ref=f25e1011] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter
+      - link "Format spec" [ref=f25e1012] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter/blob/master/docs/FORMAT.md
+      - link "Rationale" [ref=f25e1013] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter/blob/master/docs/RATIONALE.md
