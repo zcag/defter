@@ -216,6 +216,7 @@ export function App() {
       </section>
 
       <CollabDemo engine={engine} />
+      <StatesGallery engine={engine} />
       <Features />
       <Footer />
     </div>
@@ -291,6 +292,73 @@ function CollabDemo({ engine }: { engine: ReturnType<typeof createEngine> }) {
         </div>
       </div>
     </section>
+  )
+}
+
+const STATES: [string, string, string][] = [
+  ['Empty', 'a blank editable grid', '| A | B | C |\n|---|---|---|\n|  |  |  |\n'],
+  [
+    'Formulas & styling',
+    'computed values, fills, number formats',
+    '| Item | Qty | Total |\n| --- | ---: | ---: |\n| Widget | 3 | =B2*40 |\n| Gadget | 5 | =B3*25 |\n| Sum |  | =SUM(C2:C3) |\n\n```defter-style\nA1:C1  bold fill=surface-3\nC2:C4  format=$#,##0\n```\n',
+  ],
+  [
+    'Errors',
+    'division by zero, bad refs, unknown names',
+    '| Case | Result |\n| --- | --- |\n| div by zero | =1/0 |\n| bad value | ="abc"*2 |\n| unknown fn | =NOPE(1) |\n| cycle | =B5 |\n',
+  ],
+  [
+    'Read-only',
+    'a non-editable projection',
+    '| Metric | Q1 | Q2 |\n| --- | ---: | ---: |\n| Revenue | 42 | 58 |\n| Growth | =B2 | =C2-B2 |\n\n```defter-style\nA1:C1  bold fill=accent-soft\n```\n',
+  ],
+]
+
+function StatesGallery({ engine }: { engine: ReturnType<typeof createEngine> }) {
+  return (
+    <section className="states" id="states">
+      <h2 className="features__title">Every state, one component.</h2>
+      <p className="states__lead">
+        The same <code>&lt;DefterGrid&gt;</code> across the states an embedder cares about — driven
+        entirely by text and CSS-variable themes.
+      </p>
+      <div className="states__grid">
+        {STATES.map(([title, sub, text], i) => (
+          <div className="state-card" key={title}>
+            <div className="state-card__head">
+              <strong>{title}</strong>
+              <span>{sub}</span>
+            </div>
+            <div className="state-card__grid">
+              <StateGrid text={text} engine={engine} readOnly={title === 'Read-only'} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function StateGrid({
+  text,
+  engine,
+  readOnly,
+}: {
+  text: string
+  engine: ReturnType<typeof createEngine>
+  readOnly?: boolean
+}) {
+  const [t, setT] = useState(text)
+  return (
+    <DefterGrid
+      text={t}
+      onChange={readOnly ? undefined : setT}
+      engine={engine}
+      theme="light"
+      readOnly={readOnly}
+      extraRows={2}
+      extraCols={1}
+    />
   )
 }
 

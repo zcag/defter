@@ -395,6 +395,52 @@ body {
   }
 }
 
+/* States gallery */
+.states {
+  padding: 48px 0 8px;
+}
+.states__lead {
+  max-width: 640px;
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1.55;
+  margin: -18px 0 28px;
+}
+.states__lead code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: var(--paper-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.states__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+.state-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+.state-card__head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.state-card__head span {
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+.state-card__grid {
+  height: 220px;
+  padding: 10px;
+}
+
 /* Features */
 .features {
   padding: 56px 0;
