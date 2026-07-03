@@ -1,6 +1,6 @@
 /** Built-in worksheet functions. Each takes raw arg nodes + context so it controls evaluation. */
 
-import { type CellValue, ERR, isError, toNumber } from '@defter/core'
+import { type CellValue, ERR, formatValue, isError, toNumber } from '@defter/core'
 import { type EvalContext, stringify } from './evaluator.js'
 import type { Node } from './parser.js'
 
@@ -179,4 +179,174 @@ function concat(args: Node[], ctx: EvalContext): CellValue {
     }
   }
   return s
+}
+
+/** Build a predicate from an Excel-style criterion (">5", "<=3", "abc", 42). */
+function criterion(crit: CellValue): (v: CellValue) => boolean {
+  if (typeof crit === 'number') return (v) => toNumber(v) === crit
+  const s = stringify(crit)
+  const m = /^(<=|>=|<>|=|<|>)?\s*(.*)$/.exec(s)!
+  const op = m[1] || '='
+  const rhs = m[2]!
+  const rhsNum = Number(rhs)
+  const numeric = rhs !== '' && !Number.isNaN(rhsNum)
+  return (v) => {
+    if (numeric) {
+      const n = toNumber(v)
+      if (n === null) return false
+      switch (op) {
+        case '=':
+          return n === rhsNum
+        case '<>':
+          return n !== rhsNum
+        case '<':
+          return n < rhsNum
+        case '>':
+          return n > rhsNum
+        case '<=':
+          return n <= rhsNum
+        case '>=':
+          return n >= rhsNum
+      }
+    }
+    const sv = stringify(v).toLowerCase()
+    const r = rhs.toLowerCase()
+    return op === '<>' ? sv !== r : sv === r
+  }
+}
+
+function str1(args: Node[], ctx: EvalContext, f: (s: string) => CellValue): CellValue {
+  const v = ctx.eval(args[0]!)
+  return isError(v) ? v : f(stringify(v))
+}
+
+Object.assign(FUNCTIONS, {
+  LEFT: (a: Node[], c: EvalContext) =>
+    str1(a, c, (s) => s.slice(0, a[1] ? (toNumber(c.eval(a[1])) ?? 0) : 1)),
+  RIGHT: (a: Node[], c: EvalContext) =>
+    str1(a, c, (s) => {
+      const n = a[1] ? (toNumber(c.eval(a[1])) ?? 0) : 1
+      return n <= 0 ? '' : s.slice(-n)
+    }),
+  MID: (a: Node[], c: EvalContext) =>
+    str1(a, c, (s) => {
+      const start = toNumber(c.eval(a[1]!)) ?? 1
+      const len = toNumber(c.eval(a[2]!)) ?? 0
+      return s.slice(start - 1, start - 1 + len)
+    }),
+  FIND: (a: Node[], c: EvalContext) => {
+    const sub = stringify(c.eval(a[0]!))
+    const s = stringify(c.eval(a[1]!))
+    const from = a[2] ? (toNumber(c.eval(a[2])) ?? 1) : 1
+    const idx = s.indexOf(sub, from - 1)
+    return idx < 0 ? ERR.value : idx + 1
+  },
+  SUBSTITUTE: (a: Node[], c: EvalContext) => {
+    const s = stringify(c.eval(a[0]!))
+    const oldT = stringify(c.eval(a[1]!))
+    const newT = stringify(c.eval(a[2]!))
+    return oldT === '' ? s : s.split(oldT).join(newT)
+  },
+  TEXT: (a: Node[], c: EvalContext) => {
+    const v = c.eval(a[0]!)
+    const fmt = stringify(c.eval(a[1]!))
+    return formatValue(v, { format: fmt })
+  },
+  SUMIF: (a: Node[], c: EvalContext) => conditionalAgg(a, c, 'sum'),
+  COUNTIF: (a: Node[], c: EvalContext) => conditionalAgg(a, c, 'count'),
+  AVERAGEIF: (a: Node[], c: EvalContext) => conditionalAgg(a, c, 'avg'),
+  IFS: (a: Node[], c: EvalContext) => {
+    for (let i = 0; i + 1 < a.length; i += 2) {
+      const cond = c.eval(a[i]!)
+      if (isError(cond)) return cond
+      if (cond === true || (typeof cond === 'number' && cond !== 0)) return c.eval(a[i + 1]!)
+    }
+    return ERR.na
+  },
+  SWITCH: (a: Node[], c: EvalContext) => {
+    const subject = stringify(c.eval(a[0]!))
+    let i = 1
+    for (; i + 1 < a.length; i += 2) {
+      if (stringify(c.eval(a[i]!)) === subject) return c.eval(a[i + 1]!)
+    }
+    return i < a.length ? c.eval(a[i]!) : ERR.na
+  },
+  INDEX: (a: Node[], c: EvalContext) => {
+    const m = c.matrix(a[0]!)
+    const rowNum = a[1] ? (toNumber(c.eval(a[1])) ?? 0) : 0
+    const colNum = a[2] ? (toNumber(c.eval(a[2])) ?? 0) : 0
+    const r = rowNum > 0 ? rowNum - 1 : 0
+    const col = colNum > 0 ? colNum - 1 : 0
+    return m[r]?.[col] ?? ERR.ref
+  },
+  MATCH: (a: Node[], c: EvalContext) => {
+    const target = c.eval(a[0]!)
+    const flat = c.matrix(a[1]!).flat()
+    const type = a[2] ? (toNumber(c.eval(a[2])) ?? 1) : 1
+    const tn = toNumber(target)
+    if (type === 0) {
+      const ts = stringify(target).toLowerCase()
+      for (let i = 0; i < flat.length; i++) if (stringify(flat[i]!).toLowerCase() === ts) return i + 1
+      return ERR.na
+    }
+    let best = -1
+    for (let i = 0; i < flat.length; i++) {
+      const n = toNumber(flat[i]!)
+      if (n === null || tn === null) continue
+      if (type === 1 && n <= tn) best = i
+      if (type === -1 && n >= tn) best = i
+    }
+    return best < 0 ? ERR.na : best + 1
+  },
+  VLOOKUP: (a: Node[], c: EvalContext) => {
+    const target = c.eval(a[0]!)
+    const m = c.matrix(a[1]!)
+    const colIdx = (toNumber(c.eval(a[2]!)) ?? 1) - 1
+    const exact = a[3] ? c.eval(a[3]) === false || toNumber(c.eval(a[3])) === 0 : false
+    const ts = stringify(target).toLowerCase()
+    const tn = toNumber(target)
+    let hit = -1
+    for (let i = 0; i < m.length; i++) {
+      const cell = m[i]![0]!
+      if (exact) {
+        if (stringify(cell).toLowerCase() === ts) {
+          hit = i
+          break
+        }
+      } else {
+        const n = toNumber(cell)
+        if (n !== null && tn !== null && n <= tn) hit = i
+      }
+    }
+    if (hit < 0) return ERR.na
+    return m[hit]?.[colIdx] ?? ERR.ref
+  },
+  HLOOKUP: (a: Node[], c: EvalContext) => {
+    const target = c.eval(a[0]!)
+    const m = c.matrix(a[1]!)
+    const rowIdx = (toNumber(c.eval(a[2]!)) ?? 1) - 1
+    const ts = stringify(target).toLowerCase()
+    const header = m[0] ?? []
+    for (let j = 0; j < header.length; j++) {
+      if (stringify(header[j]!).toLowerCase() === ts) return m[rowIdx]?.[j] ?? ERR.ref
+    }
+    return ERR.na
+  },
+})
+
+function conditionalAgg(args: Node[], ctx: EvalContext, mode: 'sum' | 'count' | 'avg'): CellValue {
+  const range = ctx.spill(args[0]!)
+  const pred = criterion(ctx.eval(args[1]!))
+  const sumRange = args[2] ? ctx.spill(args[2]) : range
+  let total = 0
+  let count = 0
+  for (let i = 0; i < range.length; i++) {
+    if (!pred(range[i]!)) continue
+    count++
+    const n = toNumber(sumRange[i] ?? null)
+    if (n !== null) total += n
+  }
+  if (mode === 'count') return count
+  if (mode === 'avg') return count ? total / count : ERR.div0
+  return total
 }

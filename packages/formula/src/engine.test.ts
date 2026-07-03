@@ -65,4 +65,36 @@ describe('formula engine', () => {
     const grid = createEngine().compute(parse(src))
     expect(grid.get('Two', 0, 2)).toBe(20)
   })
+
+  it('text functions', () => {
+    const one = (f: string) => createEngine().compute(parse(`| x |\n|---|\n| ${f} |\n`)).get('Sheet1', 0, 2)
+    expect(one('=LEFT("hello", 3)')).toBe('hel')
+    expect(one('=RIGHT("hello", 2)')).toBe('lo')
+    expect(one('=MID("hello", 2, 3)')).toBe('ell')
+    expect(one('=FIND("l", "hello")')).toBe(3)
+    expect(one('=SUBSTITUTE("a-b-c", "-", "+")')).toBe('a+b+c')
+    expect(one('=TEXT(1234.5, "$#,##0.00")')).toBe('$1,234.50')
+  })
+
+  it('conditional aggregates and control flow', () => {
+    const one = (f: string) => createEngine().compute(parse(`| x |\n|---|\n| ${f} |\n`)).get('Sheet1', 0, 2)
+    expect(one('=IFS(FALSE, 1, TRUE, 2)')).toBe(2)
+    expect(one('=SWITCH("b", "a", 1, "b", 2, 9)')).toBe(2)
+  })
+
+  it('lookups over a table', () => {
+    const src =
+      '| Name | Age | City |\n| --- | ---: | --- |\n| Ada | 36 | London |\n| Lin | 29 | Berlin |\n| Sam | 41 | Paris |\n| q | =VLOOKUP("Lin", A2:C4, 2, FALSE) | =INDEX(C2:C4, MATCH(41, B2:B4, 0)) |\n'
+    const grid = createEngine().compute(parse(src))
+    expect(grid.get('Sheet1', 1, 5)).toBe(29) // VLOOKUP Lin's age
+    expect(grid.get('Sheet1', 2, 5)).toBe('Paris') // INDEX/MATCH Sam's city
+  })
+
+  it('SUMIF / COUNTIF', () => {
+    const src =
+      '| Cat | Amt |\n| --- | ---: |\n| a | 10 |\n| b | 20 |\n| a | 30 |\n| s | =SUMIF(A2:A4, "a", B2:B4) | \n| c | =COUNTIF(B2:B4, ">15") |\n'
+    const grid = createEngine().compute(parse(src))
+    expect(grid.get('Sheet1', 1, 5)).toBe(40) // 10 + 30
+    expect(grid.get('Sheet1', 1, 6)).toBe(2) // 20, 30
+  })
 })

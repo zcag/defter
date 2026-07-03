@@ -22,6 +22,8 @@ export interface EvalContext {
   eval(node: Node): CellValue
   /** Flatten a node into scalar values (range → its cells, ref → one cell, scalar → itself). */
   spill(node: Node): CellValue[]
+  /** A node as a 2-D matrix (range → rows×cols; anything else → a 1×1 matrix). */
+  matrix(node: Node): CellValue[][]
 }
 
 export function makeContext(sheet: string, resolver: Resolver): EvalContext {
@@ -30,8 +32,25 @@ export function makeContext(sheet: string, resolver: Resolver): EvalContext {
     resolver,
     eval: (node) => evalNode(node, ctx),
     spill: (node) => spillNode(node, ctx),
+    matrix: (node) => matrixNode(node, ctx),
   }
   return ctx
+}
+
+function matrixNode(node: Node, ctx: EvalContext): CellValue[][] {
+  if (node.type === 'range') {
+    const sheet = node.range.sheet ?? ctx.sheet
+    const rows: CellValue[][] = []
+    for (let r = node.range.start.row; r <= node.range.end.row; r++) {
+      const row: CellValue[] = []
+      for (let c = node.range.start.col; c <= node.range.end.col; c++) {
+        row.push(ctx.resolver.cell(c, r, sheet))
+      }
+      rows.push(row)
+    }
+    return rows
+  }
+  return [[ctx.eval(node)]]
 }
 
 function refSheet(ref: Ref | Range, ctx: EvalContext): string {
