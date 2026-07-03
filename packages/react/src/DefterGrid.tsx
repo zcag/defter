@@ -56,7 +56,10 @@ export interface DefterGridProps {
   engine?: FormulaEngine
   /** Built-in theme, or any custom `data-defter-theme` value the host defines in CSS. */
   theme?: 'light' | 'dark' | 'paper' | (string & {})
+  /** Initial active sheet. Sheet switching is managed internally; observe it via `onSheetChange`. */
   sheetIndex?: number
+  /** Fired with the active sheet index whenever it changes (e.g. so a host can scope a CSV export). */
+  onSheetChange?: (index: number) => void
   locale?: Locale
   showFormulas?: boolean
   /** Show the formula/content bar above the grid. */
@@ -318,6 +321,10 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const [renaming, setRenaming] = useState<{ index: number; value: string } | null>(null)
   const si = model.sheets[activeSheet] ? activeSheet : 0
   const sheet = model.sheets[si]!
+  const onSheetChange = props.onSheetChange
+  useEffect(() => {
+    onSheetChange?.(si)
+  }, [si, onSheetChange])
   const styles = useMemo(() => resolveStyles(sheet), [sheet])
 
   const totalRows = sheet.grid.length + extraRows

@@ -53,6 +53,7 @@ export function App() {
   const [showFormulas, setShowFormulas] = useState(false)
   const [proj, setProj] = useState<ProjView>('off')
   const [accent, setAccent] = useState('')
+  const [activeSheet, setActiveSheet] = useState(0)
   // Host-driven theming: map one chosen colour onto the grid's public --defter-* tokens. Passed as
   // the `style` prop, these inline vars win over the built-in theme and update the grid live.
   const accentStyle = useMemo<CSSProperties | undefined>(() => {
@@ -98,9 +99,14 @@ export function App() {
     return out
   }, [text, engine])
 
+  // CSV holds one table, so — like Sheets/Excel — export the sheet you're viewing, named after it.
+  // (For the whole workbook in one file, use XLSX.)
   const exportCsv = () => {
     const m = parse(text)
-    download('defter.csv', modelToCsv(m, { computed: engine.compute(m) }), 'text/csv')
+    const idx = m.sheets[activeSheet] ? activeSheet : 0
+    const name = (m.sheets[idx]?.name ?? 'sheet').replace(/[^\w.-]+/g, '_')
+    const suffix = m.sheets.length > 1 ? `-${name}` : ''
+    download(`defter${suffix}.csv`, modelToCsv(m, { sheetIndex: idx, computed: engine.compute(m) }), 'text/csv')
   }
   const exportXlsx = async () => {
     const m = parse(text)
@@ -185,10 +191,10 @@ export function App() {
               <button className="chip" onClick={() => fileRef.current?.click()}>
                 ↑ Import
               </button>
-              <button className="chip" onClick={exportCsv}>
+              <button className="chip" onClick={exportCsv} title="Export the active sheet (CSV is one table)">
                 ↓ CSV
               </button>
-              <button className="chip" onClick={exportXlsx}>
+              <button className="chip" onClick={exportXlsx} title="Export the whole workbook — every sheet">
                 ↓ XLSX
               </button>
               <input
@@ -229,6 +235,7 @@ export function App() {
                 engine={engine}
                 theme={theme}
                 style={accentStyle}
+                onSheetChange={setActiveSheet}
                 showFormulas={showFormulas}
                 toolbar
                 formulaBar

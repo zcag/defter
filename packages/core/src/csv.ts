@@ -43,6 +43,18 @@ export function modelToCsv(model: Model, opts: CsvExportOptions = {}): string {
   return lines.join('\n')
 }
 
+/**
+ * Export every sheet to its own CSV. CSV holds exactly one table, so a multi-sheet workbook
+ * becomes N named CSVs — the caller decides how to deliver them (a .zip, one file each, etc.).
+ * For a single-file round-trip of a whole workbook, use XLSX instead.
+ */
+export function modelToCsvSheets(
+  model: Model,
+  opts: Omit<CsvExportOptions, 'sheetIndex'> = {},
+): { name: string; csv: string }[] {
+  return model.sheets.map((sheet, i) => ({ name: sheet.name, csv: modelToCsv(model, { ...opts, sheetIndex: i }) }))
+}
+
 /** Parse CSV text (RFC-4180-ish: quoted fields, doubled quotes, embedded newlines). */
 export function parseCsv(text: string, delimiter = ','): string[][] {
   const rows: string[][] = []

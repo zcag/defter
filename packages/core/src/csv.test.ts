@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { csvToModel, modelToCsv, parseCsv } from './csv.js'
+import { csvToModel, modelToCsv, modelToCsvSheets, parseCsv } from './csv.js'
 import { getCell } from './model.js'
 import { parse } from './parse.js'
 
 describe('CSV', () => {
+  it('exports each sheet of a workbook to its own named CSV', () => {
+    const m = parse('## Sheet: Alpha\n\n| a |\n|---|\n| 1 |\n\n## Sheet: Beta\n\n| b |\n|---|\n| 2 |\n')
+    const sheets = modelToCsvSheets(m)
+    expect(sheets.map((s) => s.name)).toEqual(['Alpha', 'Beta'])
+    expect(sheets[0]!.csv).toBe('a\n1')
+    expect(sheets[1]!.csv).toBe('b\n2')
+  })
+
   it('parses quoted fields with commas, quotes, and newlines', () => {
     const rows = parseCsv('a,"b,c","d""e","f\ng"')
     expect(rows).toEqual([['a', 'b,c', 'd"e', 'f\ng']])
