@@ -99,6 +99,111 @@ function adjustDecimals(format: string | undefined, delta: number): string {
   })
 }
 
+function Icon({ name }: { name: string }): React.JSX.Element {
+  const c = {
+    width: 16,
+    height: 16,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  }
+  switch (name) {
+    case 'align-left':
+      return (
+        <svg {...c}>
+          <path d="M4 6h16M4 12h10M4 18h13" />
+        </svg>
+      )
+    case 'align-center':
+      return (
+        <svg {...c}>
+          <path d="M4 6h16M7 12h10M6 18h12" />
+        </svg>
+      )
+    case 'align-right':
+      return (
+        <svg {...c}>
+          <path d="M4 6h16M10 12h10M7 18h13" />
+        </svg>
+      )
+    case 'fill':
+      return (
+        <svg {...c} strokeWidth={1.7}>
+          <path d="M6 4l9 9-6 6a2 2 0 01-3 0l-3-3a2 2 0 010-3z" />
+          <path d="M6 4l-1-1" />
+          <path d="M19 15s2 2.5 2 4a2 2 0 11-4 0c0-1.5 2-4 2-4z" fill="currentColor" stroke="none" />
+        </svg>
+      )
+    case 'text-color':
+      return (
+        <svg {...c} strokeWidth={1.7}>
+          <path d="M6 16L10 6l4 10M7.5 12.5h5" />
+        </svg>
+      )
+    case 'borders':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="3" width="18" height="18" rx="1.5" />
+          <path d="M3 12h18M12 3v18" opacity="0.55" />
+        </svg>
+      )
+    case 'wrap':
+      return (
+        <svg {...c}>
+          <path d="M4 6h16M4 12h12a3 3 0 010 6h-4m0 0l2-2m-2 2l2 2M4 18h4" />
+        </svg>
+      )
+    case 'merge':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="6" width="18" height="12" rx="1" />
+          <path d="M12 6v12M8 12h8m0 0l-2-2m2 2l-2 2M8 12l2-2m-2 2l2 2" opacity="0.7" />
+        </svg>
+      )
+    case 'undo':
+      return (
+        <svg {...c}>
+          <path d="M9 14L4 9l5-5" />
+          <path d="M4 9h10a6 6 0 016 6v1" />
+        </svg>
+      )
+    case 'redo':
+      return (
+        <svg {...c}>
+          <path d="M15 14l5-5-5-5" />
+          <path d="M20 9H10a6 6 0 00-6 6v1" />
+        </svg>
+      )
+    case 'painter':
+      return (
+        <svg {...c} strokeWidth={1.7}>
+          <rect x="4" y="3" width="14" height="6" rx="1" />
+          <path d="M18 6h2v4h-8v3" />
+          <rect x="10" y="13" width="4" height="7" rx="1" />
+        </svg>
+      )
+    case 'clear':
+      return (
+        <svg {...c} strokeWidth={1.7}>
+          <path d="M8 5h9l-1 9H9z" />
+          <path d="M6 19h12" />
+          <path d="M11 8l3 3m0-3l-3 3" opacity="0.6" />
+        </svg>
+      )
+    case 'sigma':
+      return (
+        <svg {...c} strokeWidth={1.9}>
+          <path d="M17 5H7l6 7-6 7h10" />
+        </svg>
+      )
+    default:
+      return <svg {...c} />
+  }
+}
+
 interface Pos {
   col: number
   row: number
@@ -600,6 +705,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const [painterOn, setPainterOn] = useState(false)
   const onCellMouseDown = useCallback(
     (col: number, row: number, shift: boolean) => {
+      rootRef.current?.focus() // capture the keyboard for THIS grid (critical with >1 grid on a page)
       if (painterRef.current) {
         const attrs = painterRef.current
         painterRef.current = null
@@ -752,6 +858,14 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const activeAttrs = styles.attrs(sel.focus.col, sel.focus.row)
   const activeRaw = rawAt(sel.focus.col, sel.focus.row)
 
+  const [popover, setPopover] = useState<'fill' | 'text' | null>(null)
+  useEffect(() => {
+    if (!popover) return
+    const close = () => setPopover(null)
+    window.addEventListener('click', close)
+    return () => window.removeEventListener('click', close)
+  }, [popover])
+
   const renderRow = (row: number) => (
     <tr key={row} role="row" aria-rowindex={row}>
       <th
@@ -807,117 +921,38 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     <div className={`defter-shell${props.className ? ` ${props.className}` : ''}`} style={props.style}>
       {toolbar && editable && (
         <div className="defter__toolbar" data-defter-theme={theme}>
-          <button
-            className={`defter__tb${activeAttrs.bold ? ' defter__tb--on' : ''}`}
-            title="Bold"
-            onClick={() => applyStyle({ bold: !activeAttrs.bold })}
-          >
-            <b>B</b>
+          <button className="defter__tb" title="Undo (Ctrl+Z)" onClick={undo}>
+            <Icon name="undo" />
+          </button>
+          <button className="defter__tb" title="Redo (Ctrl+Y)" onClick={redo}>
+            <Icon name="redo" />
           </button>
           <button
-            className={`defter__tb${activeAttrs.italic ? ' defter__tb--on' : ''}`}
-            title="Italic"
-            onClick={() => applyStyle({ italic: !activeAttrs.italic })}
+            className={`defter__tb${painterOn ? ' defter__tb--on' : ''}`}
+            title="Paint format — then click a target cell"
+            onClick={() => {
+              painterRef.current = { ...activeAttrs }
+              setPainterOn(true)
+            }}
           >
-            <i>I</i>
+            <Icon name="painter" />
           </button>
           <span className="defter__tb-sep" />
-          {(['left', 'center', 'right'] as const).map((al) => (
-            <button
-              key={al}
-              className={`defter__tb${activeAttrs.align === al ? ' defter__tb--on' : ''}`}
-              title={`Align ${al}`}
-              onClick={() => applyStyle({ align: al })}
-            >
-              {al === 'left' ? '⯇' : al === 'center' ? '≡' : '⯈'}
-            </button>
-          ))}
-          <span className="defter__tb-sep" />
-          {(
-            [
-              ['', 'none'],
-              ['surface-2', 'gray'],
-              ['accent-soft', 'blue'],
-              ['success-soft', 'green'],
-              ['warning-soft', 'amber'],
-              ['danger-soft', 'red'],
-            ] as const
-          ).map(([token, label]) => (
-            <button
-              key={label}
-              className="defter__swatch"
-              title={`Fill ${label}`}
-              style={{ background: token ? `var(--defter-token-${token})` : 'transparent' }}
-              onClick={() => applyStyle({ fill: token || undefined })}
-            >
-              {token ? '' : '⊘'}
-            </button>
-          ))}
-          <span className="defter__tb-sep" />
-          {(
-            [
-              ['', 'default'],
-              ['accent', 'blue'],
-              ['success', 'green'],
-              ['warning', 'amber'],
-              ['danger', 'red'],
-            ] as const
-          ).map(([token, label]) => (
-            <button
-              key={`fg-${label}`}
-              className="defter__swatch defter__swatch--fg"
-              title={`Text ${label}`}
-              style={{ color: token ? `var(--defter-token-${token})` : 'var(--defter-fg)' }}
-              onClick={() => applyStyle({ color: token || undefined })}
-            >
-              A
-            </button>
-          ))}
-          <span className="defter__tb-sep" />
-          <button
-            className={`defter__tb${activeAttrs.wrap ? ' defter__tb--on' : ''}`}
-            title="Wrap text"
-            onClick={() => applyStyle({ wrap: !activeAttrs.wrap })}
-          >
-            ⤶
-          </button>
-          <button className="defter__tb" title="Borders" onClick={() => applyStyle({ border: 'all' })}>
-            ▦
-          </button>
-          <button className="defter__tb" title="Sum the column above" onClick={autoSum}>
-            Σ
-          </button>
-          <span className="defter__tb-sep" />
-          <button className="defter__tb" title="Percent" onClick={() => applyStyle({ format: '0%' })}>
-            %
-          </button>
-          <button className="defter__tb" title="Currency" onClick={() => applyStyle({ format: '$#,##0.00' })}>
+
+          <button className="defter__tb defter__tb--wide" title="Currency" onClick={() => applyStyle({ format: '$#,##0.00' })}>
             $
           </button>
-          <button className="defter__tb" title="Thousands" onClick={() => applyStyle({ format: '#,##0' })}>
-            ,
+          <button className="defter__tb defter__tb--wide" title="Percent" onClick={() => applyStyle({ format: '0%' })}>
+            %
           </button>
-          <button
-            className="defter__tb"
-            title="Fewer decimals"
-            onClick={() => applyStyle({ format: adjustDecimals(activeAttrs.format, -1) })}
-          >
-            .0−
+          <button className="defter__tb defter__tb--wide" title="Fewer decimals" onClick={() => applyStyle({ format: adjustDecimals(activeAttrs.format, -1) })}>
+            .0
           </button>
-          <button
-            className="defter__tb"
-            title="More decimals"
-            onClick={() => applyStyle({ format: adjustDecimals(activeAttrs.format, 1) })}
-          >
-            .0+
+          <button className="defter__tb defter__tb--wide" title="More decimals" onClick={() => applyStyle({ format: adjustDecimals(activeAttrs.format, 1) })}>
+            .00
           </button>
-          <select
-            className="defter__tb-select"
-            value={activeAttrs.format ?? ''}
-            title="Number format"
-            onChange={(e) => applyStyle({ format: e.target.value || undefined })}
-          >
-            <option value="">General</option>
+          <select className="defter__tb-select" value={activeAttrs.format ?? ''} title="Number format" onChange={(e) => applyStyle({ format: e.target.value || undefined })}>
+            <option value="">123</option>
             <option value="#,##0">1,234</option>
             <option value="#,##0.00">1,234.00</option>
             <option value="$#,##0.00">$1,234.00</option>
@@ -925,18 +960,69 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             <option value="0.00%">0.00%</option>
           </select>
           <span className="defter__tb-sep" />
-          <button
-            className={`defter__tb${painterOn ? ' defter__tb--on' : ''}`}
-            title="Copy formatting — then click a target cell"
-            onClick={() => {
-              painterRef.current = { ...activeAttrs }
-              setPainterOn(true)
-            }}
-          >
-            🖌
+
+          <button className={`defter__tb defter__tb--strong${activeAttrs.bold ? ' defter__tb--on' : ''}`} title="Bold (Ctrl+B)" onClick={() => applyStyle({ bold: !activeAttrs.bold })}>
+            <b>B</b>
+          </button>
+          <button className={`defter__tb defter__tb--strong${activeAttrs.italic ? ' defter__tb--on' : ''}`} title="Italic (Ctrl+I)" onClick={() => applyStyle({ italic: !activeAttrs.italic })}>
+            <i>I</i>
+          </button>
+          <button className={`defter__tb defter__tb--strong${activeAttrs.strike ? ' defter__tb--on' : ''}`} title="Strikethrough" onClick={() => applyStyle({ strike: !activeAttrs.strike })}>
+            <s>S</s>
+          </button>
+
+          <div className="defter__tb-pop">
+            <button className="defter__tb defter__tb--color" title="Text color" onClick={(e) => { e.stopPropagation(); setPopover(popover === 'text' ? null : 'text') }}>
+              <Icon name="text-color" />
+              <span className="defter__tb-bar" style={{ background: activeAttrs.color ? `var(--defter-token-${activeAttrs.color})` : 'var(--defter-fg)' }} />
+            </button>
+            {popover === 'text' && (
+              <div className="defter__popover" onClick={(e) => e.stopPropagation()}>
+                {(['', 'accent', 'success', 'warning', 'danger', 'muted'] as const).map((t) => (
+                  <button key={`fg${t}`} className="defter__pop-swatch" title={t || 'default'} style={{ background: t ? `var(--defter-token-${t})` : 'var(--defter-fg)' }} onClick={() => { applyStyle({ color: t || undefined }); setPopover(null) }} />
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="defter__tb-pop">
+            <button className="defter__tb defter__tb--color" title="Fill color" onClick={(e) => { e.stopPropagation(); setPopover(popover === 'fill' ? null : 'fill') }}>
+              <Icon name="fill" />
+              <span className="defter__tb-bar" style={{ background: activeAttrs.fill ? `var(--defter-token-${activeAttrs.fill})` : 'transparent', outline: activeAttrs.fill ? 'none' : '1px solid var(--defter-grid-line-strong)' }} />
+            </button>
+            {popover === 'fill' && (
+              <div className="defter__popover" onClick={(e) => e.stopPropagation()}>
+                <button className="defter__pop-swatch defter__pop-swatch--none" title="none" onClick={() => { applyStyle({ fill: undefined }); setPopover(null) }} />
+                {(['surface-2', 'surface-3', 'accent-soft', 'success-soft', 'warning-soft', 'danger-soft'] as const).map((t) => (
+                  <button key={`bg${t}`} className="defter__pop-swatch" title={t} style={{ background: `var(--defter-token-${t})` }} onClick={() => { applyStyle({ fill: t }); setPopover(null) }} />
+                ))}
+              </div>
+            )}
+          </div>
+          <span className="defter__tb-sep" />
+
+          <button className="defter__tb" title="Borders" onClick={() => applyStyle({ border: 'all' })}>
+            <Icon name="borders" />
+          </button>
+          <button className={`defter__tb${activeAttrs.merge ? ' defter__tb--on' : ''}`} title="Merge cells" onClick={() => applyStyle({ merge: !activeAttrs.merge })}>
+            <Icon name="merge" />
+          </button>
+          <span className="defter__tb-sep" />
+
+          {(['left', 'center', 'right'] as const).map((al) => (
+            <button key={al} className={`defter__tb${activeAttrs.align === al ? ' defter__tb--on' : ''}`} title={`Align ${al}`} onClick={() => applyStyle({ align: al })}>
+              <Icon name={`align-${al}`} />
+            </button>
+          ))}
+          <button className={`defter__tb${activeAttrs.wrap ? ' defter__tb--on' : ''}`} title="Wrap text" onClick={() => applyStyle({ wrap: !activeAttrs.wrap })}>
+            <Icon name="wrap" />
+          </button>
+          <span className="defter__tb-sep" />
+
+          <button className="defter__tb" title="Sum the column above" onClick={autoSum}>
+            <Icon name="sigma" />
           </button>
           <button className="defter__tb" title="Clear formatting" onClick={clearFormatting}>
-            ⌫ clear
+            <Icon name="clear" />
           </button>
         </div>
       )}
