@@ -124,6 +124,67 @@
   --defter-token-muted: #8a7d68;
 }
 
+/* Formatting toolbar */
+.defter__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 8px;
+  background: var(--defter-bar-bg);
+  border-bottom: 1px solid var(--defter-grid-line-strong);
+  flex-wrap: wrap;
+}
+.defter__tb {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--defter-fg);
+  cursor: pointer;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.defter__tb:hover {
+  background: var(--defter-selection-bg);
+}
+.defter__tb--on {
+  background: var(--defter-header-active-bg);
+  border-color: var(--defter-selection-border);
+  color: var(--defter-header-active-fg);
+}
+.defter__tb-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--defter-grid-line);
+  margin: 0 4px;
+}
+.defter__swatch {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--defter-grid-line-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--defter-muted-fg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.defter__tb-select {
+  height: 26px;
+  border: 1px solid var(--defter-grid-line-strong);
+  border-radius: 5px;
+  background: var(--defter-bg);
+  color: var(--defter-fg);
+  font-size: 12.5px;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
 /* Formula bar */
 .defter__formulabar {
   display: flex;

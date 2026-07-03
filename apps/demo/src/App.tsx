@@ -175,6 +175,7 @@ export function App() {
                 engine={engine}
                 theme={theme}
                 showFormulas={showFormulas}
+                toolbar
                 formulaBar
                 statusBar
                 sheetTabs

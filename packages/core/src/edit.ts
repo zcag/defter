@@ -122,6 +122,28 @@ export function setStyle(
   return next
 }
 
+/** Remove style rules whose range target is fully contained in the given range. */
+export function clearStylesIn(
+  model: Model,
+  sheetIndex: number,
+  minCol: number,
+  minRow: number,
+  maxCol: number,
+  maxRow: number,
+): Model {
+  const next = cloneModel(model)
+  const sheet = next.sheets[sheetIndex]
+  if (!sheet) return next
+  sheet.styles = sheet.styles.filter((r) => {
+    if (r.target.kind !== 'range') return true
+    const { start, end } = r.target.range
+    const contained =
+      start.col >= minCol && end.col <= maxCol && start.row >= minRow && end.row <= maxRow
+    return !contained
+  })
+  return next
+}
+
 /** Set a column's width (px) in the style layer, replacing any prior single-column width rule. */
 export function setColumnWidth(model: Model, sheetIndex: number, col: number, width: number): Model {
   const next = cloneModel(model)

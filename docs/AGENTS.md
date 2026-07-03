@@ -78,6 +78,10 @@ B2:B9   align=right
   danger danger-soft muted`. A raw `#hex` also works but won't follow the theme.
 - **Merged cells:** `merge` on a range keeps the range rectangular in the text (covered cells stay
   empty) and displays merged: `A1:D1 merge bold align=center`.
+- **Charts** are declared in the same block, one per line, referencing ranges:
+  `chart type=bar title="Revenue" x=A2:A4 y=D2:D4` (types: `bar`, `line`, `area`, `pie`; `x` is
+  the label range, `y` the values). They follow the data — insert/delete a row and the chart's
+  ranges shift automatically.
 
 ### A good-looking template (copy this shape)
 

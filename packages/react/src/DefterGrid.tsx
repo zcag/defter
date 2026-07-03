@@ -5,6 +5,7 @@ import {
   type Locale,
   type Model,
   addSheet,
+  clearStylesIn,
   columnLabel,
   deleteCols,
   deleteRows,
@@ -20,8 +21,10 @@ import {
   serialize,
   setCell,
   setColumnWidth,
+  setStyle,
   toNumber,
 } from '@defter/core'
+import type { StyleAttrs } from '@defter/core'
 import {
   type CSSProperties,
   type KeyboardEvent,
@@ -52,6 +55,8 @@ export interface DefterGridProps {
   statusBar?: boolean
   /** Show sheet tabs. Defaults to on when the document has more than one sheet. */
   sheetTabs?: boolean
+  /** Show the formatting toolbar (bold/align/fill/number-format) above the grid. */
+  toolbar?: boolean
   extraRows?: number
   extraCols?: number
   readOnly?: boolean
@@ -82,6 +87,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     formulaBar = false,
     statusBar = false,
     sheetTabs,
+    toolbar = false,
     extraRows = 6,
 
     extraCols = 3,
@@ -433,10 +439,94 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     setMenu(null)
   }, [rect, rawAt, commitMany])
 
+  const applyStyle = useCallback(
+    (attrs: StyleAttrs) => {
+      const range = {
+        start: { col: rect.minCol, row: rect.minRow, colAbs: false, rowAbs: false },
+        end: { col: rect.maxCol, row: rect.maxRow, colAbs: false, rowAbs: false },
+        sheet: undefined,
+      }
+      pushEdit(serialize(setStyle(model, si, { kind: 'range', range }, attrs)))
+    },
+    [model, pushEdit, si, rect],
+  )
+  const clearFormatting = useCallback(() => {
+    pushEdit(serialize(clearStylesIn(model, si, rect.minCol, rect.minRow, rect.maxCol, rect.maxRow)))
+  }, [model, pushEdit, si, rect])
+
+  const activeAttrs = styles.attrs(sel.focus.col, sel.focus.row)
   const activeRaw = rawAt(sel.focus.col, sel.focus.row)
 
   return (
     <div className={`defter-shell${props.className ? ` ${props.className}` : ''}`} style={props.style}>
+      {toolbar && editable && (
+        <div className="defter__toolbar" data-defter-theme={theme}>
+          <button
+            className={`defter__tb${activeAttrs.bold ? ' defter__tb--on' : ''}`}
+            title="Bold"
+            onClick={() => applyStyle({ bold: !activeAttrs.bold })}
+          >
+            <b>B</b>
+          </button>
+          <button
+            className={`defter__tb${activeAttrs.italic ? ' defter__tb--on' : ''}`}
+            title="Italic"
+            onClick={() => applyStyle({ italic: !activeAttrs.italic })}
+          >
+            <i>I</i>
+          </button>
+          <span className="defter__tb-sep" />
+          {(['left', 'center', 'right'] as const).map((al) => (
+            <button
+              key={al}
+              className={`defter__tb${activeAttrs.align === al ? ' defter__tb--on' : ''}`}
+              title={`Align ${al}`}
+              onClick={() => applyStyle({ align: al })}
+            >
+              {al === 'left' ? '⯇' : al === 'center' ? '≡' : '⯈'}
+            </button>
+          ))}
+          <span className="defter__tb-sep" />
+          {(
+            [
+              ['', 'none'],
+              ['surface-2', 'gray'],
+              ['accent-soft', 'blue'],
+              ['success-soft', 'green'],
+              ['warning-soft', 'amber'],
+              ['danger-soft', 'red'],
+            ] as const
+          ).map(([token, label]) => (
+            <button
+              key={label}
+              className="defter__swatch"
+              title={`Fill ${label}`}
+              style={{ background: token ? `var(--defter-token-${token})` : 'transparent' }}
+              onClick={() => applyStyle({ fill: token || undefined })}
+            >
+              {token ? '' : '⊘'}
+            </button>
+          ))}
+          <span className="defter__tb-sep" />
+          <select
+            className="defter__tb-select"
+            value={activeAttrs.format ?? ''}
+            title="Number format"
+            onChange={(e) => applyStyle({ format: e.target.value || undefined })}
+          >
+            <option value="">General</option>
+            <option value="#,##0">1,234</option>
+            <option value="#,##0.00">1,234.00</option>
+            <option value="$#,##0.00">$1,234.00</option>
+            <option value="0%">0%</option>
+            <option value="0.00%">0.00%</option>
+          </select>
+          <span className="defter__tb-sep" />
+          <button className="defter__tb" title="Clear formatting" onClick={clearFormatting}>
+            ⌫ clear
+          </button>
+        </div>
+      )}
       {formulaBar && (
         <div className="defter__formulabar" data-defter-theme={theme}>
           <span className="defter__cellref">
