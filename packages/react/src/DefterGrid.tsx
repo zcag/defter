@@ -593,10 +593,28 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     [editing, editable, rect, commitMany],
   )
 
-  const onCellMouseDown = useCallback((col: number, row: number, shift: boolean) => {
-    dragging.current = true
-    setSel((s) => (shift ? { anchor: s.anchor, focus: { col, row } } : { anchor: { col, row }, focus: { col, row } }))
-  }, [])
+  const painterRef = useRef<StyleAttrs | null>(null)
+  const [painterOn, setPainterOn] = useState(false)
+  const onCellMouseDown = useCallback(
+    (col: number, row: number, shift: boolean) => {
+      if (painterRef.current) {
+        const attrs = painterRef.current
+        painterRef.current = null
+        setPainterOn(false)
+        setSel({ anchor: { col, row }, focus: { col, row } })
+        const range = {
+          start: { col, row, colAbs: false, rowAbs: false },
+          end: { col, row, colAbs: false, rowAbs: false },
+          sheet: undefined,
+        }
+        pushEdit(serialize(setStyle(model, si, { kind: 'range', range }, attrs)))
+        return
+      }
+      dragging.current = true
+      setSel((s) => (shift ? { anchor: s.anchor, focus: { col, row } } : { anchor: { col, row }, focus: { col, row } }))
+    },
+    [model, si, pushEdit],
+  )
   const onCellMouseEnter = useCallback((col: number, row: number) => {
     if (dragging.current) setSel((s) => ({ anchor: s.anchor, focus: { col, row } }))
   }, [])
@@ -903,6 +921,16 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             <option value="0.00%">0.00%</option>
           </select>
           <span className="defter__tb-sep" />
+          <button
+            className={`defter__tb${painterOn ? ' defter__tb--on' : ''}`}
+            title="Copy formatting — then click a target cell"
+            onClick={() => {
+              painterRef.current = { ...activeAttrs }
+              setPainterOn(true)
+            }}
+          >
+            🖌
+          </button>
           <button className="defter__tb" title="Clear formatting" onClick={clearFormatting}>
             ⌫ clear
           </button>
