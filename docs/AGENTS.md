@@ -54,7 +54,11 @@ IF IFS IFERROR SWITCH AND OR NOT
 VLOOKUP HLOOKUP INDEX MATCH
 ROUND ROUNDUP ROUNDDOWN ABS SQRT INT TRUNC POWER MOD
 CONCAT CONCATENATE LEN UPPER LOWER TRIM LEFT RIGHT MID FIND SUBSTITUTE TEXT
+DATE YEAR MONTH DAY WEEKDAY DATEDIF
 ```
+
+Dates are ISO strings (`2026-07-03`). `DATEDIF(start, end, "D"|"M"|"Y")` gives the
+difference; `DATE(y, m, d)` builds one (overflow normalizes).
 
 Examples: `=B2*C2`, `=SUM(D2:D9)`, `=IF(D2>=0,"under","over")`, `=SUM(Sales!D2:D4)`,
 `=ROUND(B2/C2, 2)`.

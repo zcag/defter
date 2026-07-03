@@ -94,6 +94,17 @@ describe('formula engine', () => {
     expect(grid.get('Sheet1', 2, 5)).toBe('Paris') // INDEX/MATCH Sam's city
   })
 
+  it('date functions', () => {
+    const one = (f: string) => createEngine().compute(parse(`| x |\n|---|\n| ${f} |\n`)).get('Sheet1', 0, 2)
+    expect(one('=DATE(2026, 7, 3)')).toBe('2026-07-03')
+    expect(one('=DATE(2026, 13, 1)')).toBe('2027-01-01') // overflow normalizes
+    expect(one('=YEAR("2026-07-03")')).toBe(2026)
+    expect(one('=MONTH("2026-07-03")')).toBe(7)
+    expect(one('=DAY("2026-07-03")')).toBe(3)
+    expect(one('=DATEDIF("2026-01-01", "2026-01-11", "D")')).toBe(10)
+    expect(one('=DATEDIF("2020-06-15", "2026-07-03", "Y")')).toBe(6)
+  })
+
   it('SUMIF / COUNTIF', () => {
     const src =
       '| Cat | Amt |\n| --- | ---: |\n| a | 10 |\n| b | 20 |\n| a | 30 |\n| s | =SUMIF(A2:A4, "a", B2:B4) | \n| c | =COUNTIF(B2:B4, ">15") |\n'

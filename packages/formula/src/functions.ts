@@ -347,6 +347,47 @@ Object.assign(FUNCTIONS, {
   },
 })
 
+function parseISO(s: string): { y: number; m: number; d: number } | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s.trim())
+  if (!m) return null
+  return { y: +m[1]!, m: +m[2]!, d: +m[3]! }
+}
+function dayNumber(y: number, m: number, d: number): number {
+  return Math.floor(Date.UTC(y, m - 1, d) / 86400000)
+}
+function dateArg(ctx: EvalContext, node: Node): { y: number; m: number; d: number } | null {
+  return parseISO(stringify(ctx.eval(node)))
+}
+
+Object.assign(FUNCTIONS, {
+  DATE: (a: Node[], c: EvalContext) => {
+    const y = toNumber(c.eval(a[0]!))
+    const m = toNumber(c.eval(a[1]!))
+    const d = toNumber(c.eval(a[2]!))
+    if (y === null || m === null || d === null) return ERR.value
+    return new Date(Date.UTC(y, m - 1, d)).toISOString().slice(0, 10) // normalizes overflow
+  },
+  YEAR: (a: Node[], c: EvalContext) => dateArg(c, a[0]!)?.y ?? ERR.value,
+  MONTH: (a: Node[], c: EvalContext) => dateArg(c, a[0]!)?.m ?? ERR.value,
+  DAY: (a: Node[], c: EvalContext) => dateArg(c, a[0]!)?.d ?? ERR.value,
+  WEEKDAY: (a: Node[], c: EvalContext) => {
+    const dt = dateArg(c, a[0]!)
+    if (!dt) return ERR.value
+    const dow = new Date(Date.UTC(dt.y, dt.m - 1, dt.d)).getUTCDay() // 0=Sun
+    return dow === 0 ? 7 : dow // ISO-ish: 1=Mon..7=Sun for the common WEEKDAY(,2)
+  },
+  DATEDIF: (a: Node[], c: EvalContext) => {
+    const s = dateArg(c, a[0]!)
+    const e = dateArg(c, a[1]!)
+    const unit = stringify(c.eval(a[2]!)).toUpperCase()
+    if (!s || !e) return ERR.value
+    if (unit === 'D') return dayNumber(e.y, e.m, e.d) - dayNumber(s.y, s.m, s.d)
+    if (unit === 'Y') return e.y - s.y - (e.m < s.m || (e.m === s.m && e.d < s.d) ? 1 : 0)
+    if (unit === 'M') return (e.y - s.y) * 12 + (e.m - s.m) - (e.d < s.d ? 1 : 0)
+    return ERR.num
+  },
+})
+
 function conditionalAgg(args: Node[], ctx: EvalContext, mode: 'sum' | 'count' | 'avg'): CellValue {
   const range = ctx.spill(args[0]!)
   const pred = criterion(ctx.eval(args[1]!))
