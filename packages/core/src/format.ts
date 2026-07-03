@@ -20,6 +20,24 @@ export function formatValue(value: CellValue, opts: FormatOptions = {}): string 
   return formatNumber(value, opts.format, opts.locale ?? LOCALE_EN)
 }
 
+const FORMAT_COLORS: Record<string, string> = {
+  red: 'danger',
+  green: 'success',
+  blue: 'accent',
+  gray: 'muted',
+  grey: 'muted',
+}
+
+/** The theme-token color a number-format section requests via `[Red]` etc., for the given value. */
+export function formatColor(n: number, format?: string): string | undefined {
+  if (!format || !Number.isFinite(n)) return undefined
+  const sections = format.split(';')
+  const fmt =
+    n < 0 && sections[1] !== undefined ? sections[1] : n === 0 && sections[2] !== undefined ? sections[2] : sections[0]
+  const m = /\[([A-Za-z]+)\]/.exec(fmt!)
+  return m ? FORMAT_COLORS[m[1]!.toLowerCase()] : undefined
+}
+
 export function formatNumber(n: number, format: string | undefined, locale: Locale): string {
   if (!Number.isFinite(n)) return String(n)
   if (!format) return defaultNumber(n, locale)

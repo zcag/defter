@@ -11,6 +11,7 @@ import {
   deleteRows,
   fillDown,
   fillRight,
+  formatColor,
   formatValue,
   getCell,
   insertCols,
@@ -39,7 +40,7 @@ import {
   useState,
 } from 'react'
 import { renderInline } from './inline.js'
-import { styleToCss } from './styleToCss.js'
+import { resolveColor, styleToCss } from './styleToCss.js'
 
 export interface DefterGridProps {
   /** Canonical Defter text. The grid is a projection of it. */
@@ -865,16 +866,19 @@ function Cell(p: CellProps): React.JSX.Element {
   let display: React.ReactNode = ''
   let numeric = false
   let error = false
+  let numVal: number | null = null
   if (p.showFormulas && isFormula) {
     display = raw
   } else if (isFormula) {
     const v = p.computed ? p.computed.get(p.sheetName, p.col, p.row) : null
     display = p.computed ? formatValue(v, { format: attrs.format, locale: p.locale }) : raw
     numeric = typeof v === 'number'
+    numVal = typeof v === 'number' ? v : null
     error = isError(v)
   } else {
     const v = parseLiteral(raw, p.locale)
     numeric = typeof v === 'number'
+    numVal = typeof v === 'number' ? v : null
     display = attrs.format && numeric ? formatValue(v, { format: attrs.format, locale: p.locale }) : renderInline(raw)
   }
 
@@ -894,6 +898,10 @@ function Cell(p: CellProps): React.JSX.Element {
 
   const css = styleToCss(attrs)
   if (!attrs.align && p.colAlign) css.textAlign = p.colAlign
+  if (numVal !== null && attrs.format && !attrs.color) {
+    const fc = formatColor(numVal, attrs.format)
+    if (fc) css.color = resolveColor(fc)
+  }
   const validation = resolveValidation(p.sheet, p.col, p.row)
 
   return (
