@@ -1,0 +1,469 @@
+- generic [ref=f8e3]:
+  - navigation [ref=f8e4]:
+    - link "📒 defter" [ref=f8e5] [cursor=pointer]:
+      - /url: "#top"
+    - generic [ref=f8e6]:
+      - link "Playground" [ref=f8e7] [cursor=pointer]:
+        - /url: "#playground"
+      - link "Collab" [ref=f8e8] [cursor=pointer]:
+        - /url: "#collab"
+      - link "Why" [ref=f8e9] [cursor=pointer]:
+        - /url: "#why"
+      - link "GitHub ↗" [ref=f8e10] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter
+  - banner [ref=f8e11]:
+    - generic [ref=f8e12]: text-canonical · collaborative · agent-friendly
+    - heading "The spreadsheet that's just text." [level=1] [ref=f8e13]:
+      - text: The spreadsheet that's
+      - emphasis [ref=f8e14]: just text.
+    - paragraph [ref=f8e15]:
+      - text: The plain-text markdown document
+      - strong [ref=f8e16]: is
+      - text: the source of truth. The grid is a live, editable projection of it — so version control, real-time collaboration, full-text search, and AI agents all operate on ordinary text instead of a hidden binary model.
+    - generic [ref=f8e17]:
+      - link "Try it live" [ref=f8e18] [cursor=pointer]:
+        - /url: "#playground"
+      - link "View source" [ref=f8e19] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter
+  - generic [ref=f8e20]:
+    - generic [ref=f8e21]:
+      - generic [ref=f8e22]:
+        - button "Invoice" [ref=f8e23] [cursor=pointer]
+        - button "Budget" [ref=f8e24] [cursor=pointer]
+        - button "Roadmap" [ref=f8e25] [cursor=pointer]
+        - button "Multi-sheet" [ref=f8e26] [cursor=pointer]
+      - generic [ref=f8e27]:
+        - generic [ref=f8e28]:
+          - generic [ref=f8e29]: Theme
+          - generic [ref=f8e30]:
+            - button "Light" [ref=f8e31] [cursor=pointer]
+            - button "Dark" [ref=f8e32] [cursor=pointer]
+            - button "Paper" [ref=f8e33] [cursor=pointer]
+        - button "ƒ formulas" [ref=f8e34] [cursor=pointer]
+        - generic [ref=f8e35]:
+          - generic [ref=f8e36]: Projection
+          - generic [ref=f8e37]:
+            - button "Off" [ref=f8e38] [cursor=pointer]
+            - button "Values" [ref=f8e39] [cursor=pointer]
+            - button "RAG" [ref=f8e40] [cursor=pointer]
+        - generic [ref=f8e41]:
+          - button "↑ Import" [ref=f8e42] [cursor=pointer]
+          - button "↓ CSV" [ref=f8e43] [cursor=pointer]
+          - button "↓ XLSX" [ref=f8e44] [cursor=pointer]
+    - generic [ref=f8e45]:
+      - generic [ref=f8e46]:
+        - generic [ref=f8e47]: canonical text · the source of truth · edit me
+        - textbox [ref=f8e48]: "## Sheet: Invoice | Item | Qty | Unit | Total | | --- | ---: | ---: | ---: | | Design system audit | 12 | 140 | =B2*C2 | | Component build | 34 | 120 | =B3*C3 | | Motion & polish | 8 | 160 | =B4*C4 | | Subtotal | | | =SUM(D2:D4) | | Tax (20%) | | | =D5*0.2 | | **Total due** | | | =D5+D6 | ```defter-style A1:D1 bold fill=surface-3 align=center D2:D7 format=$#,##0.00 A5:A7 bold D5:D7 bold border=top A7:D7 fill=accent-soft ```"
+      - generic [ref=f8e49]:
+        - generic [ref=f8e50]: live grid · a projection · edit me too
+        - generic [ref=f8e52]:
+          - generic [ref=f8e53]:
+            - generic [ref=f8e54]: A2
+            - textbox "Enter a value or =formula" [ref=f8e55]: Design system audit
+          - table [ref=f8e57]:
+            - rowgroup [ref=f8e67]:
+              - row "A B C D E F G" [ref=f8e68]:
+                - columnheader [ref=f8e69]
+                - columnheader "A" [ref=f8e70]: A
+                - columnheader "B" [ref=f8e72]: B
+                - columnheader "C" [ref=f8e74]: C
+                - columnheader "D" [ref=f8e76]: D
+                - columnheader "E" [ref=f8e78]: E
+                - columnheader "F" [ref=f8e80]: F
+                - columnheader "G" [ref=f8e82]: G
+            - rowgroup [ref=f8e84]:
+              - row "1 Item Qty Unit Total" [ref=f8e85]:
+                - rowheader "1" [ref=f8e86]
+                - cell "Item" [ref=f8e87]
+                - cell "Qty" [ref=f8e88]
+                - cell "Unit" [ref=f8e89]
+                - cell "Total" [ref=f8e90]
+                - cell [ref=f8e91]
+                - cell [ref=f8e92]
+                - cell [ref=f8e93]
+              - row "2 Design system audit 12 140 $1,680.00" [ref=f8e94]:
+                - rowheader "2" [ref=f8e95]
+                - cell "Design system audit" [ref=f8e96]
+                - cell "12" [ref=f8e97]
+                - cell "140" [ref=f8e98]
+                - cell "$1,680.00" [ref=f8e99]
+                - cell [ref=f8e100]
+                - cell [ref=f8e101]
+                - cell [ref=f8e102]
+              - row "3 Component build 34 120 $4,080.00" [ref=f8e103]:
+                - rowheader "3" [ref=f8e104]
+                - cell "Component build" [ref=f8e105]
+                - cell "34" [ref=f8e106]
+                - cell "120" [ref=f8e107]
+                - cell "$4,080.00" [ref=f8e108]
+                - cell [ref=f8e109]
+                - cell [ref=f8e110]
+                - cell [ref=f8e111]
+              - row "4 Motion & polish 8 160 $1,280.00" [ref=f8e112]:
+                - rowheader "4" [ref=f8e113]
+                - cell "Motion & polish" [ref=f8e114]
+                - cell "8" [ref=f8e115]
+                - cell "160" [ref=f8e116]
+                - cell "$1,280.00" [ref=f8e117]
+                - cell [ref=f8e118]
+                - cell [ref=f8e119]
+                - cell [ref=f8e120]
+              - row "5 Subtotal $7,040.00" [ref=f8e121]:
+                - rowheader "5" [ref=f8e122]
+                - cell "Subtotal" [ref=f8e123]
+                - cell [ref=f8e124]
+                - cell [ref=f8e125]
+                - cell "$7,040.00" [ref=f8e126]
+                - cell [ref=f8e127]
+                - cell [ref=f8e128]
+                - cell [ref=f8e129]
+              - row "6 Tax (20%) $1,408.00" [ref=f8e130]:
+                - rowheader "6" [ref=f8e131]
+                - cell "Tax (20%)" [ref=f8e132]
+                - cell [ref=f8e133]
+                - cell [ref=f8e134]
+                - cell "$1,408.00" [ref=f8e135]
+                - cell [ref=f8e136]
+                - cell [ref=f8e137]
+                - cell [ref=f8e138]
+              - row "7 Total due $8,448.00" [ref=f8e139]:
+                - rowheader "7" [ref=f8e140]
+                - cell "Total due" [ref=f8e141]:
+                  - strong [ref=f8e142]: Total due
+                - cell [ref=f8e143]
+                - cell [ref=f8e144]
+                - cell "$8,448.00" [ref=f8e145]
+                - cell [ref=f8e146]
+                - cell [ref=f8e147]
+                - cell [ref=f8e148]
+              - row "8" [ref=f8e149]:
+                - columnheader "8" [ref=f8e150]
+                - cell [ref=f8e151]
+                - cell [ref=f8e152]
+                - cell [ref=f8e153]
+                - cell [ref=f8e154]
+                - cell [ref=f8e155]
+                - cell [ref=f8e156]
+                - cell [ref=f8e157]
+              - row "9" [ref=f8e158]:
+                - columnheader "9" [ref=f8e159]
+                - cell [ref=f8e160]
+                - cell [ref=f8e161]
+                - cell [ref=f8e162]
+                - cell [ref=f8e163]
+                - cell [ref=f8e164]
+                - cell [ref=f8e165]
+                - cell [ref=f8e166]
+              - row "10" [ref=f8e167]:
+                - columnheader "10" [ref=f8e168]
+                - cell [ref=f8e169]
+                - cell [ref=f8e170]
+                - cell [ref=f8e171]
+                - cell [ref=f8e172]
+                - cell [ref=f8e173]
+                - cell [ref=f8e174]
+                - cell [ref=f8e175]
+              - row "11" [ref=f8e176]:
+                - columnheader "11" [ref=f8e177]
+                - cell [ref=f8e178]
+                - cell [ref=f8e179]
+                - cell [ref=f8e180]
+                - cell [ref=f8e181]
+                - cell [ref=f8e182]
+                - cell [ref=f8e183]
+                - cell [ref=f8e184]
+              - row "12" [ref=f8e185]:
+                - columnheader "12" [ref=f8e186]
+                - cell [ref=f8e187]
+                - cell [ref=f8e188]
+                - cell [ref=f8e189]
+                - cell [ref=f8e190]
+                - cell [ref=f8e191]
+                - cell [ref=f8e192]
+                - cell [ref=f8e193]
+              - row "13" [ref=f8e194]:
+                - columnheader "13" [ref=f8e195]
+                - cell [ref=f8e196]
+                - cell [ref=f8e197]
+                - cell [ref=f8e198]
+                - cell [ref=f8e199]
+                - cell [ref=f8e200]
+                - cell [ref=f8e201]
+                - cell [ref=f8e202]
+          - generic [ref=f8e204]: A2
+          - generic [ref=f8e205]:
+            - button "Invoice" [ref=f8e206] [cursor=pointer]
+            - button "+" [ref=f8e207] [cursor=pointer]
+  - generic [ref=f8e208]:
+    - generic [ref=f8e209]:
+      - heading "Collaboration, for free." [level=2] [ref=f8e210]
+      - paragraph [ref=f8e211]:
+        - text: Two independent Yjs documents, synced only by exchanging CRDT updates — no shared memory. Edit either grid; because a cell edit is a minimal text splice, edits to different cells occupy disjoint character spans and merge cleanly. Defter ships
+        - emphasis [ref=f8e212]: "no"
+        - text: "network provider: you hand it a"
+        - code [ref=f8e213]: Y.Text
+        - text: ", it binds the grid."
+      - generic [ref=f8e214]: ● both replicas converged
+    - generic [ref=f8e215]:
+      - generic [ref=f8e216]:
+        - generic [ref=f8e217]: Replica A
+        - generic [ref=f8e220]:
+          - table [ref=f8e222]:
+            - rowgroup [ref=f8e232]:
+              - row "A B C D E F G" [ref=f8e233]:
+                - columnheader [ref=f8e234]
+                - columnheader "A" [ref=f8e235]: A
+                - columnheader "B" [ref=f8e237]: B
+                - columnheader "C" [ref=f8e239]: C
+                - columnheader "D" [ref=f8e241]: D
+                - columnheader "E" [ref=f8e243]: E
+                - columnheader "F" [ref=f8e245]: F
+                - columnheader "G" [ref=f8e247]: G
+            - rowgroup [ref=f8e249]:
+              - row "1 Task Owner Points Done" [ref=f8e250]:
+                - rowheader "1" [ref=f8e251]
+                - cell "Task" [ref=f8e252]
+                - cell "Owner" [ref=f8e253]
+                - cell "Points" [ref=f8e254]
+                - cell "Done" [ref=f8e255]
+                - cell [ref=f8e256]
+                - cell [ref=f8e257]
+                - cell [ref=f8e258]
+              - 'row "2 Parser Ada 5 #CYCLE!" [ref=f8e259]':
+                - rowheader "2" [ref=f8e260]
+                - cell "Parser" [ref=f8e261]
+                - cell "Ada" [ref=f8e262]
+                - cell "5" [ref=f8e263]
+                - cell "#CYCLE!" [ref=f8e264]
+                - cell [ref=f8e265]
+                - cell [ref=f8e266]
+                - cell [ref=f8e267]
+              - 'row "3 Engine Lin 8 #CYCLE!" [ref=f8e268]':
+                - rowheader "3" [ref=f8e269]
+                - cell "Engine" [ref=f8e270]
+                - cell "Lin" [ref=f8e271]
+                - cell "8" [ref=f8e272]
+                - cell "#CYCLE!" [ref=f8e273]
+                - cell [ref=f8e274]
+                - cell [ref=f8e275]
+                - cell [ref=f8e276]
+              - 'row "4 Grid UI Sam 5 #CYCLE!" [ref=f8e277]':
+                - rowheader "4" [ref=f8e278]
+                - cell "Grid UI" [ref=f8e279]
+                - cell "Sam" [ref=f8e280]
+                - cell "5" [ref=f8e281]
+                - cell "#CYCLE!" [ref=f8e282]
+                - cell [ref=f8e283]
+                - cell [ref=f8e284]
+                - cell [ref=f8e285]
+              - 'row "5 Shipped 18 #CYCLE!" [ref=f8e286]':
+                - rowheader "5" [ref=f8e287]
+                - cell "Shipped" [ref=f8e288]
+                - cell [ref=f8e289]
+                - cell "18" [ref=f8e290]
+                - cell "#CYCLE!" [ref=f8e291]
+                - cell [ref=f8e292]
+                - cell [ref=f8e293]
+                - cell [ref=f8e294]
+              - row "6" [ref=f8e295]:
+                - columnheader "6" [ref=f8e296]
+                - cell [ref=f8e297]
+                - cell [ref=f8e298]
+                - cell [ref=f8e299]
+                - cell [ref=f8e300]
+                - cell [ref=f8e301]
+                - cell [ref=f8e302]
+                - cell [ref=f8e303]
+              - row "7" [ref=f8e304]:
+                - columnheader "7" [ref=f8e305]
+                - cell [ref=f8e306]
+                - cell [ref=f8e307]
+                - cell [ref=f8e308]
+                - cell [ref=f8e309]
+                - cell [ref=f8e310]
+                - cell [ref=f8e311]
+                - cell [ref=f8e312]
+              - row "8" [ref=f8e313]:
+                - columnheader "8" [ref=f8e314]
+                - cell [ref=f8e315]
+                - cell [ref=f8e316]
+                - cell [ref=f8e317]
+                - cell [ref=f8e318]
+                - cell [ref=f8e319]
+                - cell [ref=f8e320]
+                - cell [ref=f8e321]
+              - row "9" [ref=f8e322]:
+                - columnheader "9" [ref=f8e323]
+                - cell [ref=f8e324]
+                - cell [ref=f8e325]
+                - cell [ref=f8e326]
+                - cell [ref=f8e327]
+                - cell [ref=f8e328]
+                - cell [ref=f8e329]
+                - cell [ref=f8e330]
+              - row "10" [ref=f8e331]:
+                - columnheader "10" [ref=f8e332]
+                - cell [ref=f8e333]
+                - cell [ref=f8e334]
+                - cell [ref=f8e335]
+                - cell [ref=f8e336]
+                - cell [ref=f8e337]
+                - cell [ref=f8e338]
+                - cell [ref=f8e339]
+              - row "11" [ref=f8e340]:
+                - columnheader "11" [ref=f8e341]
+                - cell [ref=f8e342]
+                - cell [ref=f8e343]
+                - cell [ref=f8e344]
+                - cell [ref=f8e345]
+                - cell [ref=f8e346]
+                - cell [ref=f8e347]
+                - cell [ref=f8e348]
+          - generic [ref=f8e350]: A2
+      - generic [ref=f8e351]:
+        - generic [ref=f8e352]: Replica B
+        - generic [ref=f8e355]:
+          - table [ref=f8e357]:
+            - rowgroup [ref=f8e367]:
+              - row "A B C D E F G" [ref=f8e368]:
+                - columnheader [ref=f8e369]
+                - columnheader "A" [ref=f8e370]: A
+                - columnheader "B" [ref=f8e372]: B
+                - columnheader "C" [ref=f8e374]: C
+                - columnheader "D" [ref=f8e376]: D
+                - columnheader "E" [ref=f8e378]: E
+                - columnheader "F" [ref=f8e380]: F
+                - columnheader "G" [ref=f8e382]: G
+            - rowgroup [ref=f8e384]:
+              - row "1 Task Owner Points Done" [ref=f8e385]:
+                - rowheader "1" [ref=f8e386]
+                - cell "Task" [ref=f8e387]
+                - cell "Owner" [ref=f8e388]
+                - cell "Points" [ref=f8e389]
+                - cell "Done" [ref=f8e390]
+                - cell [ref=f8e391]
+                - cell [ref=f8e392]
+                - cell [ref=f8e393]
+              - 'row "2 Parser Ada 5 #CYCLE!" [ref=f8e394]':
+                - rowheader "2" [ref=f8e395]
+                - cell "Parser" [ref=f8e396]
+                - cell "Ada" [ref=f8e397]
+                - cell "5" [ref=f8e398]
+                - cell "#CYCLE!" [ref=f8e399]
+                - cell [ref=f8e400]
+                - cell [ref=f8e401]
+                - cell [ref=f8e402]
+              - 'row "3 Engine Lin 8 #CYCLE!" [ref=f8e403]':
+                - rowheader "3" [ref=f8e404]
+                - cell "Engine" [ref=f8e405]
+                - cell "Lin" [ref=f8e406]
+                - cell "8" [ref=f8e407]
+                - cell "#CYCLE!" [ref=f8e408]
+                - cell [ref=f8e409]
+                - cell [ref=f8e410]
+                - cell [ref=f8e411]
+              - 'row "4 Grid UI Sam 5 #CYCLE!" [ref=f8e412]':
+                - rowheader "4" [ref=f8e413]
+                - cell "Grid UI" [ref=f8e414]
+                - cell "Sam" [ref=f8e415]
+                - cell "5" [ref=f8e416]
+                - cell "#CYCLE!" [ref=f8e417]
+                - cell [ref=f8e418]
+                - cell [ref=f8e419]
+                - cell [ref=f8e420]
+              - 'row "5 Shipped 18 #CYCLE!" [ref=f8e421]':
+                - rowheader "5" [ref=f8e422]
+                - cell "Shipped" [ref=f8e423]
+                - cell [ref=f8e424]
+                - cell "18" [ref=f8e425]
+                - cell "#CYCLE!" [ref=f8e426]
+                - cell [ref=f8e427]
+                - cell [ref=f8e428]
+                - cell [ref=f8e429]
+              - row "6" [ref=f8e430]:
+                - columnheader "6" [ref=f8e431]
+                - cell [ref=f8e432]
+                - cell [ref=f8e433]
+                - cell [ref=f8e434]
+                - cell [ref=f8e435]
+                - cell [ref=f8e436]
+                - cell [ref=f8e437]
+                - cell [ref=f8e438]
+              - row "7" [ref=f8e439]:
+                - columnheader "7" [ref=f8e440]
+                - cell [ref=f8e441]
+                - cell [ref=f8e442]
+                - cell [ref=f8e443]
+                - cell [ref=f8e444]
+                - cell [ref=f8e445]
+                - cell [ref=f8e446]
+                - cell [ref=f8e447]
+              - row "8" [ref=f8e448]:
+                - columnheader "8" [ref=f8e449]
+                - cell [ref=f8e450]
+                - cell [ref=f8e451]
+                - cell [ref=f8e452]
+                - cell [ref=f8e453]
+                - cell [ref=f8e454]
+                - cell [ref=f8e455]
+                - cell [ref=f8e456]
+              - row "9" [ref=f8e457]:
+                - columnheader "9" [ref=f8e458]
+                - cell [ref=f8e459]
+                - cell [ref=f8e460]
+                - cell [ref=f8e461]
+                - cell [ref=f8e462]
+                - cell [ref=f8e463]
+                - cell [ref=f8e464]
+                - cell [ref=f8e465]
+              - row "10" [ref=f8e466]:
+                - columnheader "10" [ref=f8e467]
+                - cell [ref=f8e468]
+                - cell [ref=f8e469]
+                - cell [ref=f8e470]
+                - cell [ref=f8e471]
+                - cell [ref=f8e472]
+                - cell [ref=f8e473]
+                - cell [ref=f8e474]
+              - row "11" [ref=f8e475]:
+                - columnheader "11" [ref=f8e476]
+                - cell [ref=f8e477]
+                - cell [ref=f8e478]
+                - cell [ref=f8e479]
+                - cell [ref=f8e480]
+                - cell [ref=f8e481]
+                - cell [ref=f8e482]
+                - cell [ref=f8e483]
+          - generic [ref=f8e485]: A2
+  - generic [ref=f8e486]:
+    - heading "Five properties, one text file." [level=2] [ref=f8e487]
+    - generic [ref=f8e488]:
+      - generic [ref=f8e489]:
+        - generic [ref=f8e490]: 📝
+        - heading "Text is truth" [level=3] [ref=f8e491]
+        - paragraph [ref=f8e492]: A compact, one-row-one-line markdown table. No opaque blob — ever. It diffs, greps, and syncs like any text file.
+      - generic [ref=f8e493]:
+        - generic [ref=f8e494]: 👥
+        - heading "Collaboration for free" [level=3] [ref=f8e495]
+        - paragraph [ref=f8e496]: Bind the canonical text to a text CRDT (Yjs Y.Text). Bring your own provider; Defter never owns the socket.
+      - generic [ref=f8e497]:
+        - generic [ref=f8e498]: 🤖
+        - heading "Agents read & write it" [level=3] [ref=f8e499]
+        - paragraph [ref=f8e500]: An LLM authors a markdown table and edits via structured ops. The projection gives search and RAG clean, values-materialized text.
+      - generic [ref=f8e501]:
+        - generic [ref=f8e502]: 🎨
+        - heading "Rich, but still text" [level=3] [ref=f8e503]
+        - paragraph [ref=f8e504]: Fills, formats, merges, borders, alignment — a co-canonical style layer keyed by A1 range. Themed entirely through CSS variables.
+  - contentinfo [ref=f8e505]:
+    - generic [ref=f8e506]:
+      - strong [ref=f8e507]: Defter
+      - text: — Turkish for
+      - emphasis [ref=f8e508]: ledger / notebook
+      - text: . MIT licensed.
+    - generic [ref=f8e509]:
+      - link "GitHub" [ref=f8e510] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter
+      - link "Format spec" [ref=f8e511] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter/blob/master/docs/FORMAT.md
+      - link "Rationale" [ref=f8e512] [cursor=pointer]:
+        - /url: https://github.com/zcag/defter/blob/master/docs/RATIONALE.md

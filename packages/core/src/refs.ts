@@ -8,8 +8,9 @@
  * the model's cell text is the truth, so we rewrite the formula strings in place.
  */
 
+import type { Range } from './coords.js'
 import { columnIndex, columnLabel } from './coords.js'
-import type { Model, StyleRule, StyleTarget } from './model.js'
+import type { ChartSpec, Model, StyleRule, StyleTarget } from './model.js'
 
 export type Axis = 'row' | 'col'
 
@@ -54,8 +55,41 @@ export function shiftReferencesInModel(
     }
     if (sameSheet(sheet.name, editedSheet)) {
       sheet.styles = shiftStyleTargets(sheet.styles, axis, at, delta)
+      sheet.charts = sheet.charts
+        .map((ch) => shiftChart(ch, editedSheet, axis, at, delta))
+        .filter((ch): ch is ChartSpec => ch !== null)
     }
   }
+}
+
+function shiftRange(range: Range, axis: Axis, at: number, delta: number): Range | null {
+  const { start, end } = range
+  if (axis === 'row') {
+    const s = shiftSpan(start.row, end.row, at, delta)
+    if (!s) return null
+    return { start: { ...start, row: s[0] }, end: { ...end, row: s[1] }, sheet: range.sheet }
+  }
+  const s = shiftSpan(start.col, end.col, at, delta)
+  if (!s) return null
+  return { start: { ...start, col: s[0] }, end: { ...end, col: s[1] }, sheet: range.sheet }
+}
+
+function shiftChart(
+  chart: ChartSpec,
+  editedSheet: string,
+  axis: Axis,
+  at: number,
+  delta: number,
+): ChartSpec | null {
+  const shiftIfLocal = (r: Range | undefined): Range | null | undefined => {
+    if (!r) return undefined
+    if (r.sheet && !sameSheet(r.sheet, editedSheet)) return r
+    return shiftRange(r, axis, at, delta)
+  }
+  const values = shiftIfLocal(chart.values)
+  if (values === null) return null // the data range was deleted → drop the chart
+  const labels = shiftIfLocal(chart.labels)
+  return { ...chart, values: values!, labels: labels === null ? undefined : labels }
 }
 
 function sameSheet(a: string, b: string): boolean {

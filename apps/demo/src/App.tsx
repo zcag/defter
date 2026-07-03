@@ -1,6 +1,14 @@
-import { csvToModel, modelToCsv, parse, projectProse, projectText, serialize } from '@defter/core'
+import {
+  csvToModel,
+  modelToCsv,
+  parse,
+  projectProse,
+  projectText,
+  resolveChartData,
+  serialize,
+} from '@defter/core'
 import { createEngine } from '@defter/formula'
-import { DefterGrid } from '@defter/react'
+import { DefterChart, DefterGrid } from '@defter/react'
 import { useYText } from '@defter/yjs'
 import { useMemo, useRef, useState } from 'react'
 import * as Y from 'yjs'
@@ -40,6 +48,19 @@ export function App() {
     const computed = engine.compute(m)
     return proj === 'table' ? projectText(m, { computed }) : projectProse(m, { computed })
   }, [proj, text, engine])
+
+  const charts = useMemo(() => {
+    const m = parse(text)
+    const computed = engine.compute(m)
+    const out: { key: string; type: any; title?: string; labels: string[]; values: number[] }[] = []
+    m.sheets.forEach((s, si) =>
+      s.charts.forEach((ch, ci) => {
+        const data = resolveChartData(s.name, ch, computed)
+        out.push({ key: `${si}-${ci}`, type: ch.type, title: ch.title, ...data })
+      }),
+    )
+    return out
+  }, [text, engine])
 
   const exportCsv = () => {
     const m = parse(text)
@@ -161,6 +182,26 @@ export function App() {
             </div>
           </div>
         </div>
+
+        {charts.length > 0 && (
+          <div className="charts-panel">
+            <div className="pane__label">
+              charts <span>· declared in the defter-style layer · they follow the data</span>
+            </div>
+            <div className="charts-grid">
+              {charts.map((c) => (
+                <DefterChart
+                  key={c.key}
+                  type={c.type}
+                  title={c.title}
+                  labels={c.labels}
+                  values={c.values}
+                  theme={theme}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {proj !== 'off' && (
           <div className="projection">

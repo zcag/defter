@@ -21,8 +21,19 @@ export interface Sheet {
   /** Per-column alignment from the GFM delimiter row (native, content-layer). `null` = default. */
   colAlign: (('left' | 'center' | 'right') | null)[]
   styles: StyleRule[]
+  /** Charts declared in the `defter-style` block, referencing ranges in this sheet. */
+  charts: ChartSpec[]
   /** Whether the sheet was introduced by an explicit `## Sheet:` heading. */
   headed: boolean
+}
+
+export interface ChartSpec {
+  type: 'bar' | 'line' | 'pie' | 'area'
+  title?: string
+  /** Range of category labels (x axis). */
+  labels?: Range
+  /** Range of values (single series). */
+  values: Range
 }
 
 export interface StyleRule {
@@ -59,7 +70,7 @@ export function emptyModel(): Model {
 }
 
 export function emptySheet(name: string, headed = true): Sheet {
-  return { name, grid: [[]], width: 0, colAlign: [], styles: [], headed }
+  return { name, grid: [[]], width: 0, colAlign: [], styles: [], charts: [], headed }
 }
 
 /** Read a cell's logical text by A1 (col 0-based, row 1-based). Empty string if out of range. */

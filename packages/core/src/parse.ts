@@ -60,7 +60,9 @@ export function parse(text: string): Model {
           register(target)
           current = target
         }
-        target.styles.push(...parseStyleBlock(bodyLines.join('\n')))
+        const parsed = parseStyleBlock(bodyLines.join('\n'))
+        target.styles.push(...parsed.rules)
+        target.charts.push(...parsed.charts)
       }
       i = j // skip past closing fence
       continue

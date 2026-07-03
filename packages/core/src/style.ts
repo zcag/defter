@@ -4,7 +4,7 @@
  */
 
 import { columnIndex, columnLabel, formatRange, parseRange } from './coords.js'
-import type { StyleAttrs, StyleRule, StyleTarget } from './model.js'
+import type { ChartSpec, StyleAttrs, StyleRule, StyleTarget } from './model.js'
 
 const FLAGS = ['bold', 'italic', 'underline', 'strike', 'wrap', 'merge'] as const
 const KEYS = [
@@ -82,12 +82,23 @@ export function formatAttrs(attrs: StyleAttrs): string {
   return out.join(' ')
 }
 
-/** Parse a whole `defter-style` block body (without the fences) into rules. Lenient. */
-export function parseStyleBlock(body: string): StyleRule[] {
+export interface ParsedStyleBlock {
+  rules: StyleRule[]
+  charts: ChartSpec[]
+}
+
+/** Parse a whole `defter-style` block body (without the fences) into rules and charts. Lenient. */
+export function parseStyleBlock(body: string): ParsedStyleBlock {
   const rules: StyleRule[] = []
+  const charts: ChartSpec[] = []
   for (const raw of body.split('\n')) {
     const line = raw.trim()
     if (!line || line.startsWith('#')) continue
+    if (line.toLowerCase().startsWith('chart ') || line.toLowerCase() === 'chart') {
+      const chart = parseChartLine(line)
+      if (chart) charts.push(chart)
+      continue
+    }
     const parts = line.split(/\s+/)
     const targetText = parts[0]!
     let target: StyleTarget
@@ -99,12 +110,41 @@ export function parseStyleBlock(body: string): StyleRule[] {
     const attrs = parseAttrs(parts.slice(1))
     if (Object.keys(attrs).length > 0) rules.push({ target, attrs })
   }
-  return rules
+  return { rules, charts }
 }
 
-/** Serialize rules to a block body (without fences). Empty string if there are no rules. */
-export function serializeStyleBlock(rules: StyleRule[]): string {
-  return rules
-    .map((r) => `${formatStyleTarget(r.target)}  ${formatAttrs(r.attrs)}`)
-    .join('\n')
+const CHART_ATTR = /(\w+)=(?:"([^"]*)"|(\S+))/g
+
+function parseChartLine(line: string): ChartSpec | null {
+  const rest = line.slice(line.toLowerCase().indexOf('chart') + 5)
+  const kv: Record<string, string> = {}
+  for (const m of rest.matchAll(CHART_ATTR)) kv[m[1]!.toLowerCase()] = m[2] ?? m[3] ?? ''
+  const type = (kv.type ?? 'bar') as ChartSpec['type']
+  if (!['bar', 'line', 'pie', 'area'].includes(type)) return null
+  if (!kv.y && !kv.values) return null
+  try {
+    return {
+      type,
+      title: kv.title || undefined,
+      labels: kv.x ? parseRange(kv.x) : undefined,
+      values: parseRange(kv.y ?? kv.values!),
+    }
+  } catch {
+    return null
+  }
+}
+
+/** Serialize rules and charts to a block body (without fences). Empty string if both are empty. */
+export function serializeStyleBlock(rules: StyleRule[], charts: ChartSpec[] = []): string {
+  const lines = rules.map((r) => `${formatStyleTarget(r.target)}  ${formatAttrs(r.attrs)}`)
+  for (const ch of charts) lines.push(serializeChart(ch))
+  return lines.join('\n')
+}
+
+function serializeChart(ch: ChartSpec): string {
+  const parts = [`chart type=${ch.type}`]
+  if (ch.title) parts.push(`title="${ch.title}"`)
+  if (ch.labels) parts.push(`x=${formatRange(ch.labels)}`)
+  parts.push(`y=${formatRange(ch.values)}`)
+  return parts.join(' ')
 }

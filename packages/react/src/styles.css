@@ -379,3 +379,28 @@
   background: var(--defter-selection-bg);
   color: var(--defter-fg);
 }
+
+/* Charts */
+.defter-chart {
+  --defter-token-accent: #2f6df6;
+  --defter-token-success: #1a7f47;
+  --defter-token-warning: #a8760a;
+  --defter-token-danger: #c02636;
+  --defter-token-muted: #6b7280;
+  --defter-token-accent-soft: #dbe7ff;
+  font-family: var(--defter-font, ui-sans-serif, system-ui, sans-serif);
+  color: var(--defter-fg, #1a1a22);
+}
+.defter-chart__title {
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--defter-fg, #1a1a22);
+}
+.defter-chart__axis {
+  stroke: var(--defter-grid-line-strong, #d1d4db);
+  stroke-width: 1;
+}
+.defter-chart__label {
+  font-size: 10.5px;
+  fill: var(--defter-muted-fg, #6b7280);
+}

@@ -282,6 +282,22 @@ body {
   box-shadow: 0 6px 24px -12px rgba(20, 20, 50, 0.2);
 }
 
+.charts-panel {
+  border-top: 1px solid var(--line);
+}
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  background: #fdfdfc;
+}
+.charts-grid .defter-chart {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+}
 .projection {
   border-top: 1px solid var(--line);
 }
