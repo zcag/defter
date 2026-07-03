@@ -354,6 +354,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const autoScrollRaf = useRef(0)
   const marqueeRef = useRef<HTMLDivElement>(null)
   const copyMarqueeRef = useRef<HTMLDivElement>(null)
+  // A focused, editable element is required for the browser to fire copy/cut/paste (a plain focused
+  // div with user-select:none never does — esp. Safari). Keyboard focus lives on this hidden
+  // textarea; it captures nav keys and clipboard events reliably across browsers.
+  const keyCatcherRef = useRef<HTMLTextAreaElement>(null)
+  const focusGrid = useCallback(() => keyCatcherRef.current?.focus({ preventScroll: true }), [])
   const [copyRect, setCopyRect] = useState<Rect | null>(null)
   const shellRef = useRef<HTMLDivElement>(null)
   const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(null)
@@ -499,9 +504,16 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     }
   }, [])
 
+  const wasEditing = useRef(false)
   useEffect(() => {
-    if (editing) inputRef.current?.focus()
-  }, [editing])
+    if (editing) {
+      inputRef.current?.focus()
+      wasEditing.current = true
+    } else if (wasEditing.current) {
+      focusGrid() // return keyboard/clipboard focus to the grid when an edit ends
+      wasEditing.current = false
+    }
+  }, [editing, focusGrid])
 
   const fillDragging = useRef(false)
   const fillTargetRef = useRef<Pos | null>(null)
@@ -616,7 +628,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       pushEdit(serialize(setCell(model, si, col, row, value)))
       setEditing(null)
       if (move) setSel({ anchor: move, focus: move })
-      rootRef.current?.focus()
+      focusGrid()
     },
     [model, pushEdit, si],
   )
@@ -690,7 +702,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   )
 
   const onKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLDivElement>) => {
+    (e: KeyboardEvent<HTMLElement>) => {
       if (editing) return
       if (e.key === 'Escape' && copyRect) {
         setCopyRect(null)
@@ -1013,7 +1025,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const [painterOn, setPainterOn] = useState(false)
   const onCellMouseDown = useCallback(
     (col: number, row: number, shift: boolean) => {
-      rootRef.current?.focus() // capture the keyboard for THIS grid (critical with >1 grid on a page)
+      focusGrid() // capture the keyboard for THIS grid (critical with >1 grid on a page)
       if (painterRef.current) {
         const attrs = painterRef.current
         painterRef.current = null
@@ -1216,7 +1228,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         role="rowheader"
         className={`defter__rowhead${row >= rect.minRow && row <= rect.maxRow ? ' defter__rowhead--active' : ''}${freezeHeader && row === 1 ? ' defter__rowhead--frozen' : ''}`}
         onMouseDown={(e) => {
-          rootRef.current?.focus()
+          focusGrid()
           setSel((s) =>
             e.shiftKey
               ? { anchor: s.anchor, focus: { col: totalCols - 1, row } }
@@ -1421,6 +1433,20 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         </div>
       )}
 
+      <textarea
+        ref={keyCatcherRef}
+        className="defter__keycatcher"
+        aria-label={`Defter sheet: ${sheet.name}`}
+        tabIndex={-1}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        onKeyDown={onKeyDown}
+        onCopy={onCopy}
+        onCut={onCut}
+        onPaste={onPaste}
+      />
       <div
         ref={rootRef}
         className="defter"
@@ -1458,7 +1484,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                   aria-colindex={c + 2}
                   className={`defter__colhead${c >= rect.minCol && c <= rect.maxCol ? ' defter__colhead--active' : ''}`}
                   onMouseDown={(e) => {
-                    rootRef.current?.focus()
+                    focusGrid()
                     setSel((s) =>
                       e.shiftKey
                         ? { anchor: s.anchor, focus: { col: c, row: totalRows } }
@@ -1637,7 +1663,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
               if (e.key === 'Enter') setMatchIdx((i) => i + (e.shiftKey ? -1 : 1))
               else if (e.key === 'Escape') {
                 setFinder(null)
-                rootRef.current?.focus()
+                focusGrid()
               }
               e.stopPropagation()
             }}
@@ -1673,7 +1699,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             title="Close"
             onClick={() => {
               setFinder(null)
-              rootRef.current?.focus()
+              focusGrid()
             }}
           >
             ✕

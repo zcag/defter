@@ -370,6 +370,20 @@
   overflow: auto;
   background: var(--defter-bg);
 }
+/* Off-screen focus target that makes copy/cut/paste fire reliably (see keyCatcherRef). */
+.defter__keycatcher {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  margin: -1px;
+  opacity: 0;
+  overflow: hidden;
+  resize: none;
+  white-space: pre;
+  pointer-events: none;
+}
 /* Single crisp outline around a multi-cell selection (positioned in JS from the corner cells). */
 .defter__marquee {
   position: absolute;
