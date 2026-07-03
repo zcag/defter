@@ -1,10 +1,19 @@
-import { parse, projectProse, projectText, serialize } from '@defter/core'
+import { csvToModel, modelToCsv, parse, projectProse, projectText, serialize } from '@defter/core'
 import { createEngine } from '@defter/formula'
 import { DefterGrid } from '@defter/react'
 import { useYText } from '@defter/yjs'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import * as Y from 'yjs'
 import { SAMPLES } from './samples.js'
+
+function download(name: string, data: BlobPart, type: string) {
+  const url = URL.createObjectURL(new Blob([data], { type }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = name
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 type Theme = 'light' | 'dark' | 'paper'
 type ProjView = 'off' | 'table' | 'prose'
@@ -23,12 +32,34 @@ export function App() {
     setText(s.text)
   }
 
+  const fileRef = useRef<HTMLInputElement>(null)
+
   const projection = useMemo(() => {
     if (proj === 'off') return ''
     const m = parse(text)
     const computed = engine.compute(m)
     return proj === 'table' ? projectText(m, { computed }) : projectProse(m, { computed })
   }, [proj, text, engine])
+
+  const exportCsv = () => {
+    const m = parse(text)
+    download('defter.csv', modelToCsv(m, { computed: engine.compute(m) }), 'text/csv')
+  }
+  const exportXlsx = async () => {
+    const m = parse(text)
+    const { exportXlsx } = await import('@defter/xlsx')
+    const buf = await exportXlsx(m, { computed: engine.compute(m) })
+    download('defter.xlsx', buf, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  }
+  const onImportFile = async (file: File) => {
+    const name = file.name.toLowerCase()
+    if (name.endsWith('.csv')) {
+      setText(serialize(csvToModel(await file.text(), file.name.replace(/\.csv$/i, '') || 'Sheet1')))
+    } else if (name.endsWith('.xlsx')) {
+      const { importXlsx } = await import('@defter/xlsx')
+      setText(serialize(await importXlsx(await file.arrayBuffer())))
+    }
+  }
 
   return (
     <div className="page">
@@ -75,6 +106,28 @@ export function App() {
               ]}
               onChange={(v) => setProj(v as ProjView)}
             />
+            <div className="io">
+              <button className="chip" onClick={() => fileRef.current?.click()}>
+                ↑ Import
+              </button>
+              <button className="chip" onClick={exportCsv}>
+                ↓ CSV
+              </button>
+              <button className="chip" onClick={exportXlsx}>
+                ↓ XLSX
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv,.xlsx"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) onImportFile(f)
+                  e.target.value = ''
+                }}
+              />
+            </div>
           </div>
         </div>
 

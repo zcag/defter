@@ -12,6 +12,7 @@
     "@defter/core": "workspace:*",
     "@defter/formula": "workspace:*",
     "@defter/react": "workspace:*",
+    "@defter/xlsx": "workspace:*",
     "@defter/yjs": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

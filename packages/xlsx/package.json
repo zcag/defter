@@ -1,0 +1,25 @@
+{
+  "name": "@defter/xlsx",
+  "version": "0.0.1",
+  "description": "XLSX import/export for Defter, via exceljs. Maps cells, formulas, merges, and basic styling to and from the Defter model. Optional — not part of core.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@defter/core": "workspace:*",
+    "exceljs": "^4.4.0"
+  }
+}

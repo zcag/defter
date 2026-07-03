@@ -192,6 +192,10 @@ body {
   color: #fff;
   border-color: var(--accent);
 }
+.io {
+  display: flex;
+  gap: 6px;
+}
 .tg {
   display: flex;
   align-items: center;
