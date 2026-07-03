@@ -100,13 +100,21 @@ A fenced block with info-string `defter-style`, one rule per line:
 - Attributes are space-separated `key=value` or bare flags. Bare flags: `bold`, `italic`,
   `underline`, `strike`, `wrap`, `merge`. Key/value: `fill=<token|#hex>`, `color=<token|#hex>`,
   `align=left|center|right`, `valign=top|middle|bottom`, `format=<number-format>`,
-  `border=<spec>`, `font=<token>`, `size=<n>`.
+  `border=<spec>`, `font=<token>`, `size=<n>`, `width=<px>` (on a `cols` target).
 - Later rules override earlier ones for overlapping targets (last-wins per attribute).
 - `fill`/`color` values are preferentially **theme tokens** (e.g. `surface-2`, `accent`) so a
   host theme can restyle without touching the document; raw `#hex` is allowed as an escape hatch.
-- Charts and other objects live in the same block as `chart {…}` rules (see `docs/CHARTS.md`).
 
-Because these are keyed by A1, they are subject to the same reference rewriting as formulas.
+The block also carries two data-driven constructs, keyed by A1 range like everything else:
+
+- **Conditional formatting** — `when <range> <op> <value>  <attrs>` applies the attributes to
+  each cell whose *computed* value satisfies the condition (ops `> < >= <= = <>`; value a number
+  or `"text"`). Example: `when D2:D9 < 0  color=danger bold`.
+- **Charts** — `chart type=bar|line|area|pie title="…" x=<labels-range> y=<values-range>`. One per
+  line. The chart follows the data referenced by its ranges.
+
+Because all of these are keyed by A1, they are subject to the same reference rewriting as formulas
+(insert/delete a row or column and their targets shift; a fully-deleted range drops the rule).
 
 ## Round-trip guarantee
 
