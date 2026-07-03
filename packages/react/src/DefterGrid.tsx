@@ -353,6 +353,10 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const dragging = useRef(false)
   const autoScrollRaf = useRef(0)
   const marqueeRef = useRef<HTMLDivElement>(null)
+  const copyMarqueeRef = useRef<HTMLDivElement>(null)
+  const [copyRect, setCopyRect] = useState<Rect | null>(null)
+  const shellRef = useRef<HTMLDivElement>(null)
+  const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(null)
   // Internal clipboard: preserves raw cells (incl. formulas) so an in-app paste keeps formulas and
   // shifts their relative refs by the paste offset. `tsv` fingerprints our own copy so we can tell
   // an internal paste from one pasted in from another app (which only gives us plain text).
@@ -421,28 +425,79 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     }
   }, [sel])
 
-  // Draw a single crisp border around the whole multi-cell selection (a single cell keeps its own
-  // ring). An overlay positioned from the corner cells' geometry, so merges/freeze/widths all work.
+  // Position an overlay box (selection marquee, copy marching-ants) over a cell range from the corner
+  // cells' geometry — so merges/freeze/widths all work and it scrolls locked to the content.
   useLayoutEffect(() => {
     const root = rootRef.current
-    const mq = marqueeRef.current
-    if (!root || !mq) return
-    const single = rect.minCol === rect.maxCol && rect.minRow === rect.maxRow
-    const a = root.querySelector(`td[data-col="${rect.minCol}"][data-row="${rect.minRow}"]`)
-    const b = root.querySelector(`td[data-col="${rect.maxCol}"][data-row="${rect.maxRow}"]`)
-    if (single || editing || !a || !b) {
-      mq.style.display = 'none'
-      return
+    if (!root) return
+    const place = (el: HTMLDivElement | null, r: Rect | null, show: boolean) => {
+      if (!el) return
+      const a = r && root.querySelector(`td[data-col="${r.minCol}"][data-row="${r.minRow}"]`)
+      const b = r && root.querySelector(`td[data-col="${r.maxCol}"][data-row="${r.maxRow}"]`)
+      if (!show || !a || !b) {
+        el.style.display = 'none'
+        return
+      }
+      const cr = root.getBoundingClientRect()
+      const ar = a.getBoundingClientRect()
+      const br = b.getBoundingClientRect()
+      el.style.display = 'block'
+      el.style.left = `${ar.left - cr.left + root.scrollLeft}px`
+      el.style.top = `${ar.top - cr.top + root.scrollTop}px`
+      el.style.width = `${br.right - ar.left}px`
+      el.style.height = `${br.bottom - ar.top}px`
     }
-    const cr = root.getBoundingClientRect()
-    const ar = a.getBoundingClientRect()
-    const br = b.getBoundingClientRect()
-    mq.style.display = 'block'
-    mq.style.left = `${ar.left - cr.left + root.scrollLeft}px`
-    mq.style.top = `${ar.top - cr.top + root.scrollTop}px`
-    mq.style.width = `${br.right - ar.left}px`
-    mq.style.height = `${br.bottom - ar.top}px`
+    const single = rect.minCol === rect.maxCol && rect.minRow === rect.maxRow
+    place(marqueeRef.current, rect, !single && editing === null)
+    place(copyMarqueeRef.current, copyRect, copyRect !== null)
   })
+
+  // Themed tooltips: drive off existing `title` attributes via delegation — suppress the native
+  // tooltip on hover (stash/restore the title, so it stays available for focus/screen readers).
+  useEffect(() => {
+    const shell = shellRef.current
+    if (!shell) return
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let current: HTMLElement | null = null
+    const restore = (el: HTMLElement) => {
+      const t = el.getAttribute('data-tip')
+      if (t !== null) {
+        el.setAttribute('title', t)
+        el.removeAttribute('data-tip')
+      }
+    }
+    const clear = () => {
+      if (timer) clearTimeout(timer)
+      if (current) restore(current)
+      current = null
+      setTip(null)
+    }
+    const over = (e: MouseEvent) => {
+      const el = (e.target as HTMLElement | null)?.closest<HTMLElement>('[title]')
+      if (!el || el === current) return
+      if (current) clear()
+      const title = el.getAttribute('title') ?? ''
+      if (!title) return
+      el.setAttribute('data-tip', title)
+      el.removeAttribute('title') // suppress the native OS tooltip
+      current = el
+      timer = setTimeout(() => {
+        const r = el.getBoundingClientRect()
+        const sr = shell.getBoundingClientRect()
+        setTip({ text: title, x: r.left - sr.left + r.width / 2, y: r.bottom - sr.top + 6 })
+      }, 380)
+    }
+    const out = (e: MouseEvent) => {
+      if (current && !current.contains(e.relatedTarget as Node | null)) clear()
+    }
+    shell.addEventListener('mouseover', over)
+    shell.addEventListener('mouseout', out)
+    return () => {
+      shell.removeEventListener('mouseover', over)
+      shell.removeEventListener('mouseout', out)
+      clear()
+    }
+  }, [])
 
   useEffect(() => {
     if (editing) inputRef.current?.focus()
@@ -580,6 +635,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     (col: number, row: number, initial?: string) => {
       if (!editable) return
       setEditing({ col, row, value: initial ?? rawAt(col, row) })
+      setCopyRect(null)
     },
     [editable, rawAt],
   )
@@ -636,6 +692,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
       if (editing) return
+      if (e.key === 'Escape' && copyRect) {
+        setCopyRect(null)
+        e.preventDefault()
+        return
+      }
       if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
         if (e.shiftKey) redo()
         else undo()
@@ -789,6 +850,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       totalRows,
       jump,
       sheet,
+      copyRect,
     ],
   )
 
@@ -811,6 +873,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       }
       const tsv = valLines.join('\n')
       clip.current = { cells: raws, tsv, origin: { col: rect.minCol, row: rect.minRow }, cut }
+      setCopyRect({ ...rect }) // marching-ants marquee over the copied range
       e.clipboardData.setData('text/plain', tsv)
       e.preventDefault()
     },
@@ -836,6 +899,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       if (editing || !editable) return
       const data = e.clipboardData.getData('text/plain')
       if (!data) return
+      setCopyRect(null) // paste consumes the marching-ants marquee
       const writes: { col: number; row: number; value: string }[] = []
       // Internal paste (our own copy, unchanged): keep raw cells and shift relative refs by the offset.
       const buf = clip.current
@@ -1206,10 +1270,16 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
 
   return (
     <div
+      ref={shellRef}
       className={`defter-shell${props.className ? ` ${props.className}` : ''}`}
       data-defter-theme={theme}
       style={props.style}
     >
+      {tip && (
+        <div className="defter__tooltip" role="tooltip" style={{ left: tip.x, top: tip.y }}>
+          {tip.text}
+        </div>
+      )}
       {toolbar && editable && (
         <div
           className="defter__toolbar"
@@ -1363,11 +1433,12 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         onCut={onCut}
         onPaste={onPaste}
         onContextMenu={onContextMenu}
-        onScroll={
-          virtualize
-            ? (e) => setVp({ top: e.currentTarget.scrollTop, height: e.currentTarget.clientHeight })
-            : undefined
-        }
+        onScroll={(e) => {
+          const el = e.currentTarget
+          el.dataset.scrollY = el.scrollTop > 0 ? '1' : '' // toggles the frozen-pane shadows (CSS)
+          el.dataset.scrollX = el.scrollLeft > 0 ? '1' : ''
+          if (virtualize) setVp({ top: el.scrollTop, height: el.clientHeight })
+        }}
       >
         <table className="defter__grid" role="grid" aria-readonly={!editable || undefined}>
           <colgroup>
@@ -1428,6 +1499,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           </tbody>
         </table>
         <div ref={marqueeRef} className="defter__marquee" aria-hidden="true" style={{ display: 'none' }} />
+        <div ref={copyMarqueeRef} className="defter__copy-marquee" aria-hidden="true" style={{ display: 'none' }} />
       </div>
 
       {menu && (

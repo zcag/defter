@@ -379,6 +379,86 @@
   border-radius: 1px;
   z-index: 4;
 }
+/* Copied range: animated dashed "marching ants" drawn as four moving dash gradients. */
+.defter__copy-marquee {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  background-image:
+    linear-gradient(90deg, var(--defter-selection-border) 50%, transparent 0),
+    linear-gradient(90deg, var(--defter-selection-border) 50%, transparent 0),
+    linear-gradient(0deg, var(--defter-selection-border) 50%, transparent 0),
+    linear-gradient(0deg, var(--defter-selection-border) 50%, transparent 0);
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size: 7px 2px, 7px 2px, 2px 7px, 2px 7px;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  animation: defter-march 0.5s linear infinite;
+}
+@keyframes defter-march {
+  to {
+    background-position: 7px 0, -7px 100%, 0 -7px, 100% 7px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .defter__copy-marquee {
+    animation: none;
+  }
+}
+/* Themed tooltip (replaces native title= chrome); centered under the hovered element. */
+.defter__tooltip {
+  position: absolute;
+  z-index: 80;
+  transform: translateX(-50%);
+  pointer-events: none;
+  white-space: nowrap;
+  background: var(--defter-fg);
+  color: var(--defter-bg);
+  font-size: 11.5px;
+  line-height: 1;
+  padding: 5px 8px;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px -6px rgba(10, 10, 30, 0.4);
+  animation: defter-pop-in 90ms ease-out;
+}
+
+/* Motion: quick, tasteful hover/press transitions + a subtle pop-in for floating surfaces. */
+.defter__tb,
+.defter__tab,
+.defter__pop-btn,
+.defter__pop-swatch,
+.defter__pop-row,
+.defter__menu button,
+.defter__autocomplete li,
+.defter__chip {
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease,
+    outline-color 120ms ease;
+}
+.defter__popover,
+.defter__menu,
+.defter__autocomplete {
+  animation: defter-pop-in 110ms ease-out;
+  transform-origin: top left;
+}
+@keyframes defter-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .defter__popover,
+  .defter__menu,
+  .defter__autocomplete {
+    animation: none;
+  }
+}
 .defter:focus {
   outline: none;
 }
@@ -551,6 +631,21 @@
 .defter__cell--frozen.defter__cell--frozen-col {
   z-index: 3;
   background: var(--defter-header-bg);
+}
+/* Frozen-pane shadows: only once scrolled, so the pinned edge reads as a layer above the content. */
+.defter[data-scroll-y='1'] .defter__colhead,
+.defter[data-scroll-y='1'] .defter__corner,
+.defter[data-scroll-y='1'] .defter__cell--frozen,
+.defter[data-scroll-y='1'] .defter__rowhead--frozen {
+  box-shadow: 0 5px 6px -4px rgba(10, 10, 30, 0.28);
+}
+.defter[data-scroll-x='1'] .defter__rowhead,
+.defter[data-scroll-x='1'] .defter__corner,
+.defter[data-scroll-x='1'] .defter__cell--frozen-col {
+  box-shadow: 5px 0 6px -4px rgba(10, 10, 30, 0.28);
+}
+.defter[data-scroll-x='1'][data-scroll-y='1'] .defter__corner {
+  box-shadow: 5px 0 6px -4px rgba(10, 10, 30, 0.28), 0 5px 6px -4px rgba(10, 10, 30, 0.28);
 }
 .defter__cell code {
   font-family: var(--defter-font-mono);
