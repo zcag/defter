@@ -1,7 +1,7 @@
 {
   "name": "@defter/ironcalc",
-  "version": "0.0.1",
-  "description": "IronCalc-wasm formula engine adapter for Defter — proves the pluggable-engine seam with a mature Rust/Wasm engine (300+ functions). Optional; the default is @defter/formula.",
+  "version": "0.1.0",
+  "description": "IronCalc-wasm formula engine adapter for Defter \u2014 proves the pluggable-engine seam with a mature Rust/Wasm engine (300+ functions). Optional; the default is @defter/formula.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -13,13 +13,25 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "prepublishOnly": "tsc -b"
   },
   "dependencies": {
     "@defter/core": "workspace:*",
     "@ironcalc/wasm": "^0.7.0"
-  }
+  },
+  "author": "Cagdas Salur",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zcag/defter.git",
+    "directory": "packages/ironcalc"
+  },
+  "homepage": "https://defter.cagdas.io",
+  "bugs": "https://github.com/zcag/defter/issues"
 }

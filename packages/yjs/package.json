@@ -1,6 +1,6 @@
 {
   "name": "@defter/yjs",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Bind a Defter grid to a Yjs Y.Text for collaboration. Inject the shared type; the transport, persistence, and awareness stay entirely the host's concern.",
   "license": "MIT",
   "type": "module",
@@ -13,10 +13,14 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "prepublishOnly": "tsc -b"
   },
   "dependencies": {
     "@defter/core": "workspace:*"
@@ -24,5 +28,13 @@
   "peerDependencies": {
     "react": ">=18",
     "yjs": "^13"
-  }
+  },
+  "author": "Cagdas Salur",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zcag/defter.git",
+    "directory": "packages/yjs"
+  },
+  "homepage": "https://defter.cagdas.io",
+  "bugs": "https://github.com/zcag/defter/issues"
 }

@@ -1,7 +1,7 @@
 {
   "name": "@defter/formula",
-  "version": "0.0.1",
-  "description": "Default formula engine for Defter — a compact, dependency-free Excel-style evaluator implementing the @defter/core FormulaEngine interface.",
+  "version": "0.1.0",
+  "description": "Default formula engine for Defter \u2014 a compact, dependency-free Excel-style evaluator implementing the @defter/core FormulaEngine interface.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -13,12 +13,24 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "prepublishOnly": "tsc -b"
   },
   "dependencies": {
     "@defter/core": "workspace:*"
-  }
+  },
+  "author": "Cagdas Salur",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zcag/defter.git",
+    "directory": "packages/formula"
+  },
+  "homepage": "https://defter.cagdas.io",
+  "bugs": "https://github.com/zcag/defter/issues"
 }

@@ -1,7 +1,7 @@
 {
   "name": "@defter/xlsx",
-  "version": "0.0.1",
-  "description": "XLSX import/export for Defter, via exceljs. Maps cells, formulas, merges, and basic styling to and from the Defter model. Optional — not part of core.",
+  "version": "0.1.0",
+  "description": "XLSX import/export for Defter, via exceljs. Maps cells, formulas, merges, and basic styling to and from the Defter model. Optional \u2014 not part of core.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -13,13 +13,25 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "prepublishOnly": "tsc -b"
   },
   "dependencies": {
     "@defter/core": "workspace:*",
     "exceljs": "^4.4.0"
-  }
+  },
+  "author": "Cagdas Salur",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zcag/defter.git",
+    "directory": "packages/xlsx"
+  },
+  "homepage": "https://defter.cagdas.io",
+  "bugs": "https://github.com/zcag/defter/issues"
 }

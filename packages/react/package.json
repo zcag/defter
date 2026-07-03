@@ -1,7 +1,7 @@
 {
   "name": "@defter/react",
-  "version": "0.0.1",
-  "description": "React renderer for Defter — a thin, themeable (CSS-variable) grid projection of the text model. Bring your own Y.Text for collaboration.",
+  "version": "0.1.0",
+  "description": "React renderer for Defter \u2014 a thin, themeable (CSS-variable) grid projection of the text model. Bring your own Y.Text for collaboration.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,10 +14,16 @@
     },
     "./styles.css": "./dist/styles.css"
   },
-  "files": ["dist", "src"],
-  "sideEffects": ["*.css"],
+  "files": [
+    "dist",
+    "src"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
-    "build": "tsc -b && node ./scripts/copy-css.mjs"
+    "build": "tsc -b && node ./scripts/copy-css.mjs",
+    "prepublishOnly": "tsc -b && node ./scripts/copy-css.mjs"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -33,5 +39,13 @@
     "@types/react-dom": "^19.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
-  }
+  },
+  "author": "Cagdas Salur",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zcag/defter.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://defter.cagdas.io",
+  "bugs": "https://github.com/zcag/defter/issues"
 }

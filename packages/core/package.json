@@ -1,7 +1,7 @@
 {
   "name": "@defter/core",
-  "version": "0.0.1",
-  "description": "Headless, framework-agnostic core for Defter — a text-canonical collaborative spreadsheet. Parse/serialize, coordinates, minimal-splice edits, reference rewriting, projection.",
+  "version": "0.1.0",
+  "description": "Headless, framework-agnostic core for Defter \u2014 a text-canonical collaborative spreadsheet. Parse/serialize, coordinates, minimal-splice edits, reference rewriting, projection.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -13,14 +13,21 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "prepublishOnly": "tsc -b"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/zcag/defter.git",
+    "url": "git+https://github.com/zcag/defter.git",
     "directory": "packages/core"
-  }
+  },
+  "author": "Cagdas Salur",
+  "homepage": "https://defter.cagdas.io",
+  "bugs": "https://github.com/zcag/defter/issues"
 }
