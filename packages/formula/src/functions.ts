@@ -118,7 +118,8 @@ export const FUNCTIONS: Record<string, Fn> = {
     const d = args[1] ? toNumber(ctx.eval(args[1])) : 0
     if (x === null || d === null) return ERR.value
     const f = 10 ** d
-    return Math.round(x * f) / f
+    // Excel rounds halves away from zero, not toward +∞ (Math.round).
+    return (Math.sign(x) * Math.round(Math.abs(x) * f)) / f
   },
   ROUNDUP(args, ctx) {
     const x = toNumber(ctx.eval(args[0]!))
@@ -325,12 +326,24 @@ Object.assign(FUNCTIONS, {
     const target = c.eval(a[0]!)
     const m = c.matrix(a[1]!)
     const rowIdx = (toNumber(c.eval(a[2]!)) ?? 1) - 1
+    const exact = a[3] ? c.eval(a[3]) === false || toNumber(c.eval(a[3])) === 0 : false
     const ts = stringify(target).toLowerCase()
+    const tn = toNumber(target)
     const header = m[0] ?? []
+    let hit = -1
     for (let j = 0; j < header.length; j++) {
-      if (stringify(header[j]!).toLowerCase() === ts) return m[rowIdx]?.[j] ?? ERR.ref
+      if (exact) {
+        if (stringify(header[j]!).toLowerCase() === ts) {
+          hit = j
+          break
+        }
+      } else {
+        const nn = toNumber(header[j]!)
+        if (nn !== null && tn !== null && nn <= tn) hit = j
+      }
     }
-    return ERR.na
+    if (hit < 0) return ERR.na
+    return m[rowIdx]?.[hit] ?? ERR.ref
   },
 })
 

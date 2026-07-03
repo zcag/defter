@@ -43,6 +43,10 @@ describe('formula engine', () => {
     expect(one('=MAX(3, 7, 2)')).toBe(7)
     expect(one('="a" & "b"')).toBe('ab')
     expect(one('=IFERROR(1/0, "safe")')).toBe('safe')
+    expect(one('=ROUND(-2.5, 0)')).toBe(-3) // half away from zero
+    expect(one('=ROUND(2.5, 0)')).toBe(3)
+    expect(one('=1E5')).toBe(100000) // scientific notation
+    expect(one('=1.5E3')).toBe(1500)
   })
 
   it('propagates errors', () => {

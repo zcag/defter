@@ -23,6 +23,21 @@ describe('rewriteFormula', () => {
     expect(rw('=$A$2', 'row', 2, 1)).toBe('=$A$3')
     expect(rw('=Other!A2', 'row', 2, 1)).toBe('=Other!A2')
   })
+  it('shifts both endpoints of a cross-sheet range (end inherits the sheet)', () => {
+    expect(rewriteFormula('=SUM(Sheet1!A1:A10)', 'Sheet2', 'Sheet1', 'row', 1, 5)).toBe(
+      '=SUM(Sheet1!A6:A15)',
+    )
+    // A range on another sheet is untouched when editing this sheet.
+    expect(rewriteFormula('=SUM(Sheet2!A1:A10)', 'Sheet1', 'Sheet1', 'row', 1, 5)).toBe(
+      '=SUM(Sheet2!A1:A10)',
+    )
+  })
+  it('shrinks a range when its boundary is deleted (not #REF!)', () => {
+    expect(rw('=SUM(B1:D1)', 'col', 1, -1)).toBe('=SUM(B1:C1)')
+    expect(rw('=SUM(A2:A4)', 'row', 2, -1)).toBe('=SUM(A2:A3)')
+    // whole range deleted → #REF!
+    expect(rw('=SUM(A2:A4)', 'row', 2, -3)).toBe('=SUM(#REF!)')
+  })
   it('does not touch string literals or function names', () => {
     expect(rw('=CONCAT("A2 is here", A2)', 'row', 2, 1)).toBe('=CONCAT("A2 is here", A3)')
     expect(rw('=SUM(A2:A3)', 'row', 2, 1)).toBe('=SUM(A3:A4)')

@@ -91,14 +91,14 @@ export function lex(input: string): Token[] {
       tokens.push({ kind: 'op', value: ch, pos: i++ })
       continue
     }
-    const num = /^\d+(\.\d+)?/.exec(input.slice(i))
+    const num = /^\d+(\.\d+)?([eE][+-]?\d+)?/.exec(input.slice(i))
     if (num && ch >= '0' && ch <= '9') {
       tokens.push({ kind: 'num', value: num[0], pos: i })
       i += num[0].length
       continue
     }
     if (ch === '.' && /^\.\d/.test(input.slice(i))) {
-      const m = /^\.\d+/.exec(input.slice(i))!
+      const m = /^\.\d+([eE][+-]?\d+)?/.exec(input.slice(i))!
       tokens.push({ kind: 'num', value: m[0], pos: i })
       i += m[0].length
       continue

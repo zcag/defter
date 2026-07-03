@@ -133,6 +133,19 @@ export function rewriteFormula(
       const m = REF_TOKEN.exec(src.slice(i))
       if (m) {
         const after = src[i + m[0].length] ?? ''
+        // A range `ref:ref` is rewritten as a unit so the end inherits the range's sheet and the
+        // pair shrinks (rather than either endpoint collapsing to #REF!) on partial deletion.
+        if (after === ':') {
+          const m2 = REF_TOKEN.exec(src.slice(i + m[0].length + 1))
+          if (m2) {
+            const after2 = src[i + m[0].length + 1 + m2[0].length] ?? ''
+            if (after2 !== '(' && !/[A-Za-z0-9_]/.test(after2)) {
+              out += rewriteRange(m, m2, containingSheet, editedSheet, axis, at, delta)
+              i += m[0].length + 1 + m2[0].length
+              continue
+            }
+          }
+        }
         if (after !== '(' && !/[A-Za-z0-9_]/.test(after)) {
           out += rewriteRefToken(m, containingSheet, editedSheet, axis, at, delta)
           i += m[0].length
@@ -144,6 +157,58 @@ export function rewriteFormula(
     i++
   }
   return out
+}
+
+interface RefParts {
+  sheetPrefix: string
+  colAbs: boolean
+  rowAbs: boolean
+  col: number
+  row: number
+}
+function refParts(m: RegExpExecArray): RefParts {
+  return {
+    sheetPrefix: m[1] ?? '',
+    colAbs: m[2] === '$',
+    rowAbs: m[4] === '$',
+    col: columnIndex(m[3]!),
+    row: Number.parseInt(m[5]!, 10),
+  }
+}
+function sheetOf(prefix: string): string | undefined {
+  return prefix ? prefix.slice(0, -1).replace(/^'|'$/g, '').replace(/''/g, "'") : undefined
+}
+function fmt(p: RefParts, sheetPrefix: string): string {
+  return `${sheetPrefix}${p.colAbs ? '$' : ''}${columnLabel(p.col)}${p.rowAbs ? '$' : ''}${p.row}`
+}
+
+function rewriteRange(
+  m1: RegExpExecArray,
+  m2: RegExpExecArray,
+  containingSheet: string,
+  editedSheet: string,
+  axis: Axis,
+  at: number,
+  delta: number,
+): string {
+  const a = refParts(m1)
+  const b = refParts(m2)
+  const rangeSheet = sheetOf(a.sheetPrefix) ?? containingSheet
+  if (!sameSheet(rangeSheet, editedSheet)) return `${m1[0]}:${m2[0]}`
+
+  if (axis === 'row') {
+    const s = shiftSpan(a.row, b.row, at, delta)
+    if (!s) return '#REF!'
+    a.row = s[0]
+    b.row = s[1]
+  } else {
+    const s = shiftSpan(a.col, b.col, at, delta)
+    if (!s) return '#REF!'
+    a.col = s[0]
+    b.col = s[1]
+  }
+  // Canonical form keeps the sheet prefix only on the start endpoint.
+  return `${fmt(a, a.sheetPrefix)}:${fmt(b, '')}`
 }
 
 function rewriteRefToken(
