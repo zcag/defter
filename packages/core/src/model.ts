@@ -27,8 +27,15 @@ export interface Sheet {
   conditionals: CondRule[]
   /** Data-validation dropdowns (`validate <range> list=A,B,C`). */
   validations: ValidationRule[]
+  /** Named ranges (`name Revenue = D2:D10`) — usable in formulas from any sheet. */
+  names: NamedRange[]
   /** Whether the sheet was introduced by an explicit `## Sheet:` heading. */
   headed: boolean
+}
+
+export interface NamedRange {
+  name: string
+  range: Range
 }
 
 export interface ValidationRule {
@@ -97,6 +104,7 @@ export function emptySheet(name: string, headed = true): Sheet {
     charts: [],
     conditionals: [],
     validations: [],
+    names: [],
     headed,
   }
 }

@@ -74,6 +74,7 @@ const multi = `## Sheet: Sales
 \`\`\`defter-style
 A1:D1  bold fill=surface-3
 D2:D4  format=$#,##0
+name Revenue = D2:D4
 \`\`\`
 
 ## Sheet: Summary
@@ -81,7 +82,7 @@ D2:D4  format=$#,##0
 | Metric | Value |
 | --- | ---: |
 | Total units | =SUM(Sales!B2:B4) |
-| Total revenue | =SUM(Sales!D2:D4) |
+| Total revenue | =SUM(Revenue) |
 | Avg price | =Summary!B3/Summary!B2 |
 | Best month | =Sales!A4 |
 

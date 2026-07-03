@@ -38,6 +38,13 @@ describe('IronCalc adapter', () => {
     expect(grid.get('Two', 0, 2)).toBe(20)
   })
 
+  it('resolves Defter named ranges (as IronCalc defined names)', () => {
+    const src =
+      '## Sheet: Data\n\n| m | s |\n|---|---:|\n| Jan | 10 |\n| Feb | 20 |\n\n```defter-style\nname Sales = B2:B3\n```\n\n## Sheet: R\n\n| x | y |\n|---|---:|\n| t | =SUM(Sales) |\n'
+    const grid = createIronCalcEngine().compute(parse(src))
+    expect(grid.get('R', 1, 2)).toBe(30)
+  })
+
   it('agrees with the default engine on VLOOKUP', () => {
     const src =
       '| Name | Age |\n| --- | ---: |\n| Ada | 36 |\n| Lin | 29 |\n| q | =VLOOKUP("Lin", A2:B3, 2, FALSE) |\n'

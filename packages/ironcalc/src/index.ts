@@ -11,6 +11,7 @@ import {
   ERR,
   type FormulaEngine,
   type Model as DefterModel,
+  formatRange,
   parseLiteral,
 } from '@defter/core'
 import initWasm, { Model, initSync } from '@ironcalc/wasm'
@@ -67,6 +68,19 @@ export function createIronCalcEngine(): FormulaEngine {
           }
         }
       })
+
+      // Translate Defter named ranges into IronCalc defined names.
+      for (const sheet of model.sheets) {
+        for (const nr of sheet.names) {
+          const withSheet = { ...nr.range, sheet: nr.range.sheet ?? sheet.name }
+          try {
+            // IronCalc wants the range with a sheet prefix and NO leading '='.
+            wb.newDefinedName(nr.name, null, formatRange(withSheet))
+          } catch {
+            /* ignore invalid names */
+          }
+        }
+      }
       wb.evaluate()
 
       return {

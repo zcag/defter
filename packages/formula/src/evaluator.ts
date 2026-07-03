@@ -16,9 +16,15 @@ export interface Resolver {
   cell(col: number, row: number, sheet: string): CellValue
 }
 
+export interface NameEntry {
+  sheet: string
+  range: Range
+}
+
 export interface EvalContext {
   sheet: string
   resolver: Resolver
+  names: Map<string, NameEntry>
   eval(node: Node): CellValue
   /** Flatten a node into scalar values (range → its cells, ref → one cell, scalar → itself). */
   spill(node: Node): CellValue[]
@@ -26,10 +32,15 @@ export interface EvalContext {
   matrix(node: Node): CellValue[][]
 }
 
-export function makeContext(sheet: string, resolver: Resolver): EvalContext {
+export function makeContext(
+  sheet: string,
+  resolver: Resolver,
+  names: Map<string, NameEntry> = new Map(),
+): EvalContext {
   const ctx: EvalContext = {
     sheet,
     resolver,
+    names,
     eval: (node) => evalNode(node, ctx),
     spill: (node) => spillNode(node, ctx),
     matrix: (node) => matrixNode(node, ctx),
@@ -37,15 +48,29 @@ export function makeContext(sheet: string, resolver: Resolver): EvalContext {
   return ctx
 }
 
+/** Resolve a named range to a range node (with its owning sheet), or null. */
+function nameRange(name: string, ctx: EvalContext): { sheet: string; range: Range } | null {
+  return ctx.names.get(name.toLowerCase()) ?? null
+}
+
 function matrixNode(node: Node, ctx: EvalContext): CellValue[][] {
+  let range: Range | undefined
+  let sheet = ctx.sheet
   if (node.type === 'range') {
-    const sheet = node.range.sheet ?? ctx.sheet
+    range = node.range
+    sheet = node.range.sheet ?? ctx.sheet
+  } else if (node.type === 'name') {
+    const nr = nameRange(node.name, ctx)
+    if (nr) {
+      range = nr.range
+      sheet = nr.sheet
+    }
+  }
+  if (range) {
     const rows: CellValue[][] = []
-    for (let r = node.range.start.row; r <= node.range.end.row; r++) {
+    for (let r = range.start.row; r <= range.end.row; r++) {
       const row: CellValue[] = []
-      for (let c = node.range.start.col; c <= node.range.end.col; c++) {
-        row.push(ctx.resolver.cell(c, r, sheet))
-      }
+      for (let c = range.start.col; c <= range.end.col; c++) row.push(ctx.resolver.cell(c, r, sheet))
       rows.push(row)
     }
     return rows
@@ -65,8 +90,11 @@ function evalNode(node: Node, ctx: EvalContext): CellValue {
       return node.value
     case 'bool':
       return node.value
-    case 'name':
-      return ERR.name
+    case 'name': {
+      const nr = nameRange(node.name, ctx)
+      if (!nr) return ERR.name
+      return ctx.resolver.cell(nr.range.start.col, nr.range.start.row, nr.sheet)
+    }
     case 'ref':
       return ctx.resolver.cell(node.ref.col, node.ref.row, refSheet(node.ref, ctx))
     case 'range':
@@ -166,6 +194,13 @@ function spillNode(node: Node, ctx: EvalContext): CellValue[] {
     const sheet = refSheet(node.range, ctx)
     const out: CellValue[] = []
     for (const { col, row } of cellsInRange(node.range)) out.push(ctx.resolver.cell(col, row, sheet))
+    return out
+  }
+  if (node.type === 'name') {
+    const nr = nameRange(node.name, ctx)
+    if (!nr) return [ERR.name]
+    const out: CellValue[] = []
+    for (const { col, row } of cellsInRange(nr.range)) out.push(ctx.resolver.cell(col, row, nr.sheet))
     return out
   }
   return [ctx.eval(node)]

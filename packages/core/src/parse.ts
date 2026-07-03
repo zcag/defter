@@ -65,6 +65,7 @@ export function parse(text: string): Model {
         target.charts.push(...parsed.charts)
         target.conditionals.push(...parsed.conditionals)
         target.validations.push(...parsed.validations)
+        target.names.push(...parsed.names)
       }
       i = j // skip past closing fence
       continue

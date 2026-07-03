@@ -87,6 +87,8 @@ B2:B9   align=right
   danger danger-soft muted`. A raw `#hex` also works but won't follow the theme.
 - **Merged cells:** `merge` on a range keeps the range rectangular in the text (covered cells stay
   empty) and displays merged: `A1:D1 merge bold align=center`.
+- **Named ranges:** `name Revenue = D2:D10` defines a name usable in formulas from any sheet —
+  `=SUM(Revenue)`. The definition follows the data on insert/delete.
 - **Data validation:** `validate <range> list=Todo,Doing,Done` turns those cells into dropdowns
   restricted to the listed options.
 - **Conditional formatting:** `when <range> <op> <value>  <attrs>` applies the attributes to

@@ -44,9 +44,16 @@ function serializeSheet(sheet: Sheet, forceHeading: boolean): string {
     sheet.styles.length > 0 ||
     sheet.charts.length > 0 ||
     sheet.conditionals.length > 0 ||
-    sheet.validations.length > 0
+    sheet.validations.length > 0 ||
+    sheet.names.length > 0
   ) {
-    const block = serializeStyleBlock(sheet.styles, sheet.charts, sheet.conditionals, sheet.validations)
+    const block = serializeStyleBlock(
+      sheet.styles,
+      sheet.charts,
+      sheet.conditionals,
+      sheet.validations,
+      sheet.names,
+    )
     parts.push(`\n\`\`\`defter-style\n${block}\n\`\`\``)
   }
   return parts.join('\n')

@@ -114,6 +114,8 @@ The block also carries two data-driven constructs, keyed by A1 range like everyt
   line. The chart follows the data referenced by its ranges.
 - **Data validation** — `validate <range> list=A,B,C` makes those cells dropdowns restricted to
   the listed options.
+- **Named ranges** — `name <Name> = <range>` defines a name usable in formulas from any sheet
+  (`=SUM(Revenue)`).
 
 Because all of these are keyed by A1, they are subject to the same reference rewriting as formulas
 (insert/delete a row or column and their targets shift; a fully-deleted range drops the rule).

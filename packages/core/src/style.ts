@@ -8,6 +8,7 @@ import type {
   ChartSpec,
   CondOp,
   CondRule,
+  NamedRange,
   StyleAttrs,
   StyleRule,
   StyleTarget,
@@ -95,6 +96,17 @@ export interface ParsedStyleBlock {
   charts: ChartSpec[]
   conditionals: CondRule[]
   validations: ValidationRule[]
+  names: NamedRange[]
+}
+
+function parseNameLine(line: string): NamedRange | null {
+  const m = /^name\s+([A-Za-z_]\w*)\s*=\s*(\S+)/i.exec(line)
+  if (!m) return null
+  try {
+    return { name: m[1]!, range: parseRange(m[2]!) }
+  } catch {
+    return null
+  }
 }
 
 function parseValidateLine(line: string): ValidationRule | null {
@@ -154,9 +166,15 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
   const charts: ChartSpec[] = []
   const conditionals: CondRule[] = []
   const validations: ValidationRule[] = []
+  const names: NamedRange[] = []
   for (const raw of body.split('\n')) {
     const line = raw.trim()
     if (!line || line.startsWith('#')) continue
+    if (line.toLowerCase().startsWith('name ')) {
+      const nr = parseNameLine(line)
+      if (nr) names.push(nr)
+      continue
+    }
     if (line.toLowerCase().startsWith('when ')) {
       const cond = parseCondLine(line)
       if (cond) conditionals.push(cond)
@@ -183,7 +201,7 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
     const attrs = parseAttrs(parts.slice(1))
     if (Object.keys(attrs).length > 0) rules.push({ target, attrs })
   }
-  return { rules, charts, conditionals, validations }
+  return { rules, charts, conditionals, validations, names }
 }
 
 const CHART_ATTR = /(\w+)=(?:"([^"]*)"|(\S+))/g
@@ -213,8 +231,10 @@ export function serializeStyleBlock(
   charts: ChartSpec[] = [],
   conditionals: CondRule[] = [],
   validations: ValidationRule[] = [],
+  names: NamedRange[] = [],
 ): string {
   const lines = rules.map((r) => `${formatStyleTarget(r.target)}  ${formatAttrs(r.attrs)}`)
+  for (const nr of names) lines.push(`name ${nr.name} = ${formatRange(nr.range)}`)
   for (const cond of conditionals) {
     const v = typeof cond.value === 'number' ? cond.value : `"${cond.value}"`
     lines.push(`when ${formatStyleTarget(cond.target)} ${cond.op} ${v}  ${formatAttrs(cond.attrs)}`)
