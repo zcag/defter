@@ -5,14 +5,19 @@ import {
   type Locale,
   type Model,
   columnLabel,
+  deleteCols,
+  deleteRows,
   formatValue,
   getCell,
+  insertCols,
+  insertRows,
   isError,
   parse,
   parseLiteral,
   resolveStyles,
   serialize,
   setCell,
+  setColumnWidth,
   toNumber,
 } from '@defter/core'
 import {
@@ -94,6 +99,14 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const inputRef = useRef<HTMLInputElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null)
+  const [localW, setLocalW] = useState<Record<number, number>>({})
+  const resizeRef = useRef<{ col: number; startX: number; startW: number } | null>(null)
+  const DEFAULT_COL_W = 110
+  const colWidth = useCallback(
+    (c: number) => localW[c] ?? styles.attrs(c, 1).width ?? DEFAULT_COL_W,
+    [localW, styles],
+  )
 
   const rect: Rect = useMemo(() => {
     const { anchor, focus } = sel
@@ -116,6 +129,53 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     window.addEventListener('mouseup', up)
     return () => window.removeEventListener('mouseup', up)
   }, [])
+
+  // Column resize (drag the header's right edge); commit persists into the style layer.
+  useEffect(() => {
+    const move = (e: MouseEvent) => {
+      const r = resizeRef.current
+      if (!r) return
+      const w = Math.max(48, r.startW + (e.clientX - r.startX))
+      setLocalW((prev) => ({ ...prev, [r.col]: w }))
+    }
+    const up = (e: MouseEvent) => {
+      const r = resizeRef.current
+      if (!r) return
+      const w = Math.max(48, Math.round(r.startW + (e.clientX - r.startX)))
+      resizeRef.current = null
+      if (onChange) onChange(serialize(setColumnWidth(model, sheetIndex, r.col, w)))
+      setLocalW((prev) => {
+        const n = { ...prev }
+        delete n[r.col]
+        return n
+      })
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+    return () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+    }
+  }, [model, onChange, sheetIndex])
+
+  useEffect(() => {
+    if (!menu) return
+    const close = () => setMenu(null)
+    window.addEventListener('click', close)
+    window.addEventListener('scroll', close, true)
+    return () => {
+      window.removeEventListener('click', close)
+      window.removeEventListener('scroll', close, true)
+    }
+  }, [menu])
+
+  const applyModel = useCallback(
+    (m: Model) => {
+      if (onChange) onChange(serialize(m))
+      setMenu(null)
+    },
+    [onChange],
+  )
 
   const rawAt = useCallback((col: number, row: number) => getCell(sheet, col, row), [sheet])
 
@@ -288,6 +348,45 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     return { sum, count, numCount, avg: numCount ? sum / numCount : 0 }
   }, [rect, rawAt, valueAt])
 
+  const startResize = useCallback(
+    (col: number, e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      resizeRef.current = { col, startX: e.clientX, startW: colWidth(col) }
+    },
+    [colWidth],
+  )
+
+  const onContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      if (!editable) return
+      const el = (e.target as HTMLElement).closest('[data-col],[data-row]') as HTMLElement | null
+      if (!el) return
+      e.preventDefault()
+      const c = el.dataset.col !== undefined ? Number(el.dataset.col) : undefined
+      const r = el.dataset.row !== undefined ? Number(el.dataset.row) : undefined
+      if (c !== undefined && r !== undefined) {
+        const inside = c >= rect.minCol && c <= rect.maxCol && r >= rect.minRow && r <= rect.maxRow
+        if (!inside) setSel({ anchor: { col: c, row: r }, focus: { col: c, row: r } })
+      } else if (c !== undefined) {
+        setSel({ anchor: { col: c, row: 1 }, focus: { col: c, row: totalRows } })
+      } else if (r !== undefined) {
+        setSel({ anchor: { col: 0, row: r }, focus: { col: totalCols - 1, row: r } })
+      }
+      setMenu({ x: e.clientX, y: e.clientY })
+    },
+    [editable, rect, totalRows, totalCols],
+  )
+
+  const clearSelection = useCallback(() => {
+    const writes = []
+    for (let r = rect.minRow; r <= rect.maxRow; r++)
+      for (let c = rect.minCol; c <= rect.maxCol; c++)
+        if (rawAt(c, r) !== '') writes.push({ col: c, row: r, value: '' })
+    commitMany(writes)
+    setMenu(null)
+  }, [rect, rawAt, commitMany])
+
   const activeRaw = rawAt(sel.focus.col, sel.focus.row)
 
   return (
@@ -327,12 +426,13 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         onKeyDown={onKeyDown}
         onCopy={onCopy}
         onPaste={onPaste}
+        onContextMenu={onContextMenu}
       >
         <table className="defter__grid">
           <colgroup>
             <col style={{ width: 'var(--defter-head-width)' }} />
             {Array.from({ length: totalCols }, (_, c) => (
-              <col key={c} style={{ width: 'var(--defter-col-width)' }} />
+              <col key={c} style={{ width: `${colWidth(c)}px` }} />
             ))}
           </colgroup>
           <thead>
@@ -341,9 +441,17 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
               {Array.from({ length: totalCols }, (_, c) => (
                 <th
                   key={c}
+                  data-col={c}
                   className={`defter__colhead${c >= rect.minCol && c <= rect.maxCol ? ' defter__colhead--active' : ''}`}
                 >
                   {columnLabel(c)}
+                  {editable && (
+                    <span
+                      className="defter__resizer"
+                      onMouseDown={(e) => startResize(c, e)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
                 </th>
               ))}
             </tr>
@@ -354,6 +462,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
               return (
                 <tr key={row}>
                   <th
+                    data-row={row}
                     className={`defter__rowhead${row >= rect.minRow && row <= rect.maxRow ? ' defter__rowhead--active' : ''}`}
                   >
                     {row}
@@ -398,6 +507,32 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           </tbody>
         </table>
       </div>
+
+      {menu && (
+        <div className="defter__menu" style={{ left: menu.x, top: menu.y }} data-defter-theme={theme}>
+          <button onClick={() => applyModel(insertRows(model, sheetIndex, Math.max(2, rect.minRow), 1))}>
+            Insert row above
+          </button>
+          <button onClick={() => applyModel(insertRows(model, sheetIndex, rect.maxRow + 1, 1))}>
+            Insert row below
+          </button>
+          <button onClick={() => applyModel(deleteRows(model, sheetIndex, rect.minRow, rect.maxRow - rect.minRow + 1))}>
+            Delete {rect.maxRow > rect.minRow ? `rows ${rect.minRow}–${rect.maxRow}` : `row ${rect.minRow}`}
+          </button>
+          <div className="defter__menu-sep" />
+          <button onClick={() => applyModel(insertCols(model, sheetIndex, rect.minCol, 1))}>
+            Insert column left
+          </button>
+          <button onClick={() => applyModel(insertCols(model, sheetIndex, rect.maxCol + 1, 1))}>
+            Insert column right
+          </button>
+          <button onClick={() => applyModel(deleteCols(model, sheetIndex, rect.minCol, rect.maxCol - rect.minCol + 1))}>
+            Delete {rect.maxCol > rect.minCol ? `columns ${columnLabel(rect.minCol)}–${columnLabel(rect.maxCol)}` : `column ${columnLabel(rect.minCol)}`}
+          </button>
+          <div className="defter__menu-sep" />
+          <button onClick={clearSelection}>Clear contents</button>
+        </div>
+      )}
 
       {statusBar && (
         <div className="defter__statusbar" data-defter-theme={theme}>
@@ -487,6 +622,8 @@ function Cell(p: CellProps): React.JSX.Element {
     <td
       className={cls}
       style={css}
+      data-col={p.col}
+      data-row={p.row}
       colSpan={p.colSpan}
       rowSpan={p.rowSpan}
       onMouseDown={(e) => p.onMouseDown(e.shiftKey)}

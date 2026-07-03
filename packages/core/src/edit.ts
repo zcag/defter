@@ -5,7 +5,7 @@
  * here so formulas and style targets stay correct.
  */
 
-import { type Model, type Sheet, cloneModel } from './model.js'
+import { type Model, type Sheet, type StyleAttrs, type StyleTarget, cloneModel } from './model.js'
 import { shiftReferencesInModel } from './refs.js'
 
 function grow(sheet: Sheet, minWidth: number, minRows: number): void {
@@ -59,6 +59,33 @@ export function insertCols(model: Model, sheetIndex: number, at: number, count =
   sheet.colAlign.splice(index, 0, ...Array(count).fill(null))
   sheet.width += count
   shiftReferencesInModel(next, sheet.name, 'col', at, count)
+  return next
+}
+
+/** Append a style rule (merged last-wins by the renderer) for a target. */
+export function setStyle(
+  model: Model,
+  sheetIndex: number,
+  target: StyleTarget,
+  attrs: StyleAttrs,
+): Model {
+  const next = cloneModel(model)
+  const sheet = next.sheets[sheetIndex]
+  if (!sheet) return next
+  sheet.styles.push({ target, attrs })
+  return next
+}
+
+/** Set a column's width (px) in the style layer, replacing any prior single-column width rule. */
+export function setColumnWidth(model: Model, sheetIndex: number, col: number, width: number): Model {
+  const next = cloneModel(model)
+  const sheet = next.sheets[sheetIndex]
+  if (!sheet) return next
+  const existing = sheet.styles.find(
+    (r) => r.target.kind === 'cols' && r.target.start === col && r.target.end === col && r.attrs.width !== undefined,
+  )
+  if (existing) existing.attrs.width = width
+  else sheet.styles.push({ target: { kind: 'cols', start: col, end: col }, attrs: { width } })
   return next
 }
 

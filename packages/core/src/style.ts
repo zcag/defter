@@ -16,7 +16,10 @@ const KEYS = [
   'border',
   'font',
   'size',
+  'width',
 ] as const
+
+const NUMERIC_KEYS = new Set(['size', 'width'])
 
 export function parseStyleTarget(text: string): StyleTarget {
   const t = text.trim()
@@ -56,9 +59,9 @@ function parseAttrs(tokens: string[]): StyleAttrs {
     const key = tok.slice(0, eq)
     const value = tok.slice(eq + 1)
     if (!(KEYS as readonly string[]).includes(key)) continue
-    if (key === 'size') {
+    if (NUMERIC_KEYS.has(key)) {
       const n = Number.parseFloat(value)
-      if (!Number.isNaN(n)) attrs.size = n
+      if (!Number.isNaN(n)) (attrs as Record<string, unknown>)[key] = n
     } else {
       ;(attrs as Record<string, unknown>)[key] = value
     }

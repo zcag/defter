@@ -50,6 +50,8 @@ export interface StyleAttrs {
   border?: string
   font?: string
   size?: number
+  /** Column width in px. Only meaningful on a `cols` target; persists resize in the text layer. */
+  width?: number
 }
 
 export function emptyModel(): Model {
