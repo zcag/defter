@@ -99,6 +99,51 @@ export function fillRight(model: Model, sheetIndex: number, minCol: number, maxC
   return next
 }
 
+/**
+ * Sort data rows [fromRow, toRow] by a column. Whole rows move together, and each moved row's
+ * formulas have their *relative* references offset by the row delta — so a per-row formula like
+ * `=B2*C2` stays correct after the row lands in a new position. (Cross-row aggregate refs in a
+ * sorted region are not preserved — sort data ranges, not their totals.)
+ */
+export function sortRows(
+  model: Model,
+  sheetIndex: number,
+  byCol: number,
+  ascending: boolean,
+  fromRow: number,
+  toRow: number,
+): Model {
+  const next = cloneModel(model)
+  const sheet = next.sheets[sheetIndex]
+  if (!sheet || fromRow < 2 || toRow < fromRow) return next
+
+  const entries: { oldRow: number; cells: string[] }[] = []
+  for (let r = fromRow; r <= toRow; r++) entries.push({ oldRow: r, cells: sheet.grid[r - 1]! })
+
+  const dir = ascending ? 1 : -1
+  entries.sort((a, b) => sortCompare(a.cells[byCol] ?? '', b.cells[byCol] ?? '') * dir)
+
+  entries.forEach((entry, i) => {
+    const newRow = fromRow + i
+    const delta = newRow - entry.oldRow
+    sheet.grid[newRow - 1] = entry.cells.map((text) =>
+      text.trim().startsWith('=') ? `=${offsetReferences(text.trim().slice(1), 0, delta)}` : text,
+    )
+  })
+  return next
+}
+
+function sortCompare(a: string, b: string): number {
+  const na = Number(a)
+  const nb = Number(b)
+  const aNum = a.trim() !== '' && !Number.isNaN(na)
+  const bNum = b.trim() !== '' && !Number.isNaN(nb)
+  if (aNum && bNum) return na - nb
+  if (aNum) return -1
+  if (bNum) return 1
+  return a.localeCompare(b)
+}
+
 /** Append a new empty sheet with a unique name. Returns the new model (heading forced on serialize). */
 export function addSheet(model: Model, name?: string): Model {
   const next = cloneModel(model)

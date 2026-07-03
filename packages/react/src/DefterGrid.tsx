@@ -27,6 +27,7 @@ import {
   setCell,
   setColumnWidth,
   setStyle,
+  sortRows,
   toNumber,
 } from '@defter/core'
 import type { StyleAttrs } from '@defter/core'
@@ -955,6 +956,13 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           </button>
           <button onClick={() => applyModel(deleteCols(model, si, rect.minCol, rect.maxCol - rect.minCol + 1))}>
             Delete {rect.maxCol > rect.minCol ? `columns ${columnLabel(rect.minCol)}–${columnLabel(rect.maxCol)}` : `column ${columnLabel(rect.minCol)}`}
+          </button>
+          <div className="defter__menu-sep" />
+          <button onClick={() => applyModel(sortRows(model, si, rect.minCol, true, 2, sheet.grid.length))}>
+            Sort ↑ by column {columnLabel(rect.minCol)}
+          </button>
+          <button onClick={() => applyModel(sortRows(model, si, rect.minCol, false, 2, sheet.grid.length))}>
+            Sort ↓ by column {columnLabel(rect.minCol)}
           </button>
           <div className="defter__menu-sep" />
           <button onClick={clearSelection}>Clear contents</button>

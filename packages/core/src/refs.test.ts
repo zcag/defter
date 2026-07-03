@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deleteCols, deleteRows, fillDown, insertCols, insertRows, setCell } from './edit.js'
+import { deleteCols, deleteRows, fillDown, insertCols, insertRows, setCell, sortRows } from './edit.js'
 import { getCell } from './model.js'
 import { parse } from './parse.js'
 import { offsetReferences, rewriteFormula } from './refs.js'
@@ -78,6 +78,17 @@ describe('structural edits keep formulas correct', () => {
     const sheet = m.sheets[0]!
     expect(getCell(sheet, 1, 3)).toBe('=A3*A3')
     expect(getCell(sheet, 1, 4)).toBe('=A4*A4')
+  })
+
+  it('sortRows reorders rows and keeps per-row formulas correct', () => {
+    const src =
+      '| Name | Score | Bonus |\n| --- | ---: | ---: |\n| Ada | 5 | =B2*2 |\n| Zoe | 9 | =B3*2 |\n| Lin | 1 | =B4*2 |\n'
+    const m = sortRows(parse(src), 0, 1, true, 2, 4) // ascending by Score
+    const s = m.sheets[0]!
+    expect([getCell(s, 0, 2), getCell(s, 0, 3), getCell(s, 0, 4)]).toEqual(['Lin', 'Ada', 'Zoe'])
+    expect([getCell(s, 1, 2), getCell(s, 1, 3), getCell(s, 1, 4)]).toEqual(['1', '5', '9'])
+    // each Bonus formula references its own (new) row
+    expect([getCell(s, 2, 2), getCell(s, 2, 3), getCell(s, 2, 4)]).toEqual(['=B2*2', '=B3*2', '=B4*2'])
   })
 
   it('insertCols shifts style targets', () => {
