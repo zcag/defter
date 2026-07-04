@@ -41,7 +41,7 @@ live at runtime) in [`docs/THEMING.md`](docs/THEMING.md).
 | [`@defterjs/core`](packages/core) | Headless, framework-agnostic TypeScript. Parse/serialize, A1 coordinates, values/formatting, structured edits, reference rewriting, minimal-splice diff, projection, lint. No React, no DOM. |
 | [`@defterjs/formula`](packages/formula) | The default formula engine — a compact, dependency-free Excel-style evaluator (~75 functions, cross-sheet, cycle-safe). Implements core's pluggable `FormulaEngine`. |
 | [`@defterjs/ironcalc`](packages/ironcalc) | Alternative engine adapter over [IronCalc](https://ironcalc.com) (Rust/Wasm, 300+ functions). Same `FormulaEngine` interface — proves the seam. Swap it in live in the demo. |
-| [`@defterjs/react`](packages/react) | The grid renderer — a thin, themeable (CSS-variable) projection of the text. Selection, formula bar, copy/paste, merges, sheet tabs, undo/redo, 3 themes. |
+| [`@defterjs/react`](packages/react) | The grid renderer — a thin, themeable (CSS-variable) projection of the text. Selection marquee, formula bar with live reference highlighting + point mode, formatting toolbar, checkbox/date cells, filters, live presence cursors, touch, copy/paste, merges, sheet tabs, undo/redo. |
 | [`@defterjs/yjs`](packages/yjs) | Collaboration binding: hand it a `Y.Text` and it keeps the canonical text in sync via minimal splices. Ships no network provider — inject the shared type. |
 
 **For agents:** [`docs/AGENTS.md`](docs/AGENTS.md) is the complete contract for authoring and editing Defter sheets. To let agents edit sheets over **MCP** (structured, minimal-diff ops via `applyOp` + `SHEET_OP_SCHEMA`), see [`docs/MCP.md`](docs/MCP.md).
@@ -50,21 +50,30 @@ live at runtime) in [`docs/THEMING.md`](docs/THEMING.md).
 
 - **Text-canonical format** — compact one-row-one-line GFM tables (content) + a co-canonical
   `defter-style` layer (fills, number formats, merges, borders, alignment, column widths,
-  conditional formatting, data-validation dropdowns, charts). Lenient parse, byte-stable
-  serialize, idempotent round-trip.
-- **Formula engine** ([`@defterjs/formula`](packages/formula)) — ~55 functions incl. `SUM`/`AVERAGE`,
+  conditional formatting, data-validation dropdowns, checkbox & date cells, row filters, frozen
+  panes, named ranges, charts). Lenient parse, byte-stable serialize, idempotent round-trip.
+- **Formula engine** ([`@defterjs/formula`](packages/formula)) — ~75 functions incl. `SUM`/`AVERAGE`,
   `VLOOKUP`/`HLOOKUP`/`INDEX`/`MATCH`, `SUMIF`/`COUNTIF` (wildcards), `IF`/`IFS`/`SWITCH`, text and
   date functions. Cross-sheet, cycle-safe, memoized. Compute-on-read — values are never stored.
-- **Premium editing** — range selection, formula bar, formatting toolbar, copy/paste (TSV),
-  undo/redo, fill down/right (relative-ref adjusting), column resize, insert/delete row/col (with
-  automatic reference rewriting), merges, freeze header/column, multi-sheet tabs, keyboard shortcuts.
+- **Premium editing** — range selection with a crisp marquee, formula bar (with range dims), a
+  formatting toolbar (themed color/border/number-format pickers), **live formula-reference
+  highlighting** and **click/drag-to-insert references** (point mode), smart fill series, copy/cut/
+  paste (cross-platform, incl. iOS), undo/redo, column auto-fit, insert/delete row/col with
+  automatic reference rewriting, merges, freeze header/column, multi-sheet tabs, themed tooltips,
+  and full keyboard shortcuts.
+- **Cell types & views** — checkbox and date-picker cells, data-validation dropdowns, and
+  non-destructive **row filters** — all stored in the text so they round-trip and sync.
+- **Touch** — long-press context menu, touch fill handle, and clean double-tap editing on tablets.
+- **Collaboration** ([`@defterjs/yjs`](packages/yjs)) — bind a `Y.Text`; concurrent edits auto-merge
+  (tested for convergence), plus **live presence** (remote cursors, selections, and name flags via
+  the Yjs awareness channel). No bundled provider.
 - **Scale** — opt-in row virtualization renders only the visible window.
-- **Collaboration** ([`@defterjs/yjs`](packages/yjs)) — bind a `Y.Text`; concurrent edits to different
-  cells auto-merge (tested for convergence). No bundled provider.
 - **Charts** (bar/line/area/pie, dependency-free SVG), **import/export** CSV + XLSX
-  ([`@defterjs/xlsx`](packages/xlsx)), **3 themes**, **ARIA grid**, **Storybook**, **CI**.
-- **Agent-ready** — the [authoring contract](docs/AGENTS.md) + a values-materialized projection for
-  search/RAG.
+  ([`@defterjs/xlsx`](packages/xlsx)), **CSS-variable theming** (3 presets + live host theming),
+  **ARIA grid**, **Storybook**, **CI**.
+- **Agent-ready** — the [authoring contract](docs/AGENTS.md) + structured **MCP edit ops**
+  ([`docs/MCP.md`](docs/MCP.md), `applyOp` + `SHEET_OP_SCHEMA`) + a values-materialized projection
+  for search/RAG.
 
 Two adversarial review passes; 58 tests. See the [live demo](https://defter.cagdas.io).
 

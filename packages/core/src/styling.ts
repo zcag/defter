@@ -37,6 +37,13 @@ function targetCovers(target: StyleTarget, col: number, row: number): boolean {
 
 function condMatches(v: CellValue, op: CondOp, value: number | string): boolean {
   if (isError(v)) return false
+  // Boolean cells (checkboxes) compare against TRUE/FALSE-ish text regardless of case.
+  if (typeof v === 'boolean') {
+    const t = String(value).trim().toLowerCase()
+    const b = t === 'true' || t === 'yes' || t === '1' ? true : t === 'false' || t === 'no' || t === '0' ? false : null
+    if (b === null) return op === '<>'
+    return op === '=' ? v === b : op === '<>' ? v !== b : false
+  }
   const vn = toNumber(v)
   if (typeof value === 'number' && vn !== null && typeof v !== 'string') {
     switch (op) {

@@ -115,6 +115,12 @@ filter B >= 10
     const hidden = resolveHiddenRows(m.sheets[0]!, litGrid(m))
     expect([...hidden].sort((a, b) => a - b)).toEqual([2, 4]) // A(5), C(3) hidden
   })
+  it('filters a checkbox column against TRUE/FALSE regardless of case', () => {
+    const src = `| Task | Done |\n| --- | :-: |\n| A | TRUE |\n| B | FALSE |\n\n\`\`\`defter-style\ncheckbox B2:B3\nfilter B = FALSE\n\`\`\`\n`
+    const m = parse(src)
+    const hidden = resolveHiddenRows(m.sheets[0]!, litGrid(m))
+    expect([...hidden]).toEqual([2]) // A (TRUE) hidden; B (FALSE) shown
+  })
   it('addFilter replaces per column; clearFilters empties; col shifts on insert', () => {
     let m = addFilter(parse(SRC), 0, 1, '=', 12)
     expect(m.sheets[0]!.filters).toEqual([{ col: 1, op: '=', value: 12 }])

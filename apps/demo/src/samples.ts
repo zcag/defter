@@ -93,9 +93,31 @@ B3:B4  format=$#,##0.00
 \`\`\`
 `
 
+const tasks = `## Sheet: Sprint
+
+| Task | Owner | Due | Priority | Done |
+| --- | --- | :-: | :-: | :-: |
+| Ship filter views | Ada | 2026-07-10 | High | TRUE |
+| Date picker cells | Lin | 2026-07-14 | High | TRUE |
+| Touch gestures | Sam | 2026-07-18 | Med | FALSE |
+| Editor token colours | Ada | 2026-07-22 | Low | FALSE |
+| Presence cursors | Lin | 2026-07-25 | Med | FALSE |
+| MCP edit ops | Sam | 2026-07-28 | High | FALSE |
+
+\`\`\`defter-style
+A1:E1  bold fill=accent-soft align=center
+date C2:C7
+validate D2:D7 list=Low,Med,High
+checkbox E2:E7
+when D2:D7 = "High"  color=danger bold
+filter E = FALSE
+\`\`\`
+`
+
 export const SAMPLES: Sample[] = [
   { id: 'invoice', label: 'Invoice', text: invoice },
   { id: 'budget', label: 'Budget', text: budget },
   { id: 'planner', label: 'Roadmap', text: planner },
+  { id: 'tasks', label: 'Tasks', text: tasks },
   { id: 'multi', label: 'Multi-sheet', text: multi },
 ]
