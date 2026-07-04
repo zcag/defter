@@ -27,6 +27,8 @@ export interface Sheet {
   conditionals: CondRule[]
   /** Data-validation dropdowns (`validate <range> list=A,B,C`). */
   validations: ValidationRule[]
+  /** Checkbox cells (`checkbox <range>`) — rendered as a toggle over a TRUE/FALSE value. */
+  checkboxes: CheckboxRule[]
   /** Named ranges (`name Revenue = D2:D10`) — usable in formulas from any sheet. */
   names: NamedRange[]
   /**
@@ -47,6 +49,10 @@ export interface NamedRange {
 export interface ValidationRule {
   target: StyleTarget
   list: string[]
+}
+
+export interface CheckboxRule {
+  target: StyleTarget
 }
 
 export type CondOp = '>' | '<' | '>=' | '<=' | '=' | '<>'
@@ -110,6 +116,7 @@ export function emptySheet(name: string, headed = true): Sheet {
     charts: [],
     conditionals: [],
     validations: [],
+    checkboxes: [],
     names: [],
     headed,
   }

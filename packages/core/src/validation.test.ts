@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { insertCols } from './edit.js'
 import { parse } from './parse.js'
 import { serialize } from './serialize.js'
-import { resolveValidation } from './styling.js'
+import { isChecked, resolveCheckbox, resolveValidation } from './styling.js'
 
 const SRC = `## Sheet: S
 
@@ -30,5 +30,34 @@ describe('data validation', () => {
     const v = m.sheets[0]!.validations[0]!
     // B2:B3 → C2:C3 (col index 1 → 2)
     if (v.target.kind === 'range') expect(v.target.range.start.col).toBe(2)
+  })
+})
+
+describe('checkbox cell type', () => {
+  const SRC = `| Task | Done |
+| --- | :-: |
+| A | TRUE |
+| B | FALSE |
+
+\`\`\`defter-style
+checkbox B2:B3
+\`\`\`
+`
+  it('round-trips and resolves checkbox cells', () => {
+    const m = parse(SRC)
+    expect(resolveCheckbox(m.sheets[0]!, 1, 2)).toBe(true) // B2
+    expect(resolveCheckbox(m.sheets[0]!, 0, 2)).toBe(false) // A2 (not a checkbox)
+    expect(serialize(m)).toBe(serialize(parse(serialize(m))))
+    expect(serialize(m)).toContain('checkbox B2:B3')
+  })
+  it('reference-rewrites the checkbox target on column insert', () => {
+    const m = insertCols(parse(SRC), 0, 0, 1) // insert a column before A → B shifts to C
+    expect(serialize(m)).toContain('checkbox C2:C3')
+  })
+  it('reads truthy values as checked', () => {
+    expect(isChecked('TRUE')).toBe(true)
+    expect(isChecked('yes')).toBe(true)
+    expect(isChecked('FALSE')).toBe(false)
+    expect(isChecked('')).toBe(false)
   })
 })

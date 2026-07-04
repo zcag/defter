@@ -89,6 +89,17 @@ export function resolveValidation(sheet: Sheet, col: number, row: number): strin
   return null
 }
 
+/** Whether a cell is a checkbox (declared via `checkbox <range>` in the style block). */
+export function resolveCheckbox(sheet: Sheet, col: number, row: number): boolean {
+  return sheet.checkboxes.some((c) => targetCovers(c.target, col, row))
+}
+
+/** A checkbox cell counts as checked for these raw values (case-insensitive). */
+export function isChecked(raw: string): boolean {
+  const t = raw.trim().toLowerCase()
+  return t === 'true' || t === 'yes' || t === '1' || t === 'x' || t === '✓' || t === 'checked'
+}
+
 export function resolveStyles(sheet: Sheet): ResolvedStyles {
   const anchors = new Map<string, MergeSpan>()
   const covered = new Set<string>()

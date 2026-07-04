@@ -28,7 +28,9 @@ import {
   renameSheet,
   resolveConditionalAttrs,
   resolveStyles,
+  resolveCheckbox,
   resolveValidation,
+  isChecked,
   serialize,
   setCell,
   setColumnWidth,
@@ -1531,6 +1533,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
               commit(col, row, v, dir === 'down' ? { col, row: row + 1 } : { col: col + 1, row })
             }
             onCancel={() => setEditing(null)}
+            editable={editable}
+            onToggleCheckbox={() => commit(col, row, isChecked(getCell(sheet, col, row)) ? 'FALSE' : 'TRUE', { col, row })}
           />
         )
       })}
@@ -2123,6 +2127,8 @@ interface CellProps {
   onEditChange: (v: string) => void
   onCommit: (v: string, dir: 'down' | 'right') => void
   onCancel: () => void
+  editable: boolean
+  onToggleCheckbox: () => void
 }
 
 function CellEditor(p: {
@@ -2354,10 +2360,11 @@ function Cell(p: CellProps): React.JSX.Element {
     if (fc) css.color = resolveColor(fc)
   }
   const validation = resolveValidation(p.sheet, p.col, p.row)
+  const checkbox = resolveCheckbox(p.sheet, p.col, p.row)
 
   return (
     <td
-      className={`${cls}${validation ? ' defter__cell--select' : ''}${p.editing !== null ? ' defter__cell--editing' : ''}`}
+      className={`${cls}${validation ? ' defter__cell--select' : ''}${checkbox ? ' defter__cell--checkbox' : ''}${p.editing !== null ? ' defter__cell--editing' : ''}`}
       style={css}
       data-col={p.col}
       data-row={p.row}
@@ -2388,8 +2395,26 @@ function Cell(p: CellProps): React.JSX.Element {
         />
       ) : (
         <>
-          {display}
-          {validation && <span className="defter__caret" aria-hidden="true">▾</span>}
+          {checkbox ? (
+            <span
+              className={`defter__checkbox${isChecked(raw) ? ' defter__checkbox--on' : ''}`}
+              role="checkbox"
+              aria-checked={isChecked(raw)}
+              onMouseDown={(e) => {
+                e.stopPropagation()
+                if (p.editable) p.onToggleCheckbox()
+              }}
+            />
+          ) : (
+            <>
+              {display}
+              {validation && (
+                <span className="defter__caret" aria-hidden="true">
+                  ▾
+                </span>
+              )}
+            </>
+          )}
           {p.fillHandle && (
             <span
               className="defter__fill-handle"

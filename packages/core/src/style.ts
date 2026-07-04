@@ -6,6 +6,7 @@
 import { columnIndex, columnLabel, formatRange, parseRange } from './coords.js'
 import type {
   ChartSpec,
+  CheckboxRule,
   CondOp,
   CondRule,
   NamedRange,
@@ -96,6 +97,7 @@ export interface ParsedStyleBlock {
   charts: ChartSpec[]
   conditionals: CondRule[]
   validations: ValidationRule[]
+  checkboxes: CheckboxRule[]
   names: NamedRange[]
   /** Frozen-pane directive (`freeze rows=N cols=M`), if the block declared one (last wins). */
   freeze?: { rows: number; cols: number }
@@ -189,6 +191,7 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
   const charts: ChartSpec[] = []
   const conditionals: CondRule[] = []
   const validations: ValidationRule[] = []
+  const checkboxes: CheckboxRule[] = []
   const names: NamedRange[] = []
   let freeze: { rows: number; cols: number } | undefined
   for (const raw of body.split('\n')) {
@@ -214,6 +217,14 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
       if (val) validations.push(val)
       continue
     }
+    if (line.toLowerCase().startsWith('checkbox ')) {
+      try {
+        checkboxes.push({ target: parseStyleTarget(line.slice(9).trim()) })
+      } catch {
+        // unparseable target — skip
+      }
+      continue
+    }
     if (line.toLowerCase().startsWith('chart ') || line.toLowerCase() === 'chart') {
       const chart = parseChartLine(line)
       if (chart) charts.push(chart)
@@ -230,7 +241,7 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
     const attrs = parseAttrs(parts.slice(1))
     if (Object.keys(attrs).length > 0) rules.push({ target, attrs })
   }
-  return { rules, charts, conditionals, validations, names, freeze }
+  return { rules, charts, conditionals, validations, checkboxes, names, freeze }
 }
 
 const CHART_ATTR = /(\w+)=(?:"([^"]*)"|(\S+))/g
@@ -261,6 +272,7 @@ export function serializeStyleBlock(
   charts: ChartSpec[] = [],
   conditionals: CondRule[] = [],
   validations: ValidationRule[] = [],
+  checkboxes: CheckboxRule[] = [],
   names: NamedRange[] = [],
   freeze?: { rows: number; cols: number },
 ): string {
@@ -275,6 +287,7 @@ export function serializeStyleBlock(
   for (const val of validations) {
     lines.push(`validate ${formatStyleTarget(val.target)} list=${val.list.join(',')}`)
   }
+  for (const cb of checkboxes) lines.push(`checkbox ${formatStyleTarget(cb.target)}`)
   for (const ch of charts) lines.push(serializeChart(ch))
   return lines.join('\n')
 }

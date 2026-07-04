@@ -46,6 +46,7 @@ function serializeSheet(sheet: Sheet, forceHeading: boolean): string {
     sheet.charts.length > 0 ||
     sheet.conditionals.length > 0 ||
     sheet.validations.length > 0 ||
+    sheet.checkboxes.length > 0 ||
     sheet.names.length > 0 ||
     hasFreeze
   ) {
@@ -54,6 +55,7 @@ function serializeSheet(sheet: Sheet, forceHeading: boolean): string {
       sheet.charts,
       sheet.conditionals,
       sheet.validations,
+      sheet.checkboxes,
       sheet.names,
       sheet.freeze,
     )
