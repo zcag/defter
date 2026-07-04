@@ -91,6 +91,10 @@ B2:B9   align=right
   `=SUM(Revenue)`. The definition follows the data on insert/delete.
 - **Data validation:** `validate <range> list=Todo,Doing,Done` turns those cells into dropdowns
   restricted to the listed options.
+- **Frozen panes:** `freeze rows=N cols=M` pins the first N rows and/or first M columns while
+  scrolling (both parts optional: `freeze rows=1`, `freeze cols=1`, `freeze rows=1 cols=1`). One per
+  sheet. It lives in the document text, so a frozen sheet stays frozen on export/sync — not just a
+  runtime view setting. A host toggles it via `setFreeze(text, { rows, cols })`.
 - **Conditional formatting:** `when <range> <op> <value>  <attrs>` applies the attributes to
   each cell in the range whose computed value satisfies the condition — e.g.
   `when D2:D9 < 0  color=danger bold` or `when B2:B9 >= 100  fill=success-soft`
@@ -130,6 +134,7 @@ Use the **structured operations** the host exposes (these map to `@defterjs/core
 - `insertRows / deleteRows / insertCols / deleteCols` — structural edits; Defter rewrites all
   affected references (formulas *and* style targets) automatically.
 - `setStyle(target, attrs)` / `setColumnWidth(col, px)` — presentation.
+- `setFreeze(text, { rows, cols })` — freeze the first N rows / M columns (0 to unfreeze an axis).
 - `addSheet / renameSheet / deleteSheet`.
 
 Generating a brand-new sheet from scratch? Then just emit the full markdown document from §1.

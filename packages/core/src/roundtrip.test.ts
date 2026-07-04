@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import fc from 'fast-check'
+import { setFreeze } from './edit.js'
 import { getCell } from './model.js'
 import { parse } from './parse.js'
 import { serialize } from './serialize.js'
@@ -58,6 +59,38 @@ describe('round-trip', () => {
     const m = parse(src)
     expect(m.sheets.map((s) => s.name)).toEqual(['One', 'Two'])
     expect(serialize(m)).toBe(src)
+  })
+
+  it('parses, serializes, and round-trips a freeze directive', () => {
+    const src =
+      '| a | b |\n| --- | --- |\n| 1 | 2 |\n\n```defter-style\nfreeze rows=1 cols=1\nA1:B1  bold\n```\n'
+    const m = parse(src)
+    expect(m.sheets[0]!.freeze).toEqual({ rows: 1, cols: 1 })
+    const once = serialize(m)
+    expect(once).toContain('freeze rows=1 cols=1')
+    expect(serialize(parse(once))).toBe(once) // idempotent
+  })
+
+  it('serializes freeze with one axis omitted', () => {
+    expect(serialize(parse('| a |\n| --- |\n| 1 |\n\n```defter-style\nfreeze rows=2\n```\n'))).toContain(
+      'freeze rows=2\n',
+    )
+    expect(parse('| a |\n| --- |\n| 1 |\n\n```defter-style\nfreeze cols=3\n```\n').sheets[0]!.freeze).toEqual({
+      rows: 0,
+      cols: 3,
+    })
+  })
+
+  it('setFreeze adds, updates, and removes the directive', () => {
+    const base = '| a | b |\n| --- | --- |\n| 1 | 2 |\n'
+    const frozen = setFreeze(base, { rows: 1, cols: 1 })
+    expect(parse(frozen).sheets[0]!.freeze).toEqual({ rows: 1, cols: 1 })
+    const updated = setFreeze(frozen, { rows: 2, cols: 0 })
+    expect(parse(updated).sheets[0]!.freeze).toEqual({ rows: 2, cols: 0 })
+    expect(updated).toContain('freeze rows=2')
+    const cleared = setFreeze(updated, {})
+    expect(parse(cleared).sheets[0]!.freeze).toBeUndefined()
+    expect(cleared).not.toContain('freeze')
   })
 
   it('idempotent on arbitrary small grids', () => {

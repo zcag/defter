@@ -13,7 +13,9 @@ import {
   cloneModel,
   emptySheet,
 } from './model.js'
+import { parse } from './parse.js'
 import { offsetReferences, shiftReferencesInModel } from './refs.js'
+import { serialize } from './serialize.js'
 
 function grow(sheet: Sheet, minWidth: number, minRows: number): void {
   if (minWidth > sheet.width) {
@@ -295,6 +297,28 @@ export function renameSheet(model: Model, sheetIndex: number, name: string): Mod
   sheet.name = trimmed
   sheet.headed = true
   return next
+}
+
+/**
+ * Set (or clear) the frozen-pane directive on a sheet, as a **minimal canonical-text edit** — this
+ * is the text-in/text-out helper a host calls to toggle freeze so it travels with the document
+ * (export, sync, search). `opts.rows`/`opts.cols` are the desired frozen-row / frozen-column counts;
+ * an omitted axis counts as 0. When both resolve to 0 the `freeze` line is removed. To keep one axis
+ * while changing the other, pass both (read the current values off the parsed model's `sheet.freeze`).
+ */
+export function setFreeze(
+  text: string,
+  opts: { rows?: number; cols?: number },
+  sheetIndex = 0,
+): string {
+  const model = parse(text)
+  const sheet = model.sheets[sheetIndex]
+  if (!sheet) return serialize(model)
+  const rows = Math.max(0, Math.floor(opts.rows ?? 0))
+  const cols = Math.max(0, Math.floor(opts.cols ?? 0))
+  if (rows <= 0 && cols <= 0) sheet.freeze = undefined
+  else sheet.freeze = { rows, cols }
+  return serialize(model)
 }
 
 /** Delete a sheet. No-op if it's the only sheet. */

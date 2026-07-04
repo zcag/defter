@@ -82,6 +82,41 @@ func TestLintTextMalformedStyleLines(t *testing.T) {
 	}
 }
 
+func TestLintTextAcceptsFreeze(t *testing.T) {
+	// A `freeze` directive must NOT be reported as an unknown style rule — tela
+	// rejects agent sheets on any lint issue, so an unhandled freeze would break
+	// agent-authored frozen sheets.
+	text := "## Sheet: S\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\n" +
+		"```defter-style\nfreeze rows=1 cols=1\nA1:B1  bold\n```\n"
+	if issues := LintText(text); len(issues) != 0 {
+		t.Errorf("freeze directive should lint clean, got %+v", issues)
+	}
+	// A freeze line with no axis is malformed.
+	bad := "## Sheet: S\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\n```defter-style\nfreeze\n```\n"
+	if !hasMsg(LintText(bad), "malformed freeze") {
+		t.Errorf("expected malformed-freeze issue, got %+v", LintText(bad))
+	}
+}
+
+func TestFreezeParseSerialize(t *testing.T) {
+	text := "| a | b |\n| --- | --- |\n| 1 | 2 |\n\n```defter-style\nfreeze rows=1 cols=1\nA1:B1  bold\n```\n"
+	m := Parse(text)
+	if got := m.Sheets[0].Freeze; got.Rows != 1 || got.Cols != 1 {
+		t.Fatalf("freeze not parsed: %+v", got)
+	}
+	once := Normalize(text)
+	if !strings.Contains(once, "freeze rows=1 cols=1") {
+		t.Errorf("freeze not serialized: %q", once)
+	}
+	if twice := Normalize(once); twice != once {
+		t.Errorf("freeze not idempotent:\n%q\n%q", once, twice)
+	}
+	// One-axis omission.
+	if got := Parse("| a |\n| --- |\n| 1 |\n\n```defter-style\nfreeze cols=3\n```\n").Sheets[0].Freeze; got.Rows != 0 || got.Cols != 3 {
+		t.Errorf("one-axis freeze wrong: %+v", got)
+	}
+}
+
 func TestLintTextCleanHasNoStyleIssues(t *testing.T) {
 	// Every sample fixture's canonical form must lint clean at the text layer.
 	for id, text := range readFixtures(t) {

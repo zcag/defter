@@ -1,0 +1,11 @@
+## Sheet: Ledger
+
+| Item | Q1 | Q2 | Q3 |
+| --- | --: | --: | --: |
+| Rent | 100 | 100 | 100 |
+| Cloud | 40 | 45 | 50 |
+
+```defter-style
+freeze rows=1 cols=1
+A1:D1  bold fill=surface-3
+```

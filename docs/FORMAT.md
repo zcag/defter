@@ -116,9 +116,18 @@ The block also carries two data-driven constructs, keyed by A1 range like everyt
   the listed options.
 - **Named ranges** — `name <Name> = <range>` defines a name usable in formulas from any sheet
   (`=SUM(Revenue)`).
+- **Frozen panes** — `freeze rows=N cols=M` pins the first `N` rows and/or first `M` columns as
+  sticky panes while scrolling. Both parts are optional (`freeze rows=1`, `freeze cols=1`, and
+  `freeze rows=1 cols=1` are all valid) and at most one `freeze` line is meaningful per sheet (last
+  wins). Unlike the constructs above it is **not** keyed by A1 — it is sheet-level metadata (counts
+  from the top-left), so it is not reference-rewritten on insert/delete. Because it travels in the
+  document text, a frozen sheet stays frozen across export, sync, and collaboration rather than being
+  a runtime-only view setting. `@defterjs/core` exposes `setFreeze(text, { rows?, cols? }, sheetIndex?)`
+  to add/update/remove it as a minimal text edit (both axes 0/omitted removes the line).
 
-Because all of these are keyed by A1, they are subject to the same reference rewriting as formulas
-(insert/delete a row or column and their targets shift; a fully-deleted range drops the rule).
+Because the first four are keyed by A1, they are subject to the same reference rewriting as formulas
+(insert/delete a row or column and their targets shift; a fully-deleted range drops the rule). `freeze`
+is the exception noted above — it carries plain counts, not references.
 
 ## Round-trip guarantee
 

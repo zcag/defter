@@ -29,6 +29,12 @@ export interface Sheet {
   validations: ValidationRule[]
   /** Named ranges (`name Revenue = D2:D10`) — usable in formulas from any sheet. */
   names: NamedRange[]
+  /**
+   * Frozen panes: keep the first `rows` rows and/or first `cols` columns pinned while scrolling.
+   * `0` on an axis means no freeze there; absent entirely means the sheet declares no freeze.
+   * Encoded in the `defter-style` block as `freeze rows=N cols=M`.
+   */
+  freeze?: { rows: number; cols: number }
   /** Whether the sheet was introduced by an explicit `## Sheet:` heading. */
   headed: boolean
 }

@@ -201,6 +201,40 @@ type parsedStyleBlock struct {
 	Conditionals []CondRule
 	Validations  []ValidationRule
 	Names        []NamedRange
+	Freeze       FreezeSpec // {0,0} when the block declares no freeze
+	HasFreeze    bool       // true if a valid freeze line was seen (last wins)
+}
+
+var freezePrefixRe = regexp.MustCompile(`(?i)^freeze\b`)
+var freezeRowsRe = regexp.MustCompile(`(?i)\brows\s*=\s*(\d+)`)
+var freezeColsRe = regexp.MustCompile(`(?i)\bcols\s*=\s*(\d+)`)
+
+// parseFreezeLine parses `freeze rows=N cols=M`. Both parts optional; ok=false
+// when neither resolves to a positive count.
+func parseFreezeLine(line string) (FreezeSpec, bool) {
+	var f FreezeSpec
+	if m := freezeRowsRe.FindStringSubmatch(line); m != nil {
+		f.Rows, _ = strconv.Atoi(m[1])
+	}
+	if m := freezeColsRe.FindStringSubmatch(line); m != nil {
+		f.Cols, _ = strconv.Atoi(m[1])
+	}
+	if f.Rows <= 0 && f.Cols <= 0 {
+		return FreezeSpec{}, false
+	}
+	return f, true
+}
+
+// serializeFreeze renders a freeze directive to its canonical line (omit an axis that is 0).
+func serializeFreeze(f FreezeSpec) string {
+	out := "freeze"
+	if f.Rows > 0 {
+		out += " rows=" + strconv.Itoa(f.Rows)
+	}
+	if f.Cols > 0 {
+		out += " cols=" + strconv.Itoa(f.Cols)
+	}
+	return out
 }
 
 var nameLineRe = regexp.MustCompile(`(?i)^name\s+([A-Za-z_]\w*)\s*=\s*(\S+)`)
@@ -302,6 +336,12 @@ func parseStyleBlock(body string) parsedStyleBlock {
 		}
 		low := strings.ToLower(line)
 		switch {
+		case freezePrefixRe.MatchString(line):
+			if f, ok := parseFreezeLine(line); ok {
+				out.Freeze = f // last wins
+				out.HasFreeze = true
+			}
+			continue
 		case strings.HasPrefix(low, "name "):
 			if nr, ok := parseNameLine(line); ok {
 				out.Names = append(out.Names, nr)
@@ -389,8 +429,11 @@ func parseChartLine(line string) (ChartSpec, bool) {
 
 // serializeStyleBlock renders rules, names, conditionals, validations, and
 // charts to a block body (without fences), in that fixed order.
-func serializeStyleBlock(rules []StyleRule, charts []ChartSpec, conds []CondRule, vals []ValidationRule, names []NamedRange) string {
+func serializeStyleBlock(rules []StyleRule, charts []ChartSpec, conds []CondRule, vals []ValidationRule, names []NamedRange, freeze FreezeSpec) string {
 	var lines []string
+	if freeze.isSet() {
+		lines = append(lines, serializeFreeze(freeze))
+	}
 	for _, r := range rules {
 		lines = append(lines, formatStyleTarget(r.Target)+"  "+formatAttrs(r.Attrs))
 	}

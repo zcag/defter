@@ -222,6 +222,32 @@ validate B2:B3 list=Todo,Doing,Done
 `,
 )
 
+// Frozen panes: `freeze rows=N cols=M` is a sheet-level style-block directive
+// (both axes, one axis, and alongside other rules) — must round-trip TS↔Go.
+add(
+  'freeze-both',
+  `## Sheet: Ledger
+
+| Item | Q1 | Q2 | Q3 |
+| --- | ---: | ---: | ---: |
+| Rent | 100 | 100 | 100 |
+| Cloud | 40 | 45 | 50 |
+
+\`\`\`defter-style
+freeze rows=1 cols=1
+A1:D1  bold fill=surface-3
+\`\`\`
+`,
+)
+add(
+  'freeze-rows-only',
+  `| Metric | Value |\n| --- | ---: |\n| A | 1 |\n| B | 2 |\n\n\`\`\`defter-style\nfreeze rows=2\n\`\`\`\n`,
+)
+add(
+  'freeze-cols-only',
+  `| Name | X | Y |\n| --- | ---: | ---: |\n| P | 1 | 2 |\n\n\`\`\`defter-style\nfreeze cols=1\n\`\`\`\n`,
+)
+
 // Edge cases exercising the lenient parser + escaping + merges + prose.
 add('empty', ``)
 add('whitespace-only', `   \n\t\n  `)

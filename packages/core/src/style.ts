@@ -97,6 +97,29 @@ export interface ParsedStyleBlock {
   conditionals: CondRule[]
   validations: ValidationRule[]
   names: NamedRange[]
+  /** Frozen-pane directive (`freeze rows=N cols=M`), if the block declared one (last wins). */
+  freeze?: { rows: number; cols: number }
+}
+
+const FREEZE_ROWS_RE = /\brows\s*=\s*(\d+)/i
+const FREEZE_COLS_RE = /\bcols\s*=\s*(\d+)/i
+
+/** Parse a `freeze rows=N cols=M` line. Both parts optional; returns null if neither is set (>0). */
+function parseFreezeLine(line: string): { rows: number; cols: number } | null {
+  const rm = FREEZE_ROWS_RE.exec(line)
+  const cm = FREEZE_COLS_RE.exec(line)
+  const rows = rm ? Number.parseInt(rm[1]!, 10) : 0
+  const cols = cm ? Number.parseInt(cm[1]!, 10) : 0
+  if (rows <= 0 && cols <= 0) return null
+  return { rows, cols }
+}
+
+/** Serialize a freeze directive to its canonical line (omit an axis that is 0). */
+export function serializeFreeze(freeze: { rows: number; cols: number }): string {
+  let out = 'freeze'
+  if (freeze.rows > 0) out += ` rows=${freeze.rows}`
+  if (freeze.cols > 0) out += ` cols=${freeze.cols}`
+  return out
 }
 
 function parseNameLine(line: string): NamedRange | null {
@@ -167,9 +190,15 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
   const conditionals: CondRule[] = []
   const validations: ValidationRule[] = []
   const names: NamedRange[] = []
+  let freeze: { rows: number; cols: number } | undefined
   for (const raw of body.split('\n')) {
     const line = raw.trim()
     if (!line || line.startsWith('#')) continue
+    if (/^freeze\b/i.test(line)) {
+      const f = parseFreezeLine(line)
+      if (f) freeze = f // last wins
+      continue
+    }
     if (line.toLowerCase().startsWith('name ')) {
       const nr = parseNameLine(line)
       if (nr) names.push(nr)
@@ -201,7 +230,7 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
     const attrs = parseAttrs(parts.slice(1))
     if (Object.keys(attrs).length > 0) rules.push({ target, attrs })
   }
-  return { rules, charts, conditionals, validations, names }
+  return { rules, charts, conditionals, validations, names, freeze }
 }
 
 const CHART_ATTR = /(\w+)=(?:"([^"]*)"|(\S+))/g
@@ -233,8 +262,11 @@ export function serializeStyleBlock(
   conditionals: CondRule[] = [],
   validations: ValidationRule[] = [],
   names: NamedRange[] = [],
+  freeze?: { rows: number; cols: number },
 ): string {
-  const lines = rules.map((r) => `${formatStyleTarget(r.target)}  ${formatAttrs(r.attrs)}`)
+  const lines: string[] = []
+  if (freeze && (freeze.rows > 0 || freeze.cols > 0)) lines.push(serializeFreeze(freeze))
+  for (const r of rules) lines.push(`${formatStyleTarget(r.target)}  ${formatAttrs(r.attrs)}`)
   for (const nr of names) lines.push(`name ${nr.name} = ${formatRange(nr.range)}`)
   for (const cond of conditionals) {
     const v = typeof cond.value === 'number' ? cond.value : `"${cond.value}"`

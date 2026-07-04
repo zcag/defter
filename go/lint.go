@@ -186,6 +186,11 @@ func lintStyleLine(sheet string, lineNo int, raw string) []Issue {
 		return []Issue{{Sheet: sheet, Line: lineNo, Message: msg}}
 	}
 	switch {
+	case freezePrefixRe.MatchString(line):
+		if _, ok := parseFreezeLine(line); !ok {
+			return mk("malformed freeze rule (expected `freeze rows=N cols=M`, at least one axis): " + line)
+		}
+		return nil
 	case strings.HasPrefix(low, "name "):
 		if _, ok := parseNameLine(line); !ok {
 			return mk("malformed name rule: " + line)

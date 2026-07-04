@@ -74,6 +74,28 @@ export const Large: Story = {
   },
 }
 
+// A document-driven frozen sheet: the `freeze rows=1 cols=1` line lives in the defter-style block,
+// so the pane pins the header row + the first column on load — and it travels on export/sync. Toggle
+// it live by right-clicking a column header ("Freeze up to this column") or a row header.
+const FROZEN = (() => {
+  const cols = 10
+  const head = Array.from({ length: cols - 1 }, (_, c) => `M${c + 1}`).join(' | ')
+  const header = `| Region | ${head} |`
+  const delim = `| --- | ${Array(cols - 1).fill('---:').join(' | ')} |`
+  const rows = Array.from({ length: 30 }, (_, r) => {
+    const vals = Array.from({ length: cols - 1 }, (_, c) => String((r + 1) * (c + 2))).join(' | ')
+    return `| Region ${r + 1} | ${vals} |`
+  })
+  const style = ['```defter-style', 'freeze rows=1 cols=1', 'A1:J1  bold fill=surface-3', '```']
+  return [header, delim, ...rows, '', ...style, ''].join('\n')
+})()
+
+/** Document-driven frozen panes (`freeze rows=1 cols=1` in the text). Scroll to see the pinned row +
+ * column; right-click a column/row header to change the freeze — it rewrites the canonical text. */
+export const FrozenPanes: Story = {
+  args: { initial: FROZEN, statusBar: true, formulaBar: true },
+}
+
 export const ReadOnly: Story = {
   args: { initial: INVOICE, readOnly: true },
   render: (args) => (

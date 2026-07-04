@@ -1,0 +1,7 @@
+| Name | X | Y |
+| --- | ---: | ---: |
+| P | 1 | 2 |
+
+```defter-style
+freeze cols=1
+```

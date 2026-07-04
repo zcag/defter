@@ -39,9 +39,23 @@ type Sheet struct {
 	Validations []ValidationRule
 	// Names are named ranges (`name Revenue = D2:D10`).
 	Names []NamedRange
+	// Freeze pins the first Freeze.Rows rows and/or Freeze.Cols columns as sticky
+	// panes (`freeze rows=N cols=M`). A zero value on an axis means no freeze there;
+	// {0,0} means the sheet declares no freeze at all (nothing is serialized).
+	Freeze FreezeSpec
 	// Headed reports whether the sheet was introduced by an explicit `## Sheet:` heading.
 	Headed bool
 }
+
+// FreezeSpec is a `freeze rows=N cols=M` directive. Rows/Cols are the frozen-row
+// and frozen-column counts from the top-left; {0,0} means "no freeze".
+type FreezeSpec struct {
+	Rows int
+	Cols int
+}
+
+// isSet reports whether the freeze directive should be serialized.
+func (f FreezeSpec) isSet() bool { return f.Rows > 0 || f.Cols > 0 }
 
 // NamedRange is a `name <Name> = <range>` definition.
 type NamedRange struct {

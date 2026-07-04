@@ -31,6 +31,7 @@ import {
   serialize,
   setCell,
   setColumnWidth,
+  setFreeze,
   setStyle,
   sortRows,
   toNumber,
@@ -97,9 +98,13 @@ export interface DefterGridProps {
   sheetTabs?: boolean
   /** Show the formatting toolbar (bold/align/fill/number-format) above the grid. */
   toolbar?: boolean
-  /** Keep the header row (A1 row 1) pinned while scrolling. */
+  /**
+   * Keep the header row (A1 row 1) pinned while scrolling. **Fallback only:** when the document
+   * declares its own `freeze` (via the `defter-style` block / the freeze context-menu), that wins
+   * and this prop is ignored. Use it for a purely runtime freeze on documents that carry none.
+   */
   freezeHeader?: boolean
-  /** Keep the first column (A) pinned while scrolling horizontally. */
+  /** Keep the first column (A) pinned while scrolling. Fallback only — see {@link DefterGridProps.freezeHeader}. */
   freezeCol?: boolean
   /** Render only the visible rows (windowing) for large sheets. Assumes a fixed row height. */
   virtualize?: boolean
@@ -412,6 +417,13 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   }, [si, onSheetChange])
   const styles = useMemo(() => resolveStyles(sheet), [sheet])
 
+  // Frozen panes. The document's `freeze` (parsed from the defter-style block) is the source of
+  // truth so it travels on export/sync; the freezeHeader/freezeCol props are a fallback for
+  // documents that declare none. Rows are A1 1..freezeRows (row 1 = header); cols are 0..freezeCols-1.
+  const docFreeze = sheet.freeze
+  const freezeRows = docFreeze ? docFreeze.rows : freezeHeader ? 1 : 0
+  const freezeCols = docFreeze ? docFreeze.cols : freezeCol ? 1 : 0
+
   const totalRows = sheet.grid.length + extraRows
   const totalCols = sheet.width + extraCols
   const editable = Boolean(onChange) && !readOnly
@@ -440,13 +452,26 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   // shifts their relative refs by the paste offset. `tsv` fingerprints our own copy so we can tell
   // an internal paste from one pasted in from another app (which only gives us plain text).
   const clip = useRef<{ cells: string[][]; tsv: string; origin: { col: number; row: number }; cut: boolean } | null>(null)
-  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null)
+  // `colHead`/`rowHead` carry the 0-based col / 1-based row when the menu was opened on a header,
+  // so the freeze items ("Freeze up to this column/row") can target it.
+  const [menu, setMenu] = useState<{ x: number; y: number; colHead?: number; rowHead?: number } | null>(null)
   const [localW, setLocalW] = useState<Record<number, number>>({})
   const resizeRef = useRef<{ col: number; startX: number; startW: number } | null>(null)
   const DEFAULT_COL_W = 110
+  const HEAD_W = 44 // matches --defter-head-width
   const colWidth = useCallback(
     (c: number) => localW[c] ?? styles.attrs(c, 1).width ?? DEFAULT_COL_W,
     [localW, styles],
+  )
+  // Sticky-left offset of a frozen column: the row-header gutter plus the widths of the columns
+  // pinned before it (columns are variable-width, unlike the fixed row height used for frozen rows).
+  const frozenColLeft = useCallback(
+    (c: number) => {
+      let x = HEAD_W
+      for (let i = 0; i < c; i++) x += colWidth(i)
+      return x
+    },
+    [colWidth],
   )
 
   // History: all mutations route through pushEdit so undo/redo works. This is the built-in *local
@@ -500,9 +525,12 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     winStart = Math.max(1, Math.floor(vp.top / rowHeight) + 1 - OVERSCAN)
     winEnd = Math.min(totalRows, winStart + visible + OVERSCAN * 2)
   }
-  // Under virtualization, force-render the frozen header row (row 1) even when scrolled past it.
-  const forceHeader = virtualize && freezeHeader && winStart > 1
-  const padTop = (winStart - 1 - (forceHeader ? 1 : 0)) * rowHeight
+  // Under virtualization, force-render the frozen rows (1..freezeRows) even when scrolled past them.
+  const frozenTopRows =
+    virtualize && freezeRows > 0 && winStart > 1
+      ? Array.from({ length: Math.min(freezeRows, winStart - 1) }, (_, k) => k + 1)
+      : []
+  const padTop = (winStart - 1 - frozenTopRows.length) * rowHeight
   const padBottom = (totalRows - winEnd) * rowHeight
 
   const rect: Rect = useMemo(() => {
@@ -703,6 +731,15 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       setMenu(null)
     },
     [pushEdit],
+  )
+  // Toggle frozen panes on the active sheet as a minimal canonical-text edit, so the freeze travels
+  // with the document (onChange → the host persists/syncs it). Both axes 0 removes the freeze line.
+  const applyFreeze = useCallback(
+    (opts: { rows?: number; cols?: number }) => {
+      pushEdit(setFreeze(text, opts, si))
+      setMenu(null)
+    },
+    [text, si, pushEdit],
   )
 
   const rawAt = useCallback((col: number, row: number) => getCell(sheet, col, row), [sheet])
@@ -1128,7 +1165,6 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   )
 
   // Map a viewport point to a cell, so a parked-at-the-edge drag keeps extending as content scrolls.
-  const HEAD_W = 44
   const colAtX = useCallback(
     (clientX: number) => {
       const root = rootRef.current
@@ -1310,15 +1346,19 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       e.preventDefault()
       const c = el.dataset.col !== undefined ? Number(el.dataset.col) : undefined
       const r = el.dataset.row !== undefined ? Number(el.dataset.row) : undefined
+      let colHead: number | undefined
+      let rowHead: number | undefined
       if (c !== undefined && r !== undefined) {
         const inside = c >= rect.minCol && c <= rect.maxCol && r >= rect.minRow && r <= rect.maxRow
         if (!inside) setSel({ anchor: { col: c, row: r }, focus: { col: c, row: r } })
       } else if (c !== undefined) {
         setSel({ anchor: { col: c, row: 1 }, focus: { col: c, row: totalRows } })
+        colHead = c
       } else if (r !== undefined) {
         setSel({ anchor: { col: 0, row: r }, focus: { col: totalCols - 1, row: r } })
+        rowHead = r
       }
-      setMenu({ x: e.clientX, y: e.clientY })
+      setMenu({ x: e.clientX, y: e.clientY, colHead, rowHead })
     },
     [editable, rect, totalRows, totalCols],
   )
@@ -1399,7 +1439,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       <th
         data-row={row}
         role="rowheader"
-        className={`defter__rowhead${row >= rect.minRow && row <= rect.maxRow ? ' defter__rowhead--active' : ''}${freezeHeader && row === 1 ? ' defter__rowhead--frozen' : ''}`}
+        className={`defter__rowhead${row >= rect.minRow && row <= rect.maxRow ? ' defter__rowhead--active' : ''}${row <= freezeRows ? ' defter__rowhead--frozen' : ''}`}
+        style={row <= freezeRows ? { top: row * rowHeight } : undefined}
         onMouseDown={(e) => {
           focusGrid()
           setSel((s) =>
@@ -1430,8 +1471,10 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             colAlign={sheet.colAlign[col] ?? null}
             focus={isFocus}
             inSelection={inSel && !isFocus}
-            frozen={freezeHeader && row === 1}
-            frozenCol={freezeCol && col === 0}
+            frozen={row <= freezeRows}
+            frozenTop={row <= freezeRows ? row * rowHeight : undefined}
+            frozenCol={col < freezeCols}
+            frozenLeft={col < freezeCols ? frozenColLeft(col) : undefined}
             fillHandle={isFocus && editable}
             onFillStart={onFillStart}
             colSpan={span?.colspan}
@@ -1656,7 +1699,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                   data-col={c}
                   role="columnheader"
                   aria-colindex={c + 2}
-                  className={`defter__colhead${c >= rect.minCol && c <= rect.maxCol ? ' defter__colhead--active' : ''}`}
+                  className={`defter__colhead${c >= rect.minCol && c <= rect.maxCol ? ' defter__colhead--active' : ''}${c < freezeCols ? ' defter__colhead--frozen' : ''}`}
+                  style={c < freezeCols ? { left: frozenColLeft(c) } : undefined}
                   onMouseDown={(e) => {
                     focusGrid()
                     setSel((s) =>
@@ -1684,7 +1728,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {forceHeader && renderRow(1)}
+            {frozenTopRows.map((r) => renderRow(r))}
             {padTop > 0 && (
               <tr aria-hidden="true">
                 <td colSpan={totalCols + 1} style={{ height: padTop, padding: 0, border: 0 }} />
@@ -1718,6 +1762,32 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
 
       {menu && (
         <div className="defter__menu" style={{ left: menu.x, top: menu.y }} data-defter-theme={theme}>
+          {menu.colHead !== undefined && (
+            <>
+              <button onClick={() => applyFreeze({ rows: sheet.freeze?.rows ?? 0, cols: menu.colHead! + 1 })}>
+                Freeze up to column {columnLabel(menu.colHead)}
+              </button>
+              {(sheet.freeze?.cols ?? 0) > 0 && (
+                <button onClick={() => applyFreeze({ rows: sheet.freeze?.rows ?? 0, cols: 0 })}>
+                  Unfreeze columns
+                </button>
+              )}
+              <div className="defter__menu-sep" />
+            </>
+          )}
+          {menu.rowHead !== undefined && (
+            <>
+              <button onClick={() => applyFreeze({ rows: menu.rowHead!, cols: sheet.freeze?.cols ?? 0 })}>
+                Freeze up to row {menu.rowHead}
+              </button>
+              {(sheet.freeze?.rows ?? 0) > 0 && (
+                <button onClick={() => applyFreeze({ rows: 0, cols: sheet.freeze?.cols ?? 0 })}>
+                  Unfreeze rows
+                </button>
+              )}
+              <div className="defter__menu-sep" />
+            </>
+          )}
           <button onClick={() => applyModel(insertRows(model, si, Math.max(2, rect.minRow), 1))}>
             Insert row above
           </button>
@@ -1982,7 +2052,11 @@ interface CellProps {
   focus: boolean
   inSelection: boolean
   frozen?: boolean
+  /** Sticky `top` (px) for a frozen row — the column-header height plus the rows pinned above it. */
+  frozenTop?: number
   frozenCol?: boolean
+  /** Sticky `left` (px) for a frozen column — the row-header gutter plus the columns pinned left. */
+  frozenLeft?: number
   fillHandle?: boolean
   onFillStart?: () => void
   colSpan?: number
@@ -2218,6 +2292,10 @@ function Cell(p: CellProps): React.JSX.Element {
 
   const css = styleToCss(attrs)
   if (!attrs.align && p.colAlign) css.textAlign = p.colAlign
+  // Frozen-pane offsets: the sticky/z-index/background come from the --frozen classes; the per-band
+  // top/left are set here because column widths (and multi-row/col depth) are dynamic.
+  if (p.frozenTop !== undefined) css.top = p.frozenTop
+  if (p.frozenLeft !== undefined) css.left = p.frozenLeft
   if (numVal !== null && attrs.format && !attrs.color) {
     const fc = formatColor(numVal, attrs.format)
     if (fc) css.color = resolveColor(fc)

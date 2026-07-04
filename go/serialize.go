@@ -63,8 +63,8 @@ func serializeSheet(sheet *Sheet, forceHeading bool) string {
 	parts = append(parts, strings.Join(lines, "\n"))
 
 	if len(sheet.Styles) > 0 || len(sheet.Charts) > 0 || len(sheet.Conditionals) > 0 ||
-		len(sheet.Validations) > 0 || len(sheet.Names) > 0 {
-		block := serializeStyleBlock(sheet.Styles, sheet.Charts, sheet.Conditionals, sheet.Validations, sheet.Names)
+		len(sheet.Validations) > 0 || len(sheet.Names) > 0 || sheet.Freeze.isSet() {
+		block := serializeStyleBlock(sheet.Styles, sheet.Charts, sheet.Conditionals, sheet.Validations, sheet.Names, sheet.Freeze)
 		parts = append(parts, "\n```defter-style\n"+block+"\n```")
 	}
 	return strings.Join(parts, "\n")

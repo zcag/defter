@@ -80,6 +80,9 @@ func Parse(text string) *Model {
 				target.Conditionals = append(target.Conditionals, parsed.Conditionals...)
 				target.Validations = append(target.Validations, parsed.Validations...)
 				target.Names = append(target.Names, parsed.Names...)
+				if parsed.HasFreeze {
+					target.Freeze = parsed.Freeze
+				}
 			}
 			i = j // skip past closing fence
 			continue
