@@ -402,6 +402,16 @@
   border-radius: 1px;
   z-index: 4;
 }
+/* Live formula-reference outline: a coloured box over a range referenced by the formula being edited. */
+.defter__fref {
+  position: absolute;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 2px solid var(--fref-color, var(--defter-selection-border));
+  background: color-mix(in srgb, var(--fref-color, var(--defter-selection-border)) 9%, transparent);
+  border-radius: 2px;
+  z-index: 4;
+}
 /* Copied range: animated dashed "marching ants" drawn as four moving dash gradients. */
 .defter__copy-marquee {
   position: absolute;

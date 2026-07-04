@@ -9,7 +9,7 @@
  */
 
 import type { Range } from './coords.js'
-import { columnIndex, columnLabel } from './coords.js'
+import { columnIndex, columnLabel, parseRange } from './coords.js'
 import type { ChartSpec, Model, StyleRule, StyleTarget } from './model.js'
 
 export type Axis = 'row' | 'col'
@@ -309,6 +309,79 @@ export function offsetReferences(formula: string, dCol: number, dRow: number): s
     i++
   }
   return out
+}
+
+/** A cell/range reference located inside a formula, with its character span (for token highlighting). */
+export interface FormulaRef {
+  /** Index of the first char of the reference in the formula string. */
+  start: number
+  /** Index just past the last char. */
+  end: number
+  /** The matched text, e.g. `B2`, `A1:B4`, or `Sheet2!A1`. */
+  text: string
+  /** The parsed range (a single cell has start === end). */
+  range: Range
+}
+
+/**
+ * Find every cell/range reference in a formula, with its position — for live reference highlighting
+ * while editing. Skips string literals and function names, and pairs `A:B` colon ranges. Lenient:
+ * an unparseable candidate is skipped rather than throwing.
+ */
+export function extractReferences(formula: string): FormulaRef[] {
+  const refs: FormulaRef[] = []
+  let i = 0
+  const n = formula.length
+  while (i < n) {
+    const ch = formula[i]!
+    if (ch === '"') {
+      i++
+      while (i < n) {
+        if (formula[i] === '"') {
+          if (formula[i + 1] === '"') {
+            i += 2
+            continue
+          }
+          i++
+          break
+        }
+        i++
+      }
+      continue
+    }
+    const prev = i > 0 ? formula[i - 1]! : ''
+    if (/[A-Za-z0-9_$.!']/.test(prev)) {
+      i++
+      continue
+    }
+    const m = REF_TOKEN.exec(formula.slice(i))
+    if (!m) {
+      i++
+      continue
+    }
+    const after = formula[i + m[0].length] ?? ''
+    if (after === '(' || /[A-Za-z0-9_]/.test(after)) {
+      i += m[0].length
+      continue
+    }
+    let end = i + m[0].length
+    // Pair a colon range `REF:REF`.
+    if (formula[end] === ':') {
+      const m2 = REF_TOKEN.exec(formula.slice(end + 1))
+      if (m2) {
+        const after2 = formula[end + 1 + m2[0].length] ?? ''
+        if (after2 !== '(' && !/[A-Za-z0-9_]/.test(after2)) end = end + 1 + m2[0].length
+      }
+    }
+    const text = formula.slice(i, end)
+    try {
+      refs.push({ start: i, end, text, range: parseRange(text) })
+    } catch {
+      // unparseable candidate — skip
+    }
+    i = end
+  }
+  return refs
 }
 
 function shiftStyleTargets(rules: StyleRule[], axis: Axis, at: number, delta: number): StyleRule[] {

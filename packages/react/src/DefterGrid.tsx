@@ -11,6 +11,7 @@ import {
   columnLabel,
   deleteCols,
   deleteRows,
+  extractReferences,
   fillDown,
   fillRight,
   fillSeries,
@@ -185,6 +186,9 @@ function adjustDecimals(format: string | undefined, delta: number): string {
     return dec > 0 ? `${intPart}.${'0'.repeat(dec)}` : intPart
   })
 }
+
+/** Distinct hues for live formula-reference highlighting (cycled per distinct referenced range). */
+const REF_COLORS = ['#2f6df6', '#e0115f', '#1a7f47', '#b0560a', '#7c3aed', '#0e9aa7', '#c026d3', '#ca8a04']
 
 /** Number-format presets for the toolbar picker (value stored on the cell, label shown as a sample). */
 const NUMBER_FORMATS: { value: string; label: string; name: string }[] = [
@@ -543,6 +547,31 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     }
   }, [sel])
 
+  // Live formula references: while editing a `=`-formula, each distinct referenced range gets a hue,
+  // shown as a coloured outline on the grid (and matching token colours in the editor).
+  const editingRefs = useMemo(() => {
+    if (!editing || !editing.value.trim().startsWith('=')) return []
+    const colors = new Map<string, string>()
+    const byKey = new Map<string, { rect: Rect; color: string }>()
+    for (const ref of extractReferences(editing.value)) {
+      if (ref.range.sheet && ref.range.sheet.toLowerCase() !== sheet.name.toLowerCase()) continue
+      const r = {
+        minCol: Math.min(ref.range.start.col, ref.range.end.col),
+        maxCol: Math.max(ref.range.start.col, ref.range.end.col),
+        minRow: Math.min(ref.range.start.row, ref.range.end.row),
+        maxRow: Math.max(ref.range.start.row, ref.range.end.row),
+      }
+      const key = `${r.minCol},${r.minRow},${r.maxCol},${r.maxRow}`
+      let color = colors.get(key)
+      if (!color) {
+        color = REF_COLORS[colors.size % REF_COLORS.length]!
+        colors.set(key, color)
+      }
+      byKey.set(key, { rect: r, color })
+    }
+    return [...byKey.values()]
+  }, [editing, sheet.name])
+
   // Broadcast the local selection to the host (for its awareness channel), throttled. `si` is
   // folded in so a sheet switch re-broadcasts. The A1 string is a single cell or a range.
   const onSelectionChange = props.onSelectionChange
@@ -604,6 +633,18 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           maxCol: Number(el.dataset.maxCol),
           minRow: Number(el.dataset.minRow),
           maxRow: Number(el.dataset.maxRow),
+        },
+        true,
+      )
+    })
+    root.querySelectorAll<HTMLDivElement>('.defter__fref').forEach((el) => {
+      place(
+        el,
+        {
+          minCol: Number(el.dataset.mincol),
+          maxCol: Number(el.dataset.maxcol),
+          minRow: Number(el.dataset.minrow),
+          maxRow: Number(el.dataset.maxrow),
         },
         true,
       )
@@ -1744,6 +1785,18 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         </table>
         <div ref={marqueeRef} className="defter__marquee" aria-hidden="true" style={{ display: 'none' }} />
         <div ref={copyMarqueeRef} className="defter__copy-marquee" aria-hidden="true" style={{ display: 'none' }} />
+        {editingRefs.map((fr) => (
+          <div
+            key={`${fr.rect.minCol},${fr.rect.minRow},${fr.rect.maxCol},${fr.rect.maxRow}`}
+            className="defter__fref"
+            aria-hidden="true"
+            data-mincol={fr.rect.minCol}
+            data-minrow={fr.rect.minRow}
+            data-maxcol={fr.rect.maxCol}
+            data-maxrow={fr.rect.maxRow}
+            style={{ '--fref-color': fr.color, display: 'none' } as CSSProperties}
+          />
+        ))}
         {collabRects.map(({ collab, r }) => (
           <div
             key={collab.id}
