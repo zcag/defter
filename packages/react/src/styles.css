@@ -370,6 +370,8 @@
   flex: 1;
   overflow: auto;
   background: var(--defter-bg);
+  /* Allow scroll/pinch but disable double-tap-to-zoom so double-tap edits a cell cleanly on touch. */
+  touch-action: manipulation;
 }
 /* Focus target that makes copy/cut/paste fire reliably (see keyCatcherRef). Hidden via transparency
  * and z-index (NOT opacity:0 / pointer-events:none — iOS Safari won't fire clipboard on those).
@@ -685,6 +687,13 @@
   border: 1px solid var(--defter-bg);
   cursor: crosshair;
   z-index: 9;
+  touch-action: none; /* the handle owns the drag; don't let the page scroll under it */
+}
+/* Enlarged invisible hit area so the fill handle is grabbable by a fingertip. */
+.defter__fill-handle::before {
+  content: '';
+  position: absolute;
+  inset: -9px;
 }
 .defter__cell--frozen {
   position: sticky;

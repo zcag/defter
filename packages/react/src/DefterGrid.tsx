@@ -744,7 +744,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       refDragging.current = false
     }
     window.addEventListener('mouseup', up)
-    return () => window.removeEventListener('mouseup', up)
+    window.addEventListener('touchend', up)
+    return () => {
+      window.removeEventListener('mouseup', up)
+      window.removeEventListener('touchend', up)
+    }
   }, [rect, model, si, pushEdit])
 
   // Column resize (drag the header's right edge); commit persists into the style layer.
@@ -1373,29 +1377,37 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const onFillStart = useCallback(() => {
     fillDragging.current = true
     fillTargetRef.current = null
-    const move = (ev: MouseEvent) => {
-      const el = (ev.target as HTMLElement | null)?.closest?.('[data-col][data-row]') as HTMLElement | null
-      if (el?.dataset.col !== undefined && el.dataset.row !== undefined) {
-        fillTargetRef.current = { col: Number(el.dataset.col), row: Number(el.dataset.row) }
+    const track = (clientY: number, el: HTMLElement | null) => {
+      const cell = el?.closest?.('[data-col][data-row]') as HTMLElement | null
+      if (cell?.dataset.col !== undefined && cell.dataset.row !== undefined) {
+        fillTargetRef.current = { col: Number(cell.dataset.col), row: Number(cell.dataset.row) }
         return
       }
       // Over a virtualization spacer (no data cell): derive the row from geometry.
       const root = rootRef.current
       if (root) {
         const box = root.getBoundingClientRect()
-        const row = Math.max(1, Math.floor((ev.clientY - box.top + root.scrollTop) / rowHeight))
+        const row = Math.max(1, Math.floor((clientY - box.top + root.scrollTop) / rowHeight))
         fillTargetRef.current = { col: fillTargetRef.current?.col ?? sel.focus.col, row }
       }
     }
+    const move = (ev: MouseEvent) => track(ev.clientY, ev.target as HTMLElement | null)
+    const tmove = (ev: TouchEvent) => {
+      const t = ev.touches[0]
+      if (!t) return
+      ev.preventDefault() // stop the page scrolling while dragging the fill handle
+      track(t.clientY, document.elementFromPoint(t.clientX, t.clientY) as HTMLElement | null)
+    }
     document.addEventListener('mousemove', move)
-    document.addEventListener(
-      'mouseup',
-      function done() {
-        document.removeEventListener('mousemove', move)
-        document.removeEventListener('mouseup', done)
-      },
-      { once: true },
-    )
+    document.addEventListener('touchmove', tmove, { passive: false })
+    const done = () => {
+      document.removeEventListener('mousemove', move)
+      document.removeEventListener('touchmove', tmove)
+      document.removeEventListener('mouseup', done)
+      document.removeEventListener('touchend', done)
+    }
+    document.addEventListener('mouseup', done, { once: true })
+    document.addEventListener('touchend', done, { once: true })
   }, [sel.focus.col, rowHeight])
 
   const stats = useMemo(() => {
@@ -1473,6 +1485,28 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     },
     [editable, rect, totalRows, totalCols],
   )
+
+  // Long-press → context menu on touch (iOS/Safari doesn't fire `contextmenu` on a held cell).
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const onTouchStartGrid = useCallback(
+    (e: React.TouchEvent) => {
+      if (!editable || e.touches.length !== 1) return
+      const x = e.touches[0]!.clientX
+      const y = e.touches[0]!.clientY
+      longPressTimer.current = setTimeout(() => {
+        const el = (document.elementFromPoint(x, y) as HTMLElement | null)?.closest<HTMLElement>('[data-col][data-row]')
+        if (!el) return
+        const c = Number(el.dataset.col)
+        const r = Number(el.dataset.row)
+        if (!(c >= rect.minCol && c <= rect.maxCol && r >= rect.minRow && r <= rect.maxRow))
+          setSel({ anchor: { col: c, row: r }, focus: { col: c, row: r } })
+        setMenu({ x, y })
+        navigator.vibrate?.(10)
+      }, 500)
+    },
+    [editable, rect],
+  )
+  const clearLongPress = useCallback(() => clearTimeout(longPressTimer.current), [])
 
   const clearSelection = useCallback(() => {
     const writes = []
@@ -1793,6 +1827,10 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         onCut={onCut}
         onPaste={onPaste}
         onContextMenu={onContextMenu}
+        onTouchStart={onTouchStartGrid}
+        onTouchMove={clearLongPress}
+        onTouchEnd={clearLongPress}
+        onTouchCancel={clearLongPress}
         onScroll={(e) => {
           const el = e.currentTarget
           el.dataset.scrollY = el.scrollTop > 0 ? '1' : '' // toggles the frozen-pane shadows (CSS)
@@ -2582,6 +2620,10 @@ function Cell(p: CellProps): React.JSX.Element {
             <span
               className="defter__fill-handle"
               onMouseDown={(e) => {
+                e.stopPropagation()
+                p.onFillStart?.()
+              }}
+              onTouchStart={(e) => {
                 e.stopPropagation()
                 p.onFillStart?.()
               }}
