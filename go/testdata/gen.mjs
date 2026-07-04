@@ -222,6 +222,25 @@ validate B2:B3 list=Todo,Doing,Done
 `,
 )
 
+// Checkbox + date cells: 0.1.5 style-block directives (`checkbox <range>`,
+// `date <range>`) — must round-trip TS↔Go and lint clean, alongside other rules.
+add(
+  'checkbox-and-date',
+  `## Sheet: Launch
+
+| Task | Owner | Due | Done |
+| --- | --- | --- | --- |
+| Draft copy | Ana | 2026-07-10 | TRUE |
+| Build page | Ben | 2026-07-12 | FALSE |
+
+\`\`\`defter-style
+A1:D1  bold fill=surface-3 align=center
+checkbox D2:D3
+date C2:C3
+\`\`\`
+`,
+)
+
 // Frozen panes: `freeze rows=N cols=M` is a sheet-level style-block directive
 // (both axes, one axis, and alongside other rules) — must round-trip TS↔Go.
 add(

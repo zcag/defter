@@ -37,6 +37,10 @@ type Sheet struct {
 	Conditionals []CondRule
 	// Validations are data-validation dropdowns (`validate <range> list=A,B,C`).
 	Validations []ValidationRule
+	// Checkboxes mark ranges as checkbox cells (`checkbox <range>`) over TRUE/FALSE.
+	Checkboxes []CheckboxRule
+	// Dates mark ranges as date cells (`date <range>`) over ISO YYYY-MM-DD.
+	Dates []DateRule
 	// Names are named ranges (`name Revenue = D2:D10`).
 	Names []NamedRange
 	// Freeze pins the first Freeze.Rows rows and/or Freeze.Cols columns as sticky
@@ -68,6 +72,14 @@ type ValidationRule struct {
 	Target StyleTarget
 	List   []string
 }
+
+// CheckboxRule marks a range as checkbox cells (`checkbox <range>`), rendered as
+// a toggle over a TRUE/FALSE value.
+type CheckboxRule struct{ Target StyleTarget }
+
+// DateRule marks a range as date cells (`date <range>`), rendered as a calendar
+// picker over an ISO YYYY-MM-DD value.
+type DateRule struct{ Target StyleTarget }
 
 // CondValue is a conditional-rule comparison value: either a number or a string.
 type CondValue struct {

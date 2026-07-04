@@ -98,6 +98,40 @@ func TestLintTextAcceptsFreeze(t *testing.T) {
 	}
 }
 
+func TestLintTextAcceptsCheckboxAndDate(t *testing.T) {
+	// `checkbox <range>` / `date <range>` are 0.1.5 style-block directives. Before
+	// the Go port learned them they fell through to the generic rule parser and
+	// were flagged "bad target syntax: 'checkbox'", which (tela rejects on any lint
+	// issue) blocked every agent-authored checkbox/date sheet.
+	text := "## Sheet: S\n\n| a | b |\n| --- | --- |\n| x | TRUE |\n\n" +
+		"```defter-style\ncheckbox B2:B2\ndate A2:A2\n```\n"
+	if issues := LintText(text); len(issues) != 0 {
+		t.Errorf("checkbox/date should lint clean, got %+v", issues)
+	}
+	// A bad target is still reported (not silently swallowed).
+	bad := "## Sheet: S\n\n| a | b |\n| --- | --- |\n| x | y |\n\n```defter-style\ncheckbox @@@\n```\n"
+	if !hasMsg(LintText(bad), "malformed checkbox") {
+		t.Errorf("expected malformed-checkbox issue, got %+v", LintText(bad))
+	}
+}
+
+func TestCheckboxDateParseSerialize(t *testing.T) {
+	text := "| a | b | c |\n| --- | --- | --- |\n| x | 2026-07-10 | TRUE |\n| y | 2026-07-11 | FALSE |\n\n" +
+		"```defter-style\ncheckbox C2:C3\ndate B2:B3\n```\n"
+	m := Parse(text)
+	s := m.Sheets[0]
+	if len(s.Checkboxes) != 1 || len(s.Dates) != 1 {
+		t.Fatalf("checkbox/date not parsed: %d checkboxes, %d dates", len(s.Checkboxes), len(s.Dates))
+	}
+	once := Serialize(m)
+	if !strings.Contains(once, "checkbox C2:C3") || !strings.Contains(once, "date B2:B3") {
+		t.Errorf("checkbox/date not serialized: %q", once)
+	}
+	if twice := Serialize(Parse(once)); once != twice {
+		t.Errorf("checkbox/date not idempotent:\n%q\n%q", once, twice)
+	}
+}
+
 func TestFreezeParseSerialize(t *testing.T) {
 	text := "| a | b |\n| --- | --- |\n| 1 | 2 |\n\n```defter-style\nfreeze rows=1 cols=1\nA1:B1  bold\n```\n"
 	m := Parse(text)

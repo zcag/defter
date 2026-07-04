@@ -1,0 +1,11 @@
+## Sheet: Launch
+
+| Task | Owner | Due | Done |
+| --- | --- | --- | --- |
+| Draft copy | Ana | 2026-07-10 | TRUE |
+| Build page | Ben | 2026-07-12 | FALSE |
+
+```defter-style
+checkbox D2:D3
+date C2:C3
+```

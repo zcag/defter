@@ -74,6 +74,12 @@ func Lint(m *Model) []Issue {
 		for _, v := range s.Validations {
 			checkTarget(v.Target, formatStyleTarget(v.Target))
 		}
+		for _, cb := range s.Checkboxes {
+			checkTarget(cb.Target, formatStyleTarget(cb.Target))
+		}
+		for _, d := range s.Dates {
+			checkTarget(d.Target, formatStyleTarget(d.Target))
+		}
 		for _, nr := range s.Names {
 			if iss, bad := checkRange(s, byName, nr.Range); bad {
 				iss.Sheet = s.Name
@@ -204,6 +210,16 @@ func lintStyleLine(sheet string, lineNo int, raw string) []Issue {
 	case strings.HasPrefix(low, "validate "):
 		if _, ok := parseValidateLine(line); !ok {
 			return mk("malformed validation rule (expected `validate <range> list=A,B,C`): " + line)
+		}
+		return nil
+	case strings.HasPrefix(low, "checkbox "):
+		if _, err := parseStyleTarget(strings.TrimSpace(line[len("checkbox "):])); err != nil {
+			return mk("malformed checkbox rule (expected `checkbox <range>`): " + line)
+		}
+		return nil
+	case strings.HasPrefix(low, "date "):
+		if _, err := parseStyleTarget(strings.TrimSpace(line[len("date "):])); err != nil {
+			return mk("malformed date rule (expected `date <range>`): " + line)
 		}
 		return nil
 	case strings.HasPrefix(low, "chart ") || low == "chart":

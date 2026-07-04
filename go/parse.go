@@ -79,6 +79,8 @@ func Parse(text string) *Model {
 				target.Charts = append(target.Charts, parsed.Charts...)
 				target.Conditionals = append(target.Conditionals, parsed.Conditionals...)
 				target.Validations = append(target.Validations, parsed.Validations...)
+				target.Checkboxes = append(target.Checkboxes, parsed.Checkboxes...)
+				target.Dates = append(target.Dates, parsed.Dates...)
 				target.Names = append(target.Names, parsed.Names...)
 				if parsed.HasFreeze {
 					target.Freeze = parsed.Freeze

@@ -200,6 +200,8 @@ type parsedStyleBlock struct {
 	Charts       []ChartSpec
 	Conditionals []CondRule
 	Validations  []ValidationRule
+	Checkboxes   []CheckboxRule
+	Dates        []DateRule
 	Names        []NamedRange
 	Freeze       FreezeSpec // {0,0} when the block declares no freeze
 	HasFreeze    bool       // true if a valid freeze line was seen (last wins)
@@ -357,6 +359,16 @@ func parseStyleBlock(body string) parsedStyleBlock {
 				out.Validations = append(out.Validations, v)
 			}
 			continue
+		case strings.HasPrefix(low, "checkbox "):
+			if t, err := parseStyleTarget(strings.TrimSpace(line[len("checkbox "):])); err == nil {
+				out.Checkboxes = append(out.Checkboxes, CheckboxRule{Target: t})
+			}
+			continue
+		case strings.HasPrefix(low, "date "):
+			if t, err := parseStyleTarget(strings.TrimSpace(line[len("date "):])); err == nil {
+				out.Dates = append(out.Dates, DateRule{Target: t})
+			}
+			continue
 		case strings.HasPrefix(low, "chart ") || low == "chart":
 			if ch, ok := parseChartLine(line); ok {
 				out.Charts = append(out.Charts, ch)
@@ -429,7 +441,7 @@ func parseChartLine(line string) (ChartSpec, bool) {
 
 // serializeStyleBlock renders rules, names, conditionals, validations, and
 // charts to a block body (without fences), in that fixed order.
-func serializeStyleBlock(rules []StyleRule, charts []ChartSpec, conds []CondRule, vals []ValidationRule, names []NamedRange, freeze FreezeSpec) string {
+func serializeStyleBlock(rules []StyleRule, charts []ChartSpec, conds []CondRule, vals []ValidationRule, checkboxes []CheckboxRule, dates []DateRule, names []NamedRange, freeze FreezeSpec) string {
 	var lines []string
 	if freeze.isSet() {
 		lines = append(lines, serializeFreeze(freeze))
@@ -451,6 +463,12 @@ func serializeStyleBlock(rules []StyleRule, charts []ChartSpec, conds []CondRule
 	}
 	for _, val := range vals {
 		lines = append(lines, "validate "+formatStyleTarget(val.Target)+" list="+strings.Join(val.List, ","))
+	}
+	for _, cb := range checkboxes {
+		lines = append(lines, "checkbox "+formatStyleTarget(cb.Target))
+	}
+	for _, d := range dates {
+		lines = append(lines, "date "+formatStyleTarget(d.Target))
 	}
 	for _, ch := range charts {
 		lines = append(lines, serializeChart(ch))
