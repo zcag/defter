@@ -31,6 +31,8 @@ export interface Sheet {
   checkboxes: CheckboxRule[]
   /** Date cells (`date <range>`) — rendered with a calendar picker over an ISO `YYYY-MM-DD` value. */
   dates: DateRule[]
+  /** Row filters (`filter <col> <op> <value>`) — a non-destructive view; matching rows stay visible. */
+  filters: FilterRule[]
   /** Named ranges (`name Revenue = D2:D10`) — usable in formulas from any sheet. */
   names: NamedRange[]
   /**
@@ -59,6 +61,12 @@ export interface CheckboxRule {
 
 export interface DateRule {
   target: StyleTarget
+}
+
+export interface FilterRule {
+  col: number
+  op: CondOp
+  value: number | string
 }
 
 export type CondOp = '>' | '<' | '>=' | '<=' | '=' | '<>'
@@ -124,6 +132,7 @@ export function emptySheet(name: string, headed = true): Sheet {
     validations: [],
     checkboxes: [],
     dates: [],
+    filters: [],
     names: [],
     headed,
   }

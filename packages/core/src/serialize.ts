@@ -48,6 +48,7 @@ function serializeSheet(sheet: Sheet, forceHeading: boolean): string {
     sheet.validations.length > 0 ||
     sheet.checkboxes.length > 0 ||
     sheet.dates.length > 0 ||
+    sheet.filters.length > 0 ||
     sheet.names.length > 0 ||
     hasFreeze
   ) {
@@ -58,6 +59,7 @@ function serializeSheet(sheet: Sheet, forceHeading: boolean): string {
       sheet.validations,
       sheet.checkboxes,
       sheet.dates,
+      sheet.filters,
       sheet.names,
       sheet.freeze,
     )

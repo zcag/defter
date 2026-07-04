@@ -116,6 +116,7 @@ The block also carries two data-driven constructs, keyed by A1 range like everyt
   the listed options.
 - **Checkbox cells** — `checkbox <range>` renders those cells as a toggle over a `TRUE`/`FALSE` value.
 - **Date cells** — `date <range>` renders a calendar picker over an ISO `YYYY-MM-DD` value.
+- **Row filters** — `filter <col> <op> <value>` hides non-matching rows (non-destructive view; data untouched). Multiple filters AND.
 - **Named ranges** — `name <Name> = <range>` defines a name usable in formulas from any sheet
   (`=SUM(Revenue)`).
 - **Frozen panes** — `freeze rows=N cols=M` pins the first `N` rows and/or first `M` columns as

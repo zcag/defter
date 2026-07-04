@@ -8,6 +8,8 @@ import {
   addSheet,
   applyBorders,
   clearStylesIn,
+  addFilter,
+  clearFilters,
   columnLabel,
   deleteCols,
   deleteRows,
@@ -30,6 +32,7 @@ import {
   resolveStyles,
   resolveCheckbox,
   resolveDate,
+  resolveHiddenRows,
   resolveValidation,
   isChecked,
   parseISODate,
@@ -532,10 +535,15 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     if (virtualize && rootRef.current) setVp((v) => ({ ...v, height: rootRef.current!.clientHeight }))
   }, [virtualize])
 
+  const hiddenRows = useMemo(
+    () => (computed ? resolveHiddenRows(sheet, computed) : new Set<number>()),
+    [sheet, computed],
+  )
   // Visible row window (1-based, inclusive). Without virtualize this is the full range → no spacers.
+  // Filters make row index ≠ pixel position, so an active filter renders the full (skipped) range.
   let winStart = 1
   let winEnd = totalRows
-  if (virtualize && vp.height > 0) {
+  if (virtualize && hiddenRows.size === 0 && vp.height > 0) {
     const visible = Math.ceil(vp.height / rowHeight)
     winStart = Math.max(1, Math.floor(vp.top / rowHeight) + 1 - OVERSCAN)
     winEnd = Math.min(totalRows, winStart + visible + OVERSCAN * 2)
@@ -873,11 +881,18 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const moveFocus = useCallback(
     (dcol: number, drow: number, extend: boolean) => {
       setSel((s) => {
-        const focus = { col: clampCol(s.focus.col + dcol), row: clampRow(s.focus.row + drow) }
+        let row = clampRow(s.focus.row + drow)
+        // Step over filter-hidden rows so vertical nav lands on a visible row.
+        if (drow !== 0 && hiddenRows.size) {
+          const dir = drow > 0 ? 1 : -1
+          while (hiddenRows.has(row) && row > 1 && row < totalRows) row = clampRow(row + dir)
+          if (hiddenRows.has(row)) row = s.focus.row // no visible row that way — stay put
+        }
+        const focus = { col: clampCol(s.focus.col + dcol), row }
         return { anchor: extend ? s.anchor : focus, focus }
       })
     },
-    [totalCols, totalRows],
+    [totalCols, totalRows, hiddenRows],
   )
 
   // Ctrl+Arrow: jump to the edge of the current data block (Sheets behaviour).
@@ -1530,7 +1545,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const [barValue, setBarValue] = useState<string | null>(null)
   useEffect(() => setBarValue(null), [sel.focus.col, sel.focus.row])
 
-  const renderRow = (row: number) => (
+  const renderRow = (row: number) =>
+    hiddenRows.has(row) ? null : (
     <tr key={row} role="row" aria-rowindex={row}>
       <th
         data-row={row}
@@ -1812,6 +1828,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
                   }}
                 >
                   {columnLabel(c)}
+                  {sheet.filters.some((f) => f.col === c) && (
+                    <span className="defter__colfilter" aria-label="Filtered" title="Filtered — right-click to clear">
+                      ⧨
+                    </span>
+                  )}
                   {editable && (
                     <span
                       className="defter__resizer"
@@ -1927,6 +1948,16 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
           <button onClick={() => applyModel(sortRows(model, si, rect.minCol, false, 2, sheet.grid.length))}>
             Sort ↓ by column {columnLabel(rect.minCol)}
           </button>
+          <div className="defter__menu-sep" />
+          <button
+            onClick={() => {
+              const v = computed ? computed.get(sheet.name, rect.minCol, rect.minRow) : rawAt(rect.minCol, rect.minRow)
+              applyModel(addFilter(model, si, rect.minCol, '=', typeof v === 'number' ? v : v == null ? '' : String(v)))
+            }}
+          >
+            Filter {columnLabel(rect.minCol)} = this value
+          </button>
+          {sheet.filters.length > 0 && <button onClick={() => applyModel(clearFilters(model, si))}>Clear filters</button>}
           <div className="defter__menu-sep" />
           <button onClick={clearSelection}>Clear contents</button>
         </div>

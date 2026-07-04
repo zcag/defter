@@ -92,6 +92,7 @@ B2:B9   align=right
 - **Data validation:** `validate <range> list=Todo,Doing,Done` turns those cells into dropdowns
 - **Checkbox cells:** `checkbox <range>` renders a toggle over a `TRUE`/`FALSE` value.
 - **Date cells:** `date <range>` renders a calendar picker over an ISO `YYYY-MM-DD` value.
+- **Row filters:** `filter <col> <op> <value>` hides non-matching rows (a non-destructive view).
   restricted to the listed options.
 - **Frozen panes:** `freeze rows=N cols=M` pins the first N rows and/or first M columns while
   scrolling (both parts optional: `freeze rows=1`, `freeze cols=1`, `freeze rows=1 cols=1`). One per

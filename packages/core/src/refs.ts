@@ -74,6 +74,11 @@ export function shiftReferencesInModel(
         const t = shiftStyleTarget(d.target, axis, at, delta)
         return t ? [{ ...d, target: t }] : []
       })
+      if (axis === 'col')
+        sheet.filters = sheet.filters.flatMap((f) => {
+          const c = shiftPoint(f.col, at, delta)
+          return c === null ? [] : [{ ...f, col: c }]
+        })
       sheet.names = sheet.names.flatMap((nr) => {
         const r = shiftRange(nr.range, axis, at, delta)
         return r ? [{ ...nr, range: r }] : []

@@ -8,6 +8,7 @@ import type {
   ChartSpec,
   CheckboxRule,
   DateRule,
+  FilterRule,
   CondOp,
   CondRule,
   NamedRange,
@@ -100,6 +101,7 @@ export interface ParsedStyleBlock {
   validations: ValidationRule[]
   checkboxes: CheckboxRule[]
   dates: DateRule[]
+  filters: FilterRule[]
   names: NamedRange[]
   /** Frozen-pane directive (`freeze rows=N cols=M`), if the block declared one (last wins). */
   freeze?: { rows: number; cols: number }
@@ -187,6 +189,25 @@ function parseCondLine(line: string): CondRule | null {
   return { target, op: opMatch[0] as CondOp, value, attrs }
 }
 
+function parseFilterLine(line: string): FilterRule | null {
+  const rest = line.slice(7).trim() // drop "filter "
+  const opMatch = /(>=|<=|<>|>|<|=)/.exec(rest)
+  if (!opMatch) return null
+  const colText = rest.slice(0, opMatch.index).trim()
+  if (!/^[A-Za-z]+$/.test(colText)) return null
+  const afterOp = rest.slice(opMatch.index + opMatch[0].length).trim()
+  let value: number | string
+  if (afterOp.startsWith('"')) {
+    const end = afterOp.indexOf('"', 1)
+    if (end < 0) return null
+    value = afterOp.slice(1, end)
+  } else {
+    const num = Number(afterOp)
+    value = afterOp !== '' && !Number.isNaN(num) ? num : afterOp
+  }
+  return { col: columnIndex(colText), op: opMatch[0] as CondOp, value }
+}
+
 /** Parse a whole `defter-style` block body (without the fences). Lenient. */
 export function parseStyleBlock(body: string): ParsedStyleBlock {
   const rules: StyleRule[] = []
@@ -195,6 +216,7 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
   const validations: ValidationRule[] = []
   const checkboxes: CheckboxRule[] = []
   const dates: DateRule[] = []
+  const filters: FilterRule[] = []
   const names: NamedRange[] = []
   let freeze: { rows: number; cols: number } | undefined
   for (const raw of body.split('\n')) {
@@ -236,6 +258,11 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
       }
       continue
     }
+    if (line.toLowerCase().startsWith('filter ')) {
+      const f = parseFilterLine(line)
+      if (f) filters.push(f)
+      continue
+    }
     if (line.toLowerCase().startsWith('chart ') || line.toLowerCase() === 'chart') {
       const chart = parseChartLine(line)
       if (chart) charts.push(chart)
@@ -252,7 +279,7 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
     const attrs = parseAttrs(parts.slice(1))
     if (Object.keys(attrs).length > 0) rules.push({ target, attrs })
   }
-  return { rules, charts, conditionals, validations, checkboxes, dates, names, freeze }
+  return { rules, charts, conditionals, validations, checkboxes, dates, filters, names, freeze }
 }
 
 const CHART_ATTR = /(\w+)=(?:"([^"]*)"|(\S+))/g
@@ -285,6 +312,7 @@ export function serializeStyleBlock(
   validations: ValidationRule[] = [],
   checkboxes: CheckboxRule[] = [],
   dates: DateRule[] = [],
+  filters: FilterRule[] = [],
   names: NamedRange[] = [],
   freeze?: { rows: number; cols: number },
 ): string {
@@ -301,6 +329,7 @@ export function serializeStyleBlock(
   }
   for (const cb of checkboxes) lines.push(`checkbox ${formatStyleTarget(cb.target)}`)
   for (const d of dates) lines.push(`date ${formatStyleTarget(d.target)}`)
+  for (const f of filters) lines.push(`filter ${columnLabel(f.col)} ${f.op} ${typeof f.value === 'number' ? f.value : `"${f.value}"`}`)
   for (const ch of charts) lines.push(serializeChart(ch))
   return lines.join('\n')
 }

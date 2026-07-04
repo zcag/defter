@@ -6,6 +6,7 @@
  */
 
 import {
+  type CondOp,
   type Model,
   type Sheet,
   type StyleAttrs,
@@ -364,6 +365,24 @@ export function setStyle(
 }
 
 /** Remove style rules whose range target is fully contained in the given range. */
+/** Add (or replace) a non-destructive row filter on a column. One filter per column. */
+export function addFilter(model: Model, sheetIndex: number, col: number, op: CondOp, value: number | string): Model {
+  const next = cloneModel(model)
+  const sheet = next.sheets[sheetIndex]
+  if (!sheet) return next
+  sheet.filters = sheet.filters.filter((f) => f.col !== col)
+  sheet.filters.push({ col, op, value })
+  return next
+}
+
+/** Remove all row filters from a sheet (show every row). */
+export function clearFilters(model: Model, sheetIndex: number): Model {
+  const next = cloneModel(model)
+  const sheet = next.sheets[sheetIndex]
+  if (sheet) sheet.filters = []
+  return next
+}
+
 export function clearStylesIn(
   model: Model,
   sheetIndex: number,

@@ -67,6 +67,7 @@ export function parse(text: string): Model {
         target.validations.push(...parsed.validations)
         target.checkboxes.push(...parsed.checkboxes)
         target.dates.push(...parsed.dates)
+        target.filters.push(...parsed.filters)
         target.names.push(...parsed.names)
         if (parsed.freeze) target.freeze = parsed.freeze
       }

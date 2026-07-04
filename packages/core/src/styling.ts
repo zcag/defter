@@ -114,6 +114,25 @@ export function parseISODate(raw: string): { year: number; month: number; day: n
   return { year, month, day }
 }
 
+/**
+ * The set of *data* rows (1-based model index) hidden by the sheet's `filter` rules — a row is shown
+ * only if it satisfies every filter, evaluated against computed values. Row 1 (header) is never hidden.
+ * Non-destructive: the grid renders around these; the underlying data is untouched.
+ */
+export function resolveHiddenRows(sheet: Sheet, computed: ComputedGrid): Set<number> {
+  const hidden = new Set<number>()
+  if (sheet.filters.length === 0) return hidden
+  for (let row = 2; row <= sheet.grid.length; row++) {
+    for (const f of sheet.filters) {
+      if (!condMatches(computed.get(sheet.name, f.col, row), f.op, f.value)) {
+        hidden.add(row)
+        break
+      }
+    }
+  }
+  return hidden
+}
+
 export function resolveStyles(sheet: Sheet): ResolvedStyles {
   const anchors = new Map<string, MergeSpan>()
   const covered = new Set<string>()

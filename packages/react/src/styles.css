@@ -1084,3 +1084,10 @@
   font-size: 10.5px;
   fill: var(--defter-muted-fg, #6b7280);
 }
+
+/* Filtered-column indicator in the column header. */
+.defter__colfilter {
+  margin-left: 3px;
+  font-size: 10px;
+  color: var(--defter-accent);
+}

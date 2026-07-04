@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { insertCols } from './edit.js'
+import type { ComputedGrid } from './compute.js'
+import { addFilter, clearFilters, insertCols } from './edit.js'
+import { type Model, getCell } from './model.js'
+import { parseLiteral } from './values.js'
 import { parse } from './parse.js'
 import { serialize } from './serialize.js'
-import { isChecked, parseISODate, resolveCheckbox, resolveDate, resolveValidation } from './styling.js'
+import { isChecked, parseISODate, resolveCheckbox, resolveDate, resolveHiddenRows, resolveValidation } from './styling.js'
 
 const SRC = `## Sheet: S
 
@@ -15,6 +18,11 @@ const SRC = `## Sheet: S
 validate B2:B3 list=Todo,Doing,Done
 \`\`\`
 `
+
+function litGrid(m: Model): ComputedGrid {
+  const byName = new Map(m.sheets.map((s) => [s.name, s]))
+  return { get: (sheet, col, row) => { const s = byName.get(sheet); return s ? parseLiteral(getCell(s, col, row)) : null } }
+}
 
 describe('data validation', () => {
   it('parses, round-trips, and resolves the option list', () => {
@@ -85,5 +93,33 @@ date B2:B3
     expect(parseISODate('2026-07-10')).toEqual({ year: 2026, month: 7, day: 10 })
     expect(parseISODate('2026-13-01')).toBeNull()
     expect(parseISODate('nope')).toBeNull()
+  })
+})
+
+describe('row filters (views)', () => {
+  const SRC = `| Item | Qty |
+| --- | --- |
+| A | 5 |
+| B | 12 |
+| C | 3 |
+| D | 20 |
+
+\`\`\`defter-style
+filter B >= 10
+\`\`\`
+`
+  it('round-trips and resolves hidden rows against computed values', () => {
+    const m = parse(SRC)
+    expect(serialize(m)).toBe(serialize(parse(serialize(m))))
+    expect(serialize(m)).toContain('filter B >= 10')
+    const hidden = resolveHiddenRows(m.sheets[0]!, litGrid(m))
+    expect([...hidden].sort((a, b) => a - b)).toEqual([2, 4]) // A(5), C(3) hidden
+  })
+  it('addFilter replaces per column; clearFilters empties; col shifts on insert', () => {
+    let m = addFilter(parse(SRC), 0, 1, '=', 12)
+    expect(m.sheets[0]!.filters).toEqual([{ col: 1, op: '=', value: 12 }])
+    m = insertCols(m, 0, 0, 1) // insert before A → filter col B(1) → C(2)
+    expect(m.sheets[0]!.filters[0]!.col).toBe(2)
+    expect(clearFilters(m, 0).sheets[0]!.filters).toEqual([])
   })
 })
