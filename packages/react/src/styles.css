@@ -743,6 +743,83 @@
 .defter__cell--checkbox {
   text-align: center;
 }
+/* Date cell: a small calendar glyph on the right; the picker opens on edit. */
+.defter__date-icon {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--defter-muted-fg);
+  pointer-events: none;
+  display: inline-flex;
+}
+.defter__date-icon svg {
+  width: 13px;
+  height: 13px;
+}
+.defter__datepicker {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  z-index: 50;
+  width: 224px;
+  padding: 8px;
+  background: var(--defter-bg);
+  border: 1px solid var(--defter-grid-line-strong);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px -8px rgba(10, 10, 30, 0.35);
+  outline: none;
+}
+.defter__dp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--defter-fg);
+}
+.defter__dp-head button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--defter-fg);
+  font-size: 17px;
+  line-height: 1;
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+.defter__dp-head button:hover {
+  background: var(--defter-grid-line);
+}
+.defter__dp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+.defter__dp-wd {
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--defter-muted-fg);
+  padding-bottom: 2px;
+}
+.defter__dp-day {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--defter-fg);
+  font-size: 12.5px;
+  height: 26px;
+  border-radius: 5px;
+}
+.defter__dp-day:hover {
+  background: var(--defter-grid-line);
+}
+.defter__dp-day--on {
+  background: var(--defter-accent);
+  color: #fff;
+}
 .defter__checkbox {
   display: inline-block;
   width: 15px;

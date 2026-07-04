@@ -29,8 +29,10 @@ import {
   resolveConditionalAttrs,
   resolveStyles,
   resolveCheckbox,
+  resolveDate,
   resolveValidation,
   isChecked,
+  parseISODate,
   serialize,
   setCell,
   setColumnWidth,
@@ -369,6 +371,13 @@ function Icon({ name }: { name: string }): React.JSX.Element {
       return (
         <svg {...c} strokeWidth={1.9}>
           <path d="M17 5H7l6 7-6 7h10" />
+        </svg>
+      )
+    case 'calendar':
+      return (
+        <svg {...c} strokeWidth={1.6}>
+          <rect x="3" y="4.5" width="18" height="16" rx="2" />
+          <path d="M3 9h18M8 3v3M16 3v3" />
         </svg>
       )
     default:
@@ -2307,6 +2316,74 @@ function SelectEditor(p: {
   )
 }
 
+const DP_WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+/** Themed month calendar for a date cell — replaces the text editor while editing (like SelectEditor). */
+function DatePicker(p: { value: string; onPick: (iso: string) => void; onCancel: () => void }): React.JSX.Element {
+  const ref = useRef<HTMLDivElement>(null)
+  const parsed = parseISODate(p.value)
+  const init = parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : new Date()
+  const [view, setView] = useState({ y: init.getFullYear(), m: init.getMonth() }) // m: 0-11
+  useEffect(() => {
+    ref.current?.focus()
+  }, [])
+  const first = new Date(view.y, view.m, 1)
+  const days = new Date(view.y, view.m + 1, 0).getDate()
+  const iso = (d: number) => `${view.y}-${String(view.m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+  const cells: (number | null)[] = Array.from({ length: first.getDay() }, () => null)
+  for (let d = 1; d <= days; d++) cells.push(d)
+  const step = (delta: number) =>
+    setView((v) => {
+      const m = v.m + delta
+      return m < 0 ? { y: v.y - 1, m: 11 } : m > 11 ? { y: v.y + 1, m: 0 } : { y: v.y, m }
+    })
+  return (
+    <div
+      ref={ref}
+      className="defter__datepicker"
+      tabIndex={-1}
+      onMouseDown={(e) => e.stopPropagation()}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) p.onCancel()
+      }}
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Escape') p.onCancel()
+      }}
+    >
+      <div className="defter__dp-head">
+        <button type="button" onClick={() => step(-1)} aria-label="Previous month">
+          ‹
+        </button>
+        <span>{first.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</span>
+        <button type="button" onClick={() => step(1)} aria-label="Next month">
+          ›
+        </button>
+      </div>
+      <div className="defter__dp-grid">
+        {DP_WEEKDAYS.map((w, i) => (
+          <span key={`wd${i}`} className="defter__dp-wd">
+            {w}
+          </span>
+        ))}
+        {cells.map((d, i) =>
+          d === null ? (
+            <span key={`b${i}`} />
+          ) : (
+            <button
+              key={`d${d}`}
+              type="button"
+              className={`defter__dp-day${p.value === iso(d) ? ' defter__dp-day--on' : ''}`}
+              onClick={() => p.onPick(iso(d))}
+            >
+              {d}
+            </button>
+          ),
+        )}
+      </div>
+    </div>
+  )
+}
+
 function Cell(p: CellProps): React.JSX.Element {
   const staticAttrs = p.styles.attrs(p.col, p.row)
   const attrs =
@@ -2361,6 +2438,7 @@ function Cell(p: CellProps): React.JSX.Element {
   }
   const validation = resolveValidation(p.sheet, p.col, p.row)
   const checkbox = resolveCheckbox(p.sheet, p.col, p.row)
+  const date = resolveDate(p.sheet, p.col, p.row)
 
   return (
     <td
@@ -2384,6 +2462,8 @@ function Cell(p: CellProps): React.JSX.Element {
           onCommit={(v) => p.onCommit(v, 'down')}
           onCancel={p.onCancel}
         />
+      ) : p.editing !== null && date ? (
+        <DatePicker value={p.editing} onPick={(iso) => p.onCommit(iso, 'down')} onCancel={p.onCancel} />
       ) : p.editing !== null ? (
         <CellEditor
           value={p.editing}
@@ -2411,6 +2491,11 @@ function Cell(p: CellProps): React.JSX.Element {
               {validation && (
                 <span className="defter__caret" aria-hidden="true">
                   ▾
+                </span>
+              )}
+              {date && (
+                <span className="defter__date-icon" aria-hidden="true">
+                  <Icon name="calendar" />
                 </span>
               )}
             </>

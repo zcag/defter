@@ -7,6 +7,7 @@ import { columnIndex, columnLabel, formatRange, parseRange } from './coords.js'
 import type {
   ChartSpec,
   CheckboxRule,
+  DateRule,
   CondOp,
   CondRule,
   NamedRange,
@@ -98,6 +99,7 @@ export interface ParsedStyleBlock {
   conditionals: CondRule[]
   validations: ValidationRule[]
   checkboxes: CheckboxRule[]
+  dates: DateRule[]
   names: NamedRange[]
   /** Frozen-pane directive (`freeze rows=N cols=M`), if the block declared one (last wins). */
   freeze?: { rows: number; cols: number }
@@ -192,6 +194,7 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
   const conditionals: CondRule[] = []
   const validations: ValidationRule[] = []
   const checkboxes: CheckboxRule[] = []
+  const dates: DateRule[] = []
   const names: NamedRange[] = []
   let freeze: { rows: number; cols: number } | undefined
   for (const raw of body.split('\n')) {
@@ -225,6 +228,14 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
       }
       continue
     }
+    if (line.toLowerCase().startsWith('date ')) {
+      try {
+        dates.push({ target: parseStyleTarget(line.slice(5).trim()) })
+      } catch {
+        // unparseable target — skip
+      }
+      continue
+    }
     if (line.toLowerCase().startsWith('chart ') || line.toLowerCase() === 'chart') {
       const chart = parseChartLine(line)
       if (chart) charts.push(chart)
@@ -241,7 +252,7 @@ export function parseStyleBlock(body: string): ParsedStyleBlock {
     const attrs = parseAttrs(parts.slice(1))
     if (Object.keys(attrs).length > 0) rules.push({ target, attrs })
   }
-  return { rules, charts, conditionals, validations, checkboxes, names, freeze }
+  return { rules, charts, conditionals, validations, checkboxes, dates, names, freeze }
 }
 
 const CHART_ATTR = /(\w+)=(?:"([^"]*)"|(\S+))/g
@@ -273,6 +284,7 @@ export function serializeStyleBlock(
   conditionals: CondRule[] = [],
   validations: ValidationRule[] = [],
   checkboxes: CheckboxRule[] = [],
+  dates: DateRule[] = [],
   names: NamedRange[] = [],
   freeze?: { rows: number; cols: number },
 ): string {
@@ -288,6 +300,7 @@ export function serializeStyleBlock(
     lines.push(`validate ${formatStyleTarget(val.target)} list=${val.list.join(',')}`)
   }
   for (const cb of checkboxes) lines.push(`checkbox ${formatStyleTarget(cb.target)}`)
+  for (const d of dates) lines.push(`date ${formatStyleTarget(d.target)}`)
   for (const ch of charts) lines.push(serializeChart(ch))
   return lines.join('\n')
 }

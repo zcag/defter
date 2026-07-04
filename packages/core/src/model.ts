@@ -29,6 +29,8 @@ export interface Sheet {
   validations: ValidationRule[]
   /** Checkbox cells (`checkbox <range>`) — rendered as a toggle over a TRUE/FALSE value. */
   checkboxes: CheckboxRule[]
+  /** Date cells (`date <range>`) — rendered with a calendar picker over an ISO `YYYY-MM-DD` value. */
+  dates: DateRule[]
   /** Named ranges (`name Revenue = D2:D10`) — usable in formulas from any sheet. */
   names: NamedRange[]
   /**
@@ -52,6 +54,10 @@ export interface ValidationRule {
 }
 
 export interface CheckboxRule {
+  target: StyleTarget
+}
+
+export interface DateRule {
   target: StyleTarget
 }
 
@@ -117,6 +123,7 @@ export function emptySheet(name: string, headed = true): Sheet {
     conditionals: [],
     validations: [],
     checkboxes: [],
+    dates: [],
     names: [],
     headed,
   }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { insertCols } from './edit.js'
 import { parse } from './parse.js'
 import { serialize } from './serialize.js'
-import { isChecked, resolveCheckbox, resolveValidation } from './styling.js'
+import { isChecked, parseISODate, resolveCheckbox, resolveDate, resolveValidation } from './styling.js'
 
 const SRC = `## Sheet: S
 
@@ -59,5 +59,31 @@ checkbox B2:B3
     expect(isChecked('yes')).toBe(true)
     expect(isChecked('FALSE')).toBe(false)
     expect(isChecked('')).toBe(false)
+  })
+})
+
+describe('date cell type', () => {
+  const SRC = `| Task | Due |
+| --- | --- |
+| A | 2026-07-10 |
+| B |  |
+
+\`\`\`defter-style
+date B2:B3
+\`\`\`
+`
+  it('round-trips and resolves date cells', () => {
+    const m = parse(SRC)
+    expect(resolveDate(m.sheets[0]!, 1, 2)).toBe(true) // B2
+    expect(resolveDate(m.sheets[0]!, 0, 2)).toBe(false) // A2
+    expect(serialize(m)).toBe(serialize(parse(serialize(m))))
+    expect(serialize(m)).toContain('date B2:B3')
+  })
+  it('ref-rewrites the date target and parses ISO values', () => {
+    const m = insertCols(parse(SRC), 0, 0, 1)
+    expect(serialize(m)).toContain('date C2:C3')
+    expect(parseISODate('2026-07-10')).toEqual({ year: 2026, month: 7, day: 10 })
+    expect(parseISODate('2026-13-01')).toBeNull()
+    expect(parseISODate('nope')).toBeNull()
   })
 })

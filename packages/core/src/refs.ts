@@ -70,6 +70,10 @@ export function shiftReferencesInModel(
         const t = shiftStyleTarget(cb.target, axis, at, delta)
         return t ? [{ ...cb, target: t }] : []
       })
+      sheet.dates = sheet.dates.flatMap((d) => {
+        const t = shiftStyleTarget(d.target, axis, at, delta)
+        return t ? [{ ...d, target: t }] : []
+      })
       sheet.names = sheet.names.flatMap((nr) => {
         const r = shiftRange(nr.range, axis, at, delta)
         return r ? [{ ...nr, range: r }] : []

@@ -100,6 +100,20 @@ export function isChecked(raw: string): boolean {
   return t === 'true' || t === 'yes' || t === '1' || t === 'x' || t === '✓' || t === 'checked'
 }
 
+/** Whether a cell is a date cell (declared via `date <range>` in the style block). */
+export function resolveDate(sheet: Sheet, col: number, row: number): boolean {
+  return sheet.dates.some((d) => targetCovers(d.target, col, row))
+}
+
+/** Parse an ISO `YYYY-MM-DD` (the canonical date-cell value); null if not a valid date. */
+export function parseISODate(raw: string): { year: number; month: number; day: number } | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw.trim())
+  if (!m) return null
+  const year = +m[1]!, month = +m[2]!, day = +m[3]!
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null
+  return { year, month, day }
+}
+
 export function resolveStyles(sheet: Sheet): ResolvedStyles {
   const anchors = new Map<string, MergeSpan>()
   const covered = new Set<string>()
