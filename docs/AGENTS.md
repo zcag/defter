@@ -90,6 +90,8 @@ B2:B9   align=right
 - **Named ranges:** `name Revenue = D2:D10` defines a name usable in formulas from any sheet —
   `=SUM(Revenue)`. The definition follows the data on insert/delete.
 - **Data validation:** `validate <range> list=Todo,Doing,Done` turns those cells into dropdowns
+- **Checkbox cells:** `checkbox <range>` renders a toggle over a `TRUE`/`FALSE` value.
+- **Date cells:** `date <range>` renders a calendar picker over an ISO `YYYY-MM-DD` value.
   restricted to the listed options.
 - **Frozen panes:** `freeze rows=N cols=M` pins the first N rows and/or first M columns while
   scrolling (both parts optional: `freeze rows=1`, `freeze cols=1`, `freeze rows=1 cols=1`). One per

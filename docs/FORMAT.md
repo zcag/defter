@@ -114,6 +114,8 @@ The block also carries two data-driven constructs, keyed by A1 range like everyt
   line. The chart follows the data referenced by its ranges.
 - **Data validation** — `validate <range> list=A,B,C` makes those cells dropdowns restricted to
   the listed options.
+- **Checkbox cells** — `checkbox <range>` renders those cells as a toggle over a `TRUE`/`FALSE` value.
+- **Date cells** — `date <range>` renders a calendar picker over an ISO `YYYY-MM-DD` value.
 - **Named ranges** — `name <Name> = <range>` defines a name usable in formulas from any sheet
   (`=SUM(Revenue)`).
 - **Frozen panes** — `freeze rows=N cols=M` pins the first `N` rows and/or first `M` columns as
