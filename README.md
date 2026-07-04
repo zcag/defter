@@ -44,7 +44,7 @@ live at runtime) in [`docs/THEMING.md`](docs/THEMING.md).
 | [`@defterjs/react`](packages/react) | The grid renderer — a thin, themeable (CSS-variable) projection of the text. Selection, formula bar, copy/paste, merges, sheet tabs, undo/redo, 3 themes. |
 | [`@defterjs/yjs`](packages/yjs) | Collaboration binding: hand it a `Y.Text` and it keeps the canonical text in sync via minimal splices. Ships no network provider — inject the shared type. |
 
-**For agents:** [`docs/AGENTS.md`](docs/AGENTS.md) is the complete contract for authoring and editing Defter sheets.
+**For agents:** [`docs/AGENTS.md`](docs/AGENTS.md) is the complete contract for authoring and editing Defter sheets. To let agents edit sheets over **MCP** (structured, minimal-diff ops via `applyOp` + `SHEET_OP_SCHEMA`), see [`docs/MCP.md`](docs/MCP.md).
 
 ## What works
 

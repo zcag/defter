@@ -128,14 +128,27 @@ A6:D6   bold border=top fill=accent-soft
 ## 6. Editing an existing sheet (do NOT rewrite the whole body)
 
 When a sheet is live and collaborative, replacing the entire document clobbers concurrent edits.
-Use the **structured operations** the host exposes (these map to `@defterjs/core`):
+Instead apply a **structured op** — a small JSON edit — so only the touched lines change.
 
-- `setCell(sheet, col, row, text)` — set one cell (text or `=formula`).
-- `insertRows / deleteRows / insertCols / deleteCols` — structural edits; Defter rewrites all
-  affected references (formulas *and* style targets) automatically.
-- `setStyle(target, attrs)` / `setColumnWidth(col, px)` — presentation.
-- `setFreeze(text, { rows, cols })` — freeze the first N rows / M columns (0 to unfreeze an axis).
-- `addSheet / renameSheet / deleteSheet`.
+`@defterjs/core` exposes **one entry point**, `applyOp(text, op)`, that takes the canonical
+markdown + a `SheetOp` and returns the new canonical markdown (all reference rewriting — formulas
+*and* style targets — flows through automatically). A host wraps this behind an `edit_sheet` MCP
+tool whose parameter schema is the exported `SHEET_OP_SCHEMA`. The op kinds:
+
+- `setCells` — batch-set cells: `{ kind: 'setCells', cells: [{ ref: 'B2', text: '10' }, { ref: 'D2', text: '=B2*C2' }] }`.
+- `insertRows` / `deleteRows` / `insertCols` / `deleteCols` — structural edits; references shift
+  automatically (`{ kind: 'insertRows', at: 2, count: 1 }`; column `at` is a letter `"C"` or a
+  0-based index).
+- `setStyle` — presentation: `{ kind: 'setStyle', target: 'A1:D1', attrs: { bold: true, align: 'center' } }`
+  (a column width is a `width` attr on a single-column target, e.g. `{ target: 'C:C', attrs: { width: 120 } }`).
+- `setFreeze` — `{ kind: 'setFreeze', rows: 1, cols: 1 }` (both 0/omitted removes the freeze).
+- `addSheet` / `renameSheet` / `deleteSheet` — `{ kind: 'addSheet', name: 'Q3', after: 0 }`.
+
+Every op takes an optional `sheet` (0-based index or name; defaults to the first sheet).
+`applyOps(text, ops)` applies a list left-to-right (each op sees the prior result); a throwing op
+aborts the whole batch. Behind the scenes each op maps 1:1 to a `@defterjs/core` function
+(`setCell`, `insertRows`, `setStyle`, `setFreeze`, …) — `applyOp` is the single dispatcher over
+them, so a host never wires them one by one. See [`MCP.md`](MCP.md) for the full host recipe.
 
 Generating a brand-new sheet from scratch? Then just emit the full markdown document from §1.
 Editing an existing one? Prefer the ops above.

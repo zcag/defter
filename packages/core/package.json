@@ -1,6 +1,6 @@
 {
   "name": "@defterjs/core",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Headless, framework-agnostic core for Defter \u2014 a text-canonical collaborative spreadsheet. Parse/serialize, coordinates, minimal-splice edits, reference rewriting, projection.",
   "license": "MIT",
   "type": "module",
