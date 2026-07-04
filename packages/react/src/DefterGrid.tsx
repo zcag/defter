@@ -733,6 +733,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         }
       }
       dragging.current = false
+      refDragging.current = false
     }
     window.addEventListener('mouseup', up)
     return () => window.removeEventListener('mouseup', up)
@@ -1284,8 +1285,42 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
 
   const painterRef = useRef<StyleAttrs | null>(null)
   const [painterOn, setPainterOn] = useState(false)
+  // Formula "point mode": while editing a =formula, replace the last auto-inserted reference span
+  // (so consecutive clicks / a drag update the same token) — tracked here.
+  const refInsert = useRef<{ start: number; end: number; anchor: { col: number; row: number } } | null>(null)
+  const refDragging = useRef(false)
+  const pointModeInsert = useCallback(
+    (anchor: { col: number; row: number }, cur: { col: number; row: number }) => {
+      if (!editing) return
+      const a1 = (c: number, r: number) => `${columnLabel(c)}${r}`
+      const token =
+        anchor.col === cur.col && anchor.row === cur.row
+          ? a1(anchor.col, anchor.row)
+          : `${a1(Math.min(anchor.col, cur.col), Math.min(anchor.row, cur.row))}:${a1(Math.max(anchor.col, cur.col), Math.max(anchor.row, cur.row))}`
+      const val = editing.value
+      const prev = refInsert.current // replace the previous auto-inserted span (consecutive click / drag)
+      const start = prev ? prev.start : (inputRef.current?.selectionStart ?? val.length)
+      const before = prev ? val.slice(0, prev.start) : val.slice(0, start)
+      const after = prev ? val.slice(prev.end) : val.slice(start)
+      const caret = start + token.length
+      refInsert.current = { start, end: caret, anchor }
+      setEditing({ col: editing.col, row: editing.row, value: before + token + after })
+      requestAnimationFrame(() => {
+        inputRef.current?.focus()
+        inputRef.current?.setSelectionRange(caret, caret)
+      })
+    },
+    [editing],
+  )
   const onCellMouseDown = useCallback(
-    (col: number, row: number, shift: boolean) => {
+    (col: number, row: number, e: React.MouseEvent) => {
+      // Point mode: clicking another cell while editing a =formula inserts its reference (drag = range).
+      if (editing && editing.value.trim().startsWith('=') && !(col === editing.col && row === editing.row)) {
+        e.preventDefault() // keep the editor focused — don't blur/commit
+        refDragging.current = true
+        pointModeInsert({ col, row }, { col, row })
+        return
+      }
       focusGrid() // capture the keyboard for THIS grid (critical with >1 grid on a page)
       if (painterRef.current) {
         const attrs = painterRef.current
@@ -1302,13 +1337,22 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       }
       dragging.current = true
       beginDragAutoScroll()
-      setSel((s) => (shift ? { anchor: s.anchor, focus: { col, row } } : { anchor: { col, row }, focus: { col, row } }))
+      setSel((s) =>
+        e.shiftKey ? { anchor: s.anchor, focus: { col, row } } : { anchor: { col, row }, focus: { col, row } },
+      )
     },
-    [model, si, pushEdit, beginDragAutoScroll],
+    [editing, pointModeInsert, model, si, pushEdit, beginDragAutoScroll],
   )
-  const onCellMouseEnter = useCallback((col: number, row: number) => {
-    if (dragging.current) setSel((s) => ({ anchor: s.anchor, focus: { col, row } }))
-  }, [])
+  const onCellMouseEnter = useCallback(
+    (col: number, row: number) => {
+      if (refDragging.current && refInsert.current) {
+        pointModeInsert(refInsert.current.anchor, { col, row })
+        return
+      }
+      if (dragging.current) setSel((s) => ({ anchor: s.anchor, focus: { col, row } }))
+    },
+    [pointModeInsert],
+  )
 
   // Fill-handle drag tracks the target via a document mousemove (robust across real drags).
   const onFillStart = useCallback(() => {
@@ -1534,10 +1578,13 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             editing={editing?.col === col && editing?.row === row ? editing.value : null}
             inputRef={inputRef}
             functions={functions}
-            onMouseDown={(shift) => onCellMouseDown(col, row, shift)}
+            onMouseDown={(e) => onCellMouseDown(col, row, e)}
             onMouseEnter={() => onCellMouseEnter(col, row)}
             onBeginEdit={() => beginEdit(col, row)}
-            onEditChange={(v) => setEditing({ col, row, value: v })}
+            onEditChange={(v) => {
+              refInsert.current = null // typing ends the auto-inserted-reference span
+              setEditing({ col, row, value: v })
+            }}
             onCommit={(v, dir) =>
               commit(col, row, v, dir === 'down' ? { col, row: row + 1 } : { col: col + 1, row })
             }
@@ -2130,7 +2177,7 @@ interface CellProps {
   editing: string | null
   inputRef: React.RefObject<HTMLInputElement | null>
   functions?: string[]
-  onMouseDown: (shift: boolean) => void
+  onMouseDown: (e: React.MouseEvent) => void
   onMouseEnter: () => void
   onBeginEdit: () => void
   onEditChange: (v: string) => void
@@ -2451,7 +2498,7 @@ function Cell(p: CellProps): React.JSX.Element {
       aria-selected={p.inSelection || p.focus || undefined}
       colSpan={p.colSpan}
       rowSpan={p.rowSpan}
-      onMouseDown={(e) => p.onMouseDown(e.shiftKey)}
+      onMouseDown={(e) => p.onMouseDown(e)}
       onMouseEnter={p.onMouseEnter}
       onDoubleClick={p.onBeginEdit}
     >
