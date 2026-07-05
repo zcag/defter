@@ -85,6 +85,12 @@ describe('applyOp — style + freeze', () => {
     )
     expect(out).toContain('B:B  width=120')
   })
+  it('setStyle folds a height attr on a single row into a height rule', () => {
+    const out = expectCanonical(
+      applyOp(SRC, { kind: 'setStyle', target: '2:2', attrs: { height: 40 } }),
+    )
+    expect(out).toContain('2:2  height=40')
+  })
   it('setFreeze writes and clears the freeze directive', () => {
     const frozen = expectCanonical(applyOp(SRC, { kind: 'setFreeze', rows: 1, cols: 1 }))
     expect(frozen).toContain('freeze rows=1 cols=1')

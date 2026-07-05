@@ -417,6 +417,19 @@ export function setColumnWidth(model: Model, sheetIndex: number, col: number, wi
   return next
 }
 
+/** Set a row's height (px) in the style layer, replacing any prior single-row height rule. */
+export function setRowHeight(model: Model, sheetIndex: number, row: number, height: number): Model {
+  const next = cloneModel(model)
+  const sheet = next.sheets[sheetIndex]
+  if (!sheet) return next
+  const existing = sheet.styles.find(
+    (r) => r.target.kind === 'rows' && r.target.start === row && r.target.end === row && r.attrs.height !== undefined,
+  )
+  if (existing) existing.attrs.height = height
+  else sheet.styles.push({ target: { kind: 'rows', start: row, end: row }, attrs: { height } })
+  return next
+}
+
 /** Delete `count` columns starting at 0-based column `at`. */
 export function deleteCols(model: Model, sheetIndex: number, at: number, count = 1): Model {
   const next = cloneModel(model)

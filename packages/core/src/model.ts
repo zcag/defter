@@ -114,6 +114,8 @@ export interface StyleAttrs {
   size?: number
   /** Column width in px. Only meaningful on a `cols` target; persists resize in the text layer. */
   width?: number
+  /** Row height in px. Only meaningful on a `rows` target; persists resize in the text layer. */
+  height?: number
 }
 
 export function emptyModel(): Model {

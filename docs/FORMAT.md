@@ -100,7 +100,8 @@ A fenced block with info-string `defter-style`, one rule per line:
 - Attributes are space-separated `key=value` or bare flags. Bare flags: `bold`, `italic`,
   `underline`, `strike`, `wrap`, `merge`. Key/value: `fill=<token|#hex>`, `color=<token|#hex>`,
   `align=left|center|right`, `valign=top|middle|bottom`, `format=<number-format>`,
-  `border=<spec>`, `font=<token>`, `size=<n>`, `width=<px>` (on a `cols` target).
+  `border=<spec>`, `font=<token>`, `size=<n>`, `width=<px>` (on a `cols` target),
+  `height=<px>` (on a `rows` target).
 - Later rules override earlier ones for overlapping targets (last-wins per attribute).
 - `fill`/`color` values are preferentially **theme tokens** (e.g. `surface-2`, `accent`) so a
   host theme can restyle without touching the document; raw `#hex` is allowed as an escape hatch.

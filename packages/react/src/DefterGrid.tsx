@@ -40,6 +40,7 @@ import {
   setCell,
   setColumnWidth,
   setFreeze,
+  setRowHeight,
   setStyle,
   sortRows,
   toNumber,
@@ -474,8 +475,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   // so the freeze items ("Freeze up to this column/row") can target it.
   const [menu, setMenu] = useState<{ x: number; y: number; colHead?: number; rowHead?: number } | null>(null)
   const [localW, setLocalW] = useState<Record<number, number>>({})
+  const [localH, setLocalH] = useState<Record<number, number>>({})
   const resizeRef = useRef<{ col: number; startX: number; startW: number } | null>(null)
+  const rowResizeRef = useRef<{ row: number; startY: number; startH: number } | null>(null)
   const DEFAULT_COL_W = 110
+  const MIN_ROW_H = 18 // floor for a drag-resized row
   const HEAD_W = 44 // matches --defter-head-width
   const colWidth = useCallback(
     (c: number) => localW[c] ?? styles.attrs(c, 1).width ?? DEFAULT_COL_W,
@@ -490,6 +494,65 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       return x
     },
     [colWidth],
+  )
+
+  // Per-row explicit heights from the style layer (`R:R  height=<px>`), flattened to a row→px map
+  // (last-wins, ranges expanded) so the geometry below is O(1) per row rather than re-scanning rules.
+  const explicitRowH = useMemo(() => {
+    const m = new Map<number, number>()
+    for (const rule of sheet.styles) {
+      if (rule.target.kind === 'rows' && rule.attrs.height !== undefined) {
+        for (let r = rule.target.start; r <= rule.target.end; r++) m.set(r, rule.attrs.height)
+      }
+    }
+    return m
+  }, [sheet.styles])
+  // Content-driven auto heights (rows grown by wrapped cells) are wired in by the auto-size layer;
+  // `autoRowH` returns a measured height or `undefined` for a plain default row. Inert stub here.
+  const autoRowH = useCallback((_r: number): number | undefined => undefined, [])
+  const autoHeightsOn = false
+  // Resolved height of a data row (px): a live drag wins, then a persisted `height=` rule, then the
+  // content-driven auto height (wrapping), else the uniform default.
+  const rowHOf = useCallback(
+    (r: number) => localH[r] ?? explicitRowH.get(r) ?? autoRowH(r) ?? rowHeight,
+    [localH, explicitRowH, autoRowH, rowHeight],
+  )
+  // When no row has a custom height the grid is uniform, so geometry stays O(1) arithmetic and we
+  // skip building the prefix-sum entirely (keeps virtualization cheap for large, unstyled sheets).
+  const hasVarHeights =
+    Object.keys(localH).length > 0 || explicitRowH.size > 0 || autoHeightsOn
+  // Cumulative row tops: rowTops[r] = Σ heights of rows 1..r-1 (px); rowTops[totalRows+1] = full
+  // content height. `null` in the uniform fast path.
+  const rowTops = useMemo(() => {
+    if (!hasVarHeights) return null
+    const t = new Float64Array(totalRows + 2)
+    let acc = 0
+    for (let r = 1; r <= totalRows; r++) {
+      acc += rowHOf(r)
+      t[r + 1] = acc
+    }
+    return t
+  }, [hasVarHeights, totalRows, rowHOf])
+  const rowTop = useCallback(
+    (r: number) => (rowTops ? (rowTops[Math.max(1, Math.min(totalRows + 1, r))] ?? 0) : (r - 1) * rowHeight),
+    [rowTops, rowHeight, totalRows],
+  )
+  const contentH = rowTops ? rowTops[totalRows + 1]! : totalRows * rowHeight
+  // First data row whose band contains content-offset `y` (px from the top of row 1). Binary search
+  // over the prefix-sum; plain division in the uniform case.
+  const rowAtOffset = useCallback(
+    (y: number) => {
+      if (!rowTops) return Math.max(1, Math.min(totalRows, Math.floor(y / rowHeight) + 1))
+      let lo = 1
+      let hi = totalRows
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1
+        if (rowTops[mid + 1]! <= y) lo = mid + 1
+        else hi = mid
+      }
+      return lo
+    },
+    [rowTops, rowHeight, totalRows],
   )
 
   // History: all mutations route through pushEdit so undo/redo works. This is the built-in *local
@@ -544,17 +607,19 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   let winStart = 1
   let winEnd = totalRows
   if (virtualize && hiddenRows.size === 0 && vp.height > 0) {
-    const visible = Math.ceil(vp.height / rowHeight)
-    winStart = Math.max(1, Math.floor(vp.top / rowHeight) + 1 - OVERSCAN)
-    winEnd = Math.min(totalRows, winStart + visible + OVERSCAN * 2)
+    winStart = Math.max(1, rowAtOffset(vp.top) - OVERSCAN)
+    winEnd = Math.min(totalRows, rowAtOffset(vp.top + vp.height) + OVERSCAN)
   }
   // Under virtualization, force-render the frozen rows (1..freezeRows) even when scrolled past them.
   const frozenTopRows =
     virtualize && freezeRows > 0 && winStart > 1
       ? Array.from({ length: Math.min(freezeRows, winStart - 1) }, (_, k) => k + 1)
       : []
-  const padTop = (winStart - 1 - frozenTopRows.length) * rowHeight
-  const padBottom = (totalRows - winEnd) * rowHeight
+  // Spacers replace the un-rendered rows above/below the window; with variable heights they use the
+  // prefix-sum. padTop excludes the frozen rows (rendered separately at the top of the tbody).
+  const frozenTopH = frozenTopRows.reduce((s, r) => s + rowHOf(r), 0)
+  const padTop = rowTop(winStart) - frozenTopH
+  const padBottom = contentH - rowTop(winEnd + 1)
 
   const rect: Rect = useMemo(() => {
     const { anchor, focus } = sel
@@ -768,6 +833,34 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       setLocalW((prev) => {
         const n = { ...prev }
         delete n[r.col]
+        return n
+      })
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+    return () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+    }
+  }, [model, pushEdit, si])
+
+  // Row resize (drag the row header's bottom edge); commit persists as a `height=` rule.
+  useEffect(() => {
+    const move = (e: MouseEvent) => {
+      const r = rowResizeRef.current
+      if (!r) return
+      const h = Math.max(MIN_ROW_H, r.startH + (e.clientY - r.startY))
+      setLocalH((prev) => ({ ...prev, [r.row]: h }))
+    }
+    const up = (e: MouseEvent) => {
+      const r = rowResizeRef.current
+      if (!r) return
+      const h = Math.max(MIN_ROW_H, Math.round(r.startH + (e.clientY - r.startY)))
+      rowResizeRef.current = null
+      pushEdit(serialize(setRowHeight(model, si, r.row, h)))
+      setLocalH((prev) => {
+        const n = { ...prev }
+        delete n[r.row]
         return n
       })
     }
@@ -1256,10 +1349,12 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     (clientY: number) => {
       const root = rootRef.current
       if (!root) return 1
-      const r = Math.floor((clientY - root.getBoundingClientRect().top + root.scrollTop) / rowHeight)
-      return Math.max(1, Math.min(totalRows, r))
+      // Content Y minus the sticky column header (which occupies the first default row-height band),
+      // giving the offset into the data rows that `rowAtOffset` indexes.
+      const dataY = clientY - root.getBoundingClientRect().top + root.scrollTop - rowHeight
+      return Math.max(1, Math.min(totalRows, rowAtOffset(dataY)))
     },
-    [rowHeight, totalRows],
+    [rowHeight, totalRows, rowAtOffset],
   )
   // Auto-scroll the grid while a selection drag is held near an edge (so you can select past the viewport).
   const beginDragAutoScroll = useCallback(() => {
@@ -1384,11 +1479,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         return
       }
       // Over a virtualization spacer (no data cell): derive the row from geometry.
-      const root = rootRef.current
-      if (root) {
-        const box = root.getBoundingClientRect()
-        const row = Math.max(1, Math.floor((clientY - box.top + root.scrollTop) / rowHeight))
-        fillTargetRef.current = { col: fillTargetRef.current?.col ?? sel.focus.col, row }
+      if (rootRef.current) {
+        fillTargetRef.current = { col: fillTargetRef.current?.col ?? sel.focus.col, row: rowAtY(clientY) }
       }
     }
     const move = (ev: MouseEvent) => track(ev.clientY, ev.target as HTMLElement | null)
@@ -1408,7 +1500,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     }
     document.addEventListener('mouseup', done, { once: true })
     document.addEventListener('touchend', done, { once: true })
-  }, [sel.focus.col, rowHeight])
+  }, [sel.focus.col, rowAtY])
 
   const stats = useMemo(() => {
     if (rect.minCol === rect.maxCol && rect.minRow === rect.maxRow) return null
@@ -1459,6 +1551,38 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       pushEdit(serialize(setColumnWidth(model, si, col, width)))
     },
     [model, si, pushEdit],
+  )
+
+  const startRowResize = useCallback(
+    (row: number, e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      rowResizeRef.current = { row, startY: e.clientY, startH: rowHOf(row) }
+    },
+    [rowHOf],
+  )
+  // Auto-fit a row to its tallest cell (double-click the row header's bottom border). A DOM Range
+  // over each cell's contents measures the real text geometry — independent of the cell being
+  // stretched to the current row height — so it fits both up (reveal wrapped lines) and down.
+  const autoFitRow = useCallback(
+    (row: number) => {
+      const root = rootRef.current
+      if (!root) return
+      const range = document.createRange()
+      let max = 0
+      root.querySelectorAll<HTMLElement>(`td[data-row="${row}"]`).forEach((el) => {
+        if (!el.firstChild) return
+        range.selectNodeContents(el)
+        // Exclude the fill-handle corner marker so it doesn't distort the measured content height.
+        const handle = el.querySelector(':scope > .defter__fill-handle')
+        if (handle) range.setEndBefore(handle)
+        const h = range.getBoundingClientRect().height
+        if (h > max) max = h
+      })
+      const height = Math.min(600, Math.max(rowHeight, Math.ceil(max) + 8)) // vertical padding slack
+      pushEdit(serialize(setRowHeight(model, si, row, height)))
+    },
+    [model, si, pushEdit, rowHeight],
   )
 
   const onContextMenu = useCallback(
@@ -1538,11 +1662,11 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
       setSel({ anchor: m, focus: m })
       const el = rootRef.current
       if (el) {
-        if (virtualize) el.scrollTop = Math.max(0, (m.row - 1) * rowHeight - el.clientHeight / 2)
+        if (virtualize) el.scrollTop = Math.max(0, rowTop(m.row) - el.clientHeight / 2)
         else el.querySelector(`[data-col="${m.col}"][data-row="${m.row}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
       }
     }
-  }, [curMatch, matches, finder, virtualize, rowHeight])
+  }, [curMatch, matches, finder, virtualize, rowTop])
 
   const doReplace = useCallback(() => {
     if (!finder || !editable || !matches.length) return
@@ -1581,12 +1705,12 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
 
   const renderRow = (row: number) =>
     hiddenRows.has(row) ? null : (
-    <tr key={row} role="row" aria-rowindex={row}>
+    <tr key={row} role="row" aria-rowindex={row} style={{ height: rowHOf(row) }}>
       <th
         data-row={row}
         role="rowheader"
         className={`defter__rowhead${row >= rect.minRow && row <= rect.maxRow ? ' defter__rowhead--active' : ''}${row <= freezeRows ? ' defter__rowhead--frozen' : ''}`}
-        style={row <= freezeRows ? { top: row * rowHeight } : undefined}
+        style={row <= freezeRows ? { top: rowHeight + rowTop(row) } : undefined}
         onMouseDown={(e) => {
           focusGrid()
           setSel((s) =>
@@ -1597,6 +1721,18 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         }}
       >
         {row}
+        {editable && (
+          <span
+            className="defter__row-resizer"
+            title="Drag to resize · double-click to fit"
+            onMouseDown={(e) => startRowResize(row, e)}
+            onClick={(e) => e.stopPropagation()}
+            onDoubleClick={(e) => {
+              e.stopPropagation()
+              autoFitRow(row)
+            }}
+          />
+        )}
       </th>
       {Array.from({ length: totalCols }, (_, col) => {
         if (styles.isCovered(col, row)) return null
@@ -1618,7 +1754,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             focus={isFocus}
             inSelection={inSel && !isFocus}
             frozen={row <= freezeRows}
-            frozenTop={row <= freezeRows ? row * rowHeight : undefined}
+            frozenTop={row <= freezeRows ? rowHeight + rowTop(row) : undefined}
             frozenCol={col < freezeCols}
             frozenLeft={col < freezeCols ? frozenColLeft(col) : undefined}
             fillHandle={isFocus && editable}

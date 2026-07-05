@@ -22,6 +22,7 @@ import {
   setCell,
   setColumnWidth,
   setFreeze,
+  setRowHeight,
   setStyle,
 } from './edit.js'
 import type { Model, StyleAttrs } from './model.js'
@@ -142,6 +143,15 @@ export function applyOp(text: string, op: SheetOp): string {
       ) {
         return serialize(setColumnWidth(model, idx, target.start, attrs.width))
       }
+      // Pure single-row height → reuse setRowHeight's dedup; mixed rules fold height in fine.
+      if (
+        target.kind === 'rows' &&
+        target.start === target.end &&
+        attrs.height !== undefined &&
+        Object.keys(attrs).length === 1
+      ) {
+        return serialize(setRowHeight(model, idx, target.start, attrs.height))
+      }
       return serialize(setStyle(model, idx, target, attrs))
     }
     case 'setFreeze':
@@ -208,6 +218,7 @@ const styleAttrsSchema = {
     font: { type: 'string' },
     size: { type: 'number', description: 'font size in px' },
     width: { type: 'number', description: 'column width in px (single-column target only)' },
+    height: { type: 'number', description: 'row height in px (single-row target only)' },
   },
   additionalProperties: false,
 }

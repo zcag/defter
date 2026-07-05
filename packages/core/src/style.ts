@@ -29,9 +29,10 @@ const KEYS = [
   'font',
   'size',
   'width',
+  'height',
 ] as const
 
-const NUMERIC_KEYS = new Set(['size', 'width'])
+const NUMERIC_KEYS = new Set(['size', 'width', 'height'])
 
 export function parseStyleTarget(text: string): StyleTarget {
   const t = text.trim()

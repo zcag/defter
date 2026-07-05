@@ -590,18 +590,50 @@
   background: var(--defter-header-active-bg);
   color: var(--defter-header-active-fg);
 }
+/* Resize handles straddle the header's trailing border so the border itself is grabbable. The hit
+ * area is wide (10px); a thinner tinted bar shows on hover to signal where the edge is. */
 .defter__resizer {
   position: absolute;
   top: 0;
-  right: -3px;
-  width: 6px;
+  right: -5px;
+  width: 10px;
   height: 100%;
   cursor: col-resize;
   z-index: 4;
 }
-.defter__resizer:hover {
+.defter__row-resizer {
+  position: absolute;
+  /* Fixed width (not 100%/right:0) — a table-cell box won't size a percentage/edge-anchored child. */
+  left: 0;
+  width: var(--defter-head-width);
+  bottom: -5px;
+  height: 10px;
+  cursor: row-resize;
+  z-index: 4;
+}
+.defter__resizer::after,
+.defter__row-resizer::after {
+  content: '';
+  position: absolute;
   background: var(--defter-selection-border);
-  opacity: 0.5;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.defter__resizer::after {
+  top: 0;
+  bottom: 0;
+  left: 4px;
+  width: 2px;
+}
+.defter__row-resizer::after {
+  left: 0;
+  right: 0;
+  top: 4px;
+  height: 2px;
+}
+.defter__resizer:hover::after,
+.defter__row-resizer:hover::after {
+  opacity: 0.7;
 }
 
 /* Context menu */
