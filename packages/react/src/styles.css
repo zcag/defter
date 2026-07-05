@@ -686,6 +686,8 @@
 .defter__cell--wrap {
   white-space: normal;
   word-break: break-word;
+  vertical-align: top;
+  line-height: 1.5;
 }
 .defter__cell--number {
   text-align: right;

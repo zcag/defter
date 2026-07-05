@@ -49,18 +49,19 @@ live at runtime) in [`docs/THEMING.md`](docs/THEMING.md).
 ## What works
 
 - **Text-canonical format** — compact one-row-one-line GFM tables (content) + a co-canonical
-  `defter-style` layer (fills, number formats, merges, borders, alignment, column widths,
-  conditional formatting, data-validation dropdowns, checkbox & date cells, row filters, frozen
-  panes, named ranges, charts). Lenient parse, byte-stable serialize, idempotent round-trip.
+  `defter-style` layer (fills, number formats, merges, borders, alignment, column widths, row
+  heights, conditional formatting, data-validation dropdowns, checkbox & date cells, row filters,
+  frozen panes, named ranges, charts). Lenient parse, byte-stable serialize, idempotent round-trip.
 - **Formula engine** ([`@defterjs/formula`](packages/formula)) — ~75 functions incl. `SUM`/`AVERAGE`,
   `VLOOKUP`/`HLOOKUP`/`INDEX`/`MATCH`, `SUMIF`/`COUNTIF` (wildcards), `IF`/`IFS`/`SWITCH`, text and
   date functions. Cross-sheet, cycle-safe, memoized. Compute-on-read — values are never stored.
 - **Premium editing** — range selection with a crisp marquee, formula bar (with range dims), a
   formatting toolbar (themed color/border/number-format pickers), **live formula-reference
   highlighting** and **click/drag-to-insert references** (point mode), smart fill series, copy/cut/
-  paste (cross-platform, incl. iOS), undo/redo, column auto-fit, insert/delete row/col with
-  automatic reference rewriting, merges, freeze header/column, multi-sheet tabs, themed tooltips,
-  and full keyboard shortcuts.
+  paste (cross-platform, incl. iOS), undo/redo, **drag-resize rows & columns** (double-click to
+  auto-fit), **auto-size-to-content columns that wrap past a cap** (on by default), insert/delete
+  row/col with automatic reference rewriting, merges, freeze header/column, multi-sheet tabs, themed
+  tooltips, and full keyboard shortcuts.
 - **Cell types & views** — checkbox and date-picker cells, data-validation dropdowns, and
   non-destructive **row filters** — all stored in the text so they round-trip and sync.
 - **Touch** — long-press context menu, touch fill handle, and clean double-tap editing on tablets.

@@ -5,6 +5,7 @@ import {
   type Locale,
   type BorderKind,
   type Model,
+  type Sheet,
   addSheet,
   applyBorders,
   clearStylesIn,
@@ -58,6 +59,65 @@ import {
 } from 'react'
 import { renderInline } from './inline.js'
 import { resolveColor, styleToCss } from './styleToCss.js'
+
+// ── Auto-size measurement ──────────────────────────────────────────────────────────────────────
+// The plain *displayed* text of a cell (formula result / number format applied), used to measure
+// columns and rows for auto-sizing. Mirrors the Cell render path but returns a string, not a node;
+// markdown isn't stripped (raw is a safe over-estimate that avoids clipping the rendered text).
+function autoCellText(
+  sheet: Sheet,
+  computed: ComputedGrid | null,
+  attrs: StyleAttrs,
+  col: number,
+  row: number,
+  locale: Locale | undefined,
+): string {
+  const raw = getCell(sheet, col, row)
+  if (!raw) return ''
+  if (raw.trim().startsWith('=')) {
+    const v = computed ? computed.get(sheet.name, col, row) : null
+    return computed ? String(formatValue(v, { format: attrs.format, locale })) : raw
+  }
+  const v = parseLiteral(raw, locale)
+  if (attrs.format && typeof v === 'number') return String(formatValue(v, { format: attrs.format, locale }))
+  return raw
+}
+
+// Number of lines `text` wraps into at `maxWidth` under CSS `white-space: normal; word-break:
+// break-word` (break at spaces, and mid-word when a single word overflows). Greedy, mirroring the
+// browser closely enough to size rows; the small +slack in the caller absorbs any rounding.
+function measureLines(text: string, maxWidth: number, ctx: CanvasRenderingContext2D): number {
+  if (maxWidth <= 0) return 1
+  let lines = 0
+  for (const para of text.split('\n')) {
+    let cur = ''
+    for (const word of para.split(/(\s+)/)) {
+      if (!word) continue
+      const test = cur + word
+      if (cur !== '' && ctx.measureText(test).width > maxWidth) {
+        lines++
+        cur = word.trimStart()
+      } else {
+        cur = test
+      }
+      // A single run wider than the cell breaks within itself (word-break: break-word): peel off
+      // as many chars as fit per line until the remainder fits.
+      while (cur.length > 1 && ctx.measureText(cur).width > maxWidth) {
+        let lo = 1
+        let hi = cur.length
+        while (lo < hi) {
+          const mid = (lo + hi + 1) >> 1
+          if (ctx.measureText(cur.slice(0, mid)).width <= maxWidth) lo = mid
+          else hi = mid - 1
+        }
+        lines++
+        cur = cur.slice(lo)
+      }
+    }
+    lines++ // the paragraph's final (or only) line
+  }
+  return Math.max(1, lines)
+}
 
 /**
  * A remote peer's live presence, fed from the host's awareness channel. Render it Google-Sheets
@@ -119,6 +179,15 @@ export interface DefterGridProps {
   virtualize?: boolean
   /** Fixed row height in px used by virtualization; must match `--defter-row-height` (default 26). */
   rowHeight?: number
+  /**
+   * Auto-size columns to their content (up to {@link DefterGridProps.autoSizeMaxWidth}), then wrap
+   * and grow the row when content is wider. On by default; recomputes live as cells change. A manual
+   * column resize (drag / double-click) pins that column with an explicit `width=` and opts it out.
+   * Set `false` for the classic fixed-width columns with clipped overflow.
+   */
+  autoSize?: boolean
+  /** Width (px) at which an auto-sized column stops widening and starts wrapping. Default 280. */
+  autoSizeMaxWidth?: number
   /** Function names for formula autocomplete (e.g. `FUNCTION_NAMES` from `@defterjs/formula`). */
   functions?: string[]
   extraRows?: number
@@ -417,6 +486,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     freezeCol = false,
     virtualize = false,
     rowHeight = 26,
+    autoSize = true,
+    autoSizeMaxWidth = 280,
     functions,
     extraRows = 6,
 
@@ -481,9 +552,102 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
   const DEFAULT_COL_W = 110
   const MIN_ROW_H = 18 // floor for a drag-resized row
   const HEAD_W = 44 // matches --defter-head-width
+
+  // Explicit column widths / row heights from the style layer. A manual resize writes one of these,
+  // which both persists the size and pins that column/row (opting it out of auto-sizing). Flattened
+  // to maps (last-wins, ranges expanded) so lookups downstream are O(1).
+  const explicitColW = useMemo(() => {
+    const m = new Map<number, number>()
+    for (const rule of sheet.styles) {
+      if (rule.target.kind === 'cols' && rule.attrs.width !== undefined) {
+        for (let c = rule.target.start; c <= rule.target.end; c++) m.set(c, rule.attrs.width)
+      }
+    }
+    return m
+  }, [sheet.styles])
+  const explicitRowH = useMemo(() => {
+    const m = new Map<number, number>()
+    for (const rule of sheet.styles) {
+      if (rule.target.kind === 'rows' && rule.attrs.height !== undefined) {
+        for (let r = rule.target.start; r <= rule.target.end; r++) m.set(r, rule.attrs.height)
+      }
+    }
+    return m
+  }, [sheet.styles])
+
+  // Text metrics for auto-size measurement, read from the mounted grid's computed font. A 2D canvas
+  // measures text width without touching the DOM, so auto-sizing recomputes cheaply on every edit.
+  const [metrics, setMetrics] = useState<{ font: string; lineHeight: number } | null>(null)
+  const measureCtx = useMemo(() => document.createElement('canvas').getContext('2d'), [])
+  // Layout effect (not passive) so auto-sizing applies before the first paint — no default→fit flash.
+  useLayoutEffect(() => {
+    const root = rootRef.current
+    if (!root) return
+    const cs = getComputedStyle(root)
+    const size = Number.parseFloat(cs.fontSize) || 13
+    // Match `.defter__cell--wrap { line-height: 1.5 }` so measured line counts line up with layout.
+    setMetrics({ font: `${cs.fontSize} ${cs.fontFamily}`, lineHeight: size * 1.5 })
+  }, [])
+
+  // The auto-size layer (opt out with `autoSize={false}`). For every column without an explicit
+  // width it measures the widest displayed cell and either fits to content or — past
+  // `autoSizeMaxWidth` — caps the width and marks the column to wrap; wrapping columns then drive
+  // per-row auto heights. Render-time only (never written to the text) so it stays reactive without
+  // churning the document. Measurement is bounded to the first 400 rows on very tall sheets.
+  const autoLayout = useMemo(() => {
+    const empty = {
+      width: new Map<number, number>(),
+      wrap: new Set<number>(),
+      height: new Map<number, number>(),
+      on: false,
+    }
+    if (!autoSize || !metrics || !measureCtx) return empty
+    measureCtx.font = metrics.font
+    const PAD = 14 // 12px horizontal cell padding + 2px slack
+    const cap = Math.max(60, autoSizeMaxWidth)
+    const rowsN = sheet.grid.length
+    const sample = Math.min(rowsN, 400)
+    const width = new Map<number, number>()
+    const wrap = new Set<number>()
+    for (let c = 0; c < sheet.width; c++) {
+      if (explicitColW.has(c)) continue
+      let max = 0
+      for (let r = 1; r <= sample; r++) {
+        const t = autoCellText(sheet, computed, styles.attrs(c, r), c, r, locale)
+        if (!t) continue
+        const w = measureCtx.measureText(t).width
+        if (w > max) max = w
+      }
+      if (max === 0) continue
+      const desired = Math.ceil(max) + PAD
+      if (desired > cap) {
+        width.set(c, cap)
+        wrap.add(c)
+      } else {
+        width.set(c, Math.max(48, desired))
+      }
+    }
+    const height = new Map<number, number>()
+    if (wrap.size > 0) {
+      const usable = cap - PAD
+      for (let r = 1; r <= rowsN; r++) {
+        if (explicitRowH.has(r)) continue
+        let lines = 1
+        for (const c of wrap) {
+          const t = autoCellText(sheet, computed, styles.attrs(c, r), c, r, locale)
+          if (!t) continue
+          const n = measureLines(t, usable, measureCtx)
+          if (n > lines) lines = n
+        }
+        if (lines > 1) height.set(r, Math.ceil(lines * metrics.lineHeight + 8))
+      }
+    }
+    return { width, wrap, height, on: height.size > 0 }
+  }, [autoSize, autoSizeMaxWidth, metrics, measureCtx, sheet, computed, styles, explicitColW, explicitRowH, locale])
+
   const colWidth = useCallback(
-    (c: number) => localW[c] ?? styles.attrs(c, 1).width ?? DEFAULT_COL_W,
-    [localW, styles],
+    (c: number) => localW[c] ?? explicitColW.get(c) ?? autoLayout.width.get(c) ?? DEFAULT_COL_W,
+    [localW, explicitColW, autoLayout],
   )
   // Sticky-left offset of a frozen column: the row-header gutter plus the widths of the columns
   // pinned before it (columns are variable-width, unlike the fixed row height used for frozen rows).
@@ -495,22 +659,9 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     },
     [colWidth],
   )
-
-  // Per-row explicit heights from the style layer (`R:R  height=<px>`), flattened to a row→px map
-  // (last-wins, ranges expanded) so the geometry below is O(1) per row rather than re-scanning rules.
-  const explicitRowH = useMemo(() => {
-    const m = new Map<number, number>()
-    for (const rule of sheet.styles) {
-      if (rule.target.kind === 'rows' && rule.attrs.height !== undefined) {
-        for (let r = rule.target.start; r <= rule.target.end; r++) m.set(r, rule.attrs.height)
-      }
-    }
-    return m
-  }, [sheet.styles])
-  // Content-driven auto heights (rows grown by wrapped cells) are wired in by the auto-size layer;
-  // `autoRowH` returns a measured height or `undefined` for a plain default row. Inert stub here.
-  const autoRowH = useCallback((_r: number): number | undefined => undefined, [])
-  const autoHeightsOn = false
+  // Content-driven auto row heights (rows grown by wrapped cells), from the auto-size layer above.
+  const autoRowH = useCallback((r: number) => autoLayout.height.get(r), [autoLayout])
+  const autoHeightsOn = autoLayout.on
   // Resolved height of a data row (px): a live drag wins, then a persisted `height=` rule, then the
   // content-driven auto height (wrapping), else the uniform default.
   const rowHOf = useCallback(
@@ -1751,6 +1902,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
             locale={locale}
             showFormulas={showFormulas}
             colAlign={sheet.colAlign[col] ?? null}
+            autoWrap={autoLayout.wrap.has(col)}
             focus={isFocus}
             inSelection={inSel && !isFocus}
             frozen={row <= freezeRows}
@@ -2367,6 +2519,8 @@ interface CellProps {
   locale?: Locale
   showFormulas: boolean
   colAlign: 'left' | 'center' | 'right' | null
+  /** Column auto-sized past the wrap cap — render wrapped even without an explicit `wrap` attr. */
+  autoWrap?: boolean
   focus: boolean
   inSelection: boolean
   frozen?: boolean
@@ -2667,7 +2821,7 @@ function Cell(p: CellProps): React.JSX.Element {
   const cls = [
     'defter__cell',
     numeric && !attrs.align ? 'defter__cell--number' : '',
-    attrs.wrap ? 'defter__cell--wrap' : '',
+    attrs.wrap || p.autoWrap ? 'defter__cell--wrap' : '',
     error ? 'defter__cell--error' : '',
     p.showFormulas && isFormula ? 'defter__cell--formula-src' : '',
     p.inSelection ? 'defter__cell--insel' : '',
