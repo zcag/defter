@@ -6,7 +6,7 @@ SHELL := bash
 PKGS := --filter "./packages/*"
 PACK_DIR := dist-tarballs
 
-.PHONY: help install build typecheck test lint format demo demo-build storybook deploy pack publish-dry publish clean
+.PHONY: help install build rebuild typecheck test lint format demo demo-build storybook deploy pack publish-dry publish clean
 
 help: ## List available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -17,6 +17,8 @@ install: ## Install dependencies
 
 build: ## Build all publishable packages (tsc + copy CSS)
 	pnpm -r $(PKGS) build
+
+rebuild: clean build ## Clean then build packages from scratch (use when a build looks stale)
 
 typecheck: ## Type-check the whole workspace
 	pnpm typecheck
@@ -33,14 +35,16 @@ format: ## Format with Biome (writes)
 demo: ## Run the demo site (Vite dev server)
 	pnpm demo
 
-demo-build: ## Build the demo site
+demo-build: ## Build the demo site (clears the Vite cache first so it can't ship a stale bundle)
+	rm -rf apps/demo/node_modules/.vite node_modules/.vite apps/demo/dist
 	pnpm demo:build
 
 storybook: ## Run Storybook
 	pnpm storybook
 
-deploy: ## Build + deploy demo & Storybook to defter.cagdas.io
+deploy: ## Clean-build + deploy demo & Storybook to defter.cagdas.io, then verify it landed
 	bash scripts/deploy.sh
+	@echo "Deployed & verified. If it FAILED verification, the live site kept the old bundle."
 
 bench: build ## Run the performance harness (parse/serialize/edit/recompute across sizes)
 	node scripts/bench.mjs
@@ -56,6 +60,7 @@ publish-dry: build ## Dry-run: what `make publish` would push to npm
 publish: build ## Publish all packages to npm (needs `npm login` + the @defter org)
 	pnpm -r $(PKGS) publish --access public --no-git-checks
 
-clean: ## Remove build outputs
-	@for d in packages/*/; do rm -rf "$$d/dist"; done
+clean: ## Remove build outputs and caches (dist, tsbuildinfo, Vite caches)
+	@for d in packages/*/; do rm -rf "$$d/dist" "$$d"/*.tsbuildinfo; done
 	rm -rf $(PACK_DIR) apps/demo/dist storybook-static
+	rm -rf node_modules/.vite apps/demo/node_modules/.vite
