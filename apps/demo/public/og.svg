@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1526"/>
+      <stop offset="1" stop-color="#0a1a3a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4f83ff"/>
+      <stop offset="1" stop-color="#2f5fe0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- faint grid motif -->
+  <g stroke="#ffffff" stroke-width="1" opacity="0.04">
+    <path d="M0 90 H1200 M0 180 H1200 M0 270 H1200 M0 360 H1200 M0 450 H1200 M0 540 H1200"/>
+    <path d="M90 0 V630 M180 0 V630 M270 0 V630 M360 0 V630 M450 0 V630 M540 0 V630 M630 0 V630 M720 0 V630 M810 0 V630 M900 0 V630 M990 0 V630 M1080 0 V630"/>
+  </g>
+
+  <!-- top accent bar -->
+  <rect x="0" y="0" width="1200" height="6" fill="url(#accent)"/>
+
+  <!-- brand mark + wordmark -->
+  <g transform="translate(80,74)">
+    <rect width="60" height="60" rx="14" fill="#2f5fe0"/>
+    <g stroke="#ffffff" stroke-width="4" fill="none" stroke-linejoin="round">
+      <rect x="15" y="15" width="30" height="30" rx="3"/>
+      <line x1="15" y1="26" x2="45" y2="26"/>
+      <line x1="26" y1="15" x2="26" y2="45"/>
+    </g>
+    <text x="80" y="42" fill="#ffffff" font-size="34" font-weight="700" letter-spacing="0.5">Defter</text>
+  </g>
+
+  <!-- eyebrow -->
+  <text x="80" y="248" fill="#7fa8ff" font-size="18" font-weight="600" letter-spacing="2.4">TEXT-CANONICAL · COLLABORATIVE · AGENT-FRIENDLY</text>
+
+  <!-- headline -->
+  <text x="78" y="330" fill="#ffffff" font-size="72" font-weight="800" letter-spacing="-1">The spreadsheet</text>
+  <text x="78" y="410" fill="#ffffff" font-size="72" font-weight="800" letter-spacing="-1">that's <tspan fill="#4f83ff" font-style="italic">just text.</tspan></text>
+
+  <!-- subhead -->
+  <text x="80" y="474" fill="#aebdd6" font-size="27" font-weight="400">The plain-text markdown document <tspan fill="#e8eefb" font-weight="600">is</tspan> the source of truth —</text>
+  <text x="80" y="512" fill="#aebdd6" font-size="27" font-weight="400">the grid is a live projection. React · TypeScript · MIT.</text>
+
+  <!-- url -->
+  <text x="80" y="588" fill="#5f76a0" font-size="24" font-weight="500">defter.cagdas.io</text>
+
+  <!-- markdown snippet card, right -->
+  <g transform="translate(820,140)">
+    <rect x="0" y="0" width="300" height="350" rx="16" fill="#0f1c38" stroke="#25406e" stroke-width="1.5"/>
+    <g font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="17" fill="#8fa6cf">
+      <text x="22" y="42">| Item   | Qty | Total |</text>
+      <text x="22" y="70">|--------|-----|-------|</text>
+      <text x="22" y="98" fill="#c9d6ef">| Coffee |  3  | <tspan fill="#4f83ff">=B2*4</tspan> |</text>
+      <text x="22" y="126" fill="#c9d6ef">| Tea    |  2  | <tspan fill="#4f83ff">=B3*3</tspan> |</text>
+      <text x="22" y="154" fill="#c9d6ef">| Cake   |  1  | <tspan fill="#4f83ff">=B4*6</tspan> |</text>
+    </g>
+    <line x1="22" y1="188" x2="278" y2="188" stroke="#25406e" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <text x="22" y="222" font-family="ui-monospace, Menlo, monospace" font-size="14" fill="#5f76a0">↓ projects to a live grid</text>
+    <!-- mini grid -->
+    <g transform="translate(22,244)">
+      <rect width="256" height="84" rx="6" fill="#16274a"/>
+      <g stroke="#2b4778" stroke-width="1">
+        <line x1="0" y1="28" x2="256" y2="28"/><line x1="0" y1="56" x2="256" y2="56"/>
+        <line x1="128" y1="0" x2="128" y2="84"/><line x1="192" y1="0" x2="192" y2="84"/>
+      </g>
+      <g font-size="13" fill="#c9d6ef" font-family="ui-sans-serif, sans-serif">
+        <text x="12" y="19">Coffee</text><text x="150" y="19">3</text><text x="210" y="19" fill="#4f83ff">12</text>
+        <text x="12" y="47">Tea</text><text x="150" y="47">2</text><text x="210" y="47" fill="#4f83ff">6</text>
+        <text x="12" y="75">Cake</text><text x="150" y="75">1</text><text x="210" y="75" fill="#4f83ff">6</text>
+      </g>
+    </g>
+  </g>
+</svg>

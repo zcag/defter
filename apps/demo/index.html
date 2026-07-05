@@ -6,26 +6,133 @@
     <title>Defter — the spreadsheet that's just text</title>
     <meta
       name="description"
-      content="Defter is a text-canonical, collaborative, agent-friendly spreadsheet. The plain-text markdown document IS the source of truth."
+      content="Defter is a text-canonical, collaborative, agent-friendly spreadsheet for React. The plain-text markdown document IS the source of truth — so version control, real-time collaboration, full-text search, and AI agents all operate on ordinary text."
     />
+    <meta
+      name="keywords"
+      content="spreadsheet, markdown spreadsheet, plain text spreadsheet, react data grid, react spreadsheet component, collaborative spreadsheet, git-friendly spreadsheet, text-based spreadsheet, CRDT spreadsheet, Yjs, AI agent spreadsheet, MCP, CSV, XLSX, TypeScript"
+    />
+    <meta name="author" content="Cagdas Salur" />
+    <meta name="theme-color" content="#2f5fe0" />
+    <link rel="canonical" href="https://defter.cagdas.io/" />
+
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Defter" />
     <meta property="og:title" content="Defter — the spreadsheet that's just text" />
     <meta
       property="og:description"
-      content="A text-canonical, collaborative, agent-friendly spreadsheet. The markdown IS the source of truth — collaboration, search, versioning and AI agents all operate on ordinary text."
+      content="A text-canonical, collaborative, agent-friendly spreadsheet for React. The markdown IS the source of truth — collaboration, search, versioning and AI agents all operate on ordinary text."
     />
-    <meta property="og:url" content="https://defter.cagdas.io" />
+    <meta property="og:url" content="https://defter.cagdas.io/" />
+    <meta property="og:image" content="https://defter.cagdas.io/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Defter — the spreadsheet that's just text. Markdown table projecting into a live grid." />
+    <meta property="og:locale" content="en_US" />
+
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Defter — the spreadsheet that's just text" />
     <meta
       name="twitter:description"
-      content="A text-canonical, collaborative, agent-friendly spreadsheet. The markdown IS the source of truth."
+      content="A text-canonical, collaborative, agent-friendly spreadsheet for React. The markdown IS the source of truth."
     />
+    <meta name="twitter:image" content="https://defter.cagdas.io/og.png" />
+    <meta name="twitter:image:alt" content="Defter — the spreadsheet that's just text." />
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://defter.cagdas.io/#website",
+          "url": "https://defter.cagdas.io/",
+          "name": "Defter",
+          "description": "A text-canonical, collaborative, agent-friendly spreadsheet where the plain-text markdown document is the source of truth.",
+          "inLanguage": "en"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://defter.cagdas.io/#app",
+          "name": "Defter",
+          "url": "https://defter.cagdas.io/",
+          "applicationCategory": "DeveloperApplication",
+          "applicationSubCategory": "Spreadsheet",
+          "operatingSystem": "Any",
+          "description": "A text-canonical, collaborative, agent-friendly spreadsheet for React. The plain-text markdown document is the source of truth; the grid is a live projection. Formulas, charts, collaboration via Yjs, CSV/XLSX, and structured MCP edit ops for AI agents.",
+          "image": "https://defter.cagdas.io/og.png",
+          "license": "https://opensource.org/licenses/MIT",
+          "softwareVersion": "0.2.0",
+          "programmingLanguage": "TypeScript",
+          "keywords": "spreadsheet, markdown, react, data grid, collaborative, CRDT, Yjs, AI agent, MCP, CSV, XLSX, formulas",
+          "author": { "@type": "Person", "name": "Cagdas Salur", "url": "https://github.com/zcag" },
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "sameAs": ["https://github.com/zcag/defter", "https://www.npmjs.com/package/@defterjs/core"]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      Static, crawlable copy of the landing page. React (createRoot) replaces #root on mount,
+      so JS visitors get the full interactive app; no-JS visitors and crawlers/AI bots that don't
+      execute JavaScript get real, indexable content instead of an empty shell.
+    -->
+    <div id="root">
+      <main style="max-width:820px;margin:0 auto;padding:56px 24px;font-family:ui-sans-serif,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111827;line-height:1.6">
+        <p style="font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#2f5fe0;margin:0 0 12px">text-canonical · collaborative · agent-friendly</p>
+        <h1 style="font-size:40px;font-weight:800;letter-spacing:-.02em;margin:0 0 16px">Defter — the spreadsheet that's <em>just text</em></h1>
+        <p style="font-size:19px;color:#374151;margin:0 0 24px">
+          The plain-text markdown document <strong>is</strong> the source of truth. The grid is a live,
+          editable projection of it — so version control, real-time collaboration, full-text search, and
+          AI agents all operate on ordinary text instead of a hidden binary model.
+        </p>
+        <p style="margin:0 0 32px">
+          <a href="#playground" style="color:#2f5fe0;font-weight:600">Try the live demo</a> ·
+          <a href="https://github.com/zcag/defter" style="color:#2f5fe0;font-weight:600">Source on GitHub</a> ·
+          <a href="/storybook/" style="color:#2f5fe0;font-weight:600">Storybook</a>
+        </p>
+
+        <h2 style="font-size:22px;font-weight:700;margin:0 0 12px">Why Defter</h2>
+        <ul style="padding-left:20px;margin:0 0 32px">
+          <li><strong>Text is truth.</strong> A compact one-row-per-line markdown table. No opaque blob — it diffs, greps, and syncs like any text file.</li>
+          <li><strong>Collaboration for free.</strong> Bind the canonical text to a Yjs <code>Y.Text</code> CRDT; concurrent edits auto-merge, with live presence. Bring your own network provider.</li>
+          <li><strong>Agents read &amp; write it.</strong> An LLM authors a markdown table and edits via structured MCP ops; a values-materialized projection gives search and RAG clean text.</li>
+          <li><strong>Rich, but still text.</strong> Fills, formats, merges, borders, and alignment live in a co-canonical style layer keyed by A1 range. Themed entirely through CSS variables.</li>
+        </ul>
+
+        <h2 style="font-size:22px;font-weight:700;margin:0 0 12px">Capabilities</h2>
+        <p style="color:#374151;margin:0 0 32px">
+          Excel-style formula engine (~75 functions: SUM, VLOOKUP, INDEX/MATCH, SUMIF, IF/IFS), cross-sheet
+          references, live formula-reference highlighting, point-mode reference insert, conditional formatting,
+          data validation, checkbox &amp; date cells, non-destructive row filters, charts, merged cells, number
+          formats, copy/cut/paste (incl. iOS), undo/redo, smart fill series, insert/delete row-col with reference
+          rewriting, column auto-fit, freeze header/column, multi-sheet tabs, CSV / XLSX import-export, row
+          virtualization, CSS-variable theming, real-time collaboration with presence, touch / iPad support,
+          MCP edit ops, and a RAG projection.
+        </p>
+
+        <h2 style="font-size:22px;font-weight:700;margin:0 0 12px">Packages</h2>
+        <ul style="padding-left:20px;margin:0 0 32px">
+          <li><code>@defterjs/core</code> — headless, framework-agnostic parse/serialize, coordinates, edits, projection, lint.</li>
+          <li><code>@defterjs/formula</code> — the default dependency-free Excel-style formula engine.</li>
+          <li><code>@defterjs/react</code> — the themeable React grid renderer.</li>
+          <li><code>@defterjs/yjs</code> — collaboration binding for a Yjs <code>Y.Text</code>.</li>
+          <li><code>@defterjs/ironcalc</code> — alternative IronCalc (Rust/Wasm) formula engine adapter.</li>
+          <li><code>@defterjs/xlsx</code> — XLSX import/export.</li>
+        </ul>
+
+        <p style="color:#6b7280;font-size:14px;margin:0">
+          Open source (MIT). <em>Defter</em> is Turkish for ledger / notebook.
+          <a href="https://github.com/zcag/defter/blob/master/docs/FORMAT.md" style="color:#2f5fe0">Format spec</a> ·
+          <a href="https://github.com/zcag/defter/blob/master/docs/RATIONALE.md" style="color:#2f5fe0">Rationale</a>
+        </p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
