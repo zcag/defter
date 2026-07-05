@@ -603,7 +603,8 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     }
     if (!autoSize || !metrics || !measureCtx) return empty
     measureCtx.font = metrics.font
-    const PAD = 14 // 12px horizontal cell padding + 2px slack
+    const INSET = 13 // real content inset: 12px horizontal padding + 1px cell border
+    const SLACK = 7 // extra breathing room so canvas-vs-DOM measurement drift never clips to an ellipsis
     const cap = Math.max(60, autoSizeMaxWidth)
     const rowsN = sheet.grid.length
     const sample = Math.min(rowsN, 400)
@@ -619,7 +620,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
         if (w > max) max = w
       }
       if (max === 0) continue
-      const desired = Math.ceil(max) + PAD
+      const desired = Math.ceil(max) + INSET + SLACK
       if (desired > cap) {
         width.set(c, cap)
         wrap.add(c)
@@ -629,7 +630,7 @@ export function DefterGrid(props: DefterGridProps): React.JSX.Element {
     }
     const height = new Map<number, number>()
     if (wrap.size > 0) {
-      const usable = cap - PAD
+      const usable = cap - INSET
       for (let r = 1; r <= rowsN; r++) {
         if (explicitRowH.has(r)) continue
         let lines = 1
